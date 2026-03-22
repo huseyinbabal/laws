@@ -1,8 +1,8 @@
 [package]
 name = "laws"
-version = "0.1.0"
+version = "1.0.0-rc.1"
 edition = "2021"
-description = "Local AWS - a lightweight, blazing-fast AWS service emulator written in Rust"
+description = "Local AWS - a lightweight AWS service emulator"
 license = "MIT"
 repository = "https://github.com/huseyinbabal/laws"
 
