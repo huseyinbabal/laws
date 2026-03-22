@@ -200,12 +200,91 @@ laws emulates AWS services locally for development and testing. No Docker requir
 
 </details>
 
+## Installation
+
+### Homebrew (macOS/Linux)
+
+```bash
+brew install huseyinbabal/tap/laws
+```
+
+### Scoop (Windows)
+
+```powershell
+scoop bucket add huseyinbabal https://github.com/huseyinbabal/scoop-bucket
+scoop install laws
+```
+
+### Download Pre-built Binaries
+
+Download the latest release from the [Releases page](https://github.com/huseyinbabal/laws/releases/latest).
+
+| Platform | Architecture | Download |
+|----------|--------------|----------|
+| **macOS** | Apple Silicon (M1/M2/M3) | `laws-aarch64-apple-darwin.tar.gz` |
+| **macOS** | Intel | `laws-x86_64-apple-darwin.tar.gz` |
+| **Linux** | x86_64 (musl) | `laws-x86_64-unknown-linux-musl.tar.gz` |
+| **Linux** | ARM64 (musl) | `laws-aarch64-unknown-linux-musl.tar.gz` |
+| **Windows** | x86_64 | `laws-x86_64-pc-windows-msvc.zip` |
+
+#### Quick Install (macOS/Linux)
+
+```bash
+# macOS Apple Silicon
+curl -sL https://github.com/huseyinbabal/laws/releases/latest/download/laws-aarch64-apple-darwin.tar.gz | tar xz
+sudo mv laws /usr/local/bin/
+
+# macOS Intel
+curl -sL https://github.com/huseyinbabal/laws/releases/latest/download/laws-x86_64-apple-darwin.tar.gz | tar xz
+sudo mv laws /usr/local/bin/
+
+# Linux x86_64
+curl -sL https://github.com/huseyinbabal/laws/releases/latest/download/laws-x86_64-unknown-linux-musl.tar.gz | tar xz
+sudo mv laws /usr/local/bin/
+
+# Linux ARM64
+curl -sL https://github.com/huseyinbabal/laws/releases/latest/download/laws-aarch64-unknown-linux-musl.tar.gz | tar xz
+sudo mv laws /usr/local/bin/
+```
+
+#### Windows
+
+1. Download `laws-x86_64-pc-windows-msvc.zip` from the [Releases page](https://github.com/huseyinbabal/laws/releases/latest)
+2. Extract the zip file
+3. Add the extracted folder to your PATH, or move `laws.exe` to a directory in your PATH
+
+### Using Cargo
+
+```bash
+cargo install laws
+```
+
+### Using Docker
+
+```bash
+# Run laws
+docker run --rm -p 4566:4566 ghcr.io/huseyinbabal/laws
+
+# Run on a custom port
+docker run --rm -p 8080:8080 ghcr.io/huseyinbabal/laws --port 8080
+
+# Build locally
+docker build -t laws .
+docker run --rm -p 4566:4566 laws
+```
+
+### From Source
+
+```bash
+git clone https://github.com/huseyinbabal/laws.git
+cd laws
+cargo build --release
+./target/release/laws
+```
+
 ## Quick Start
 
 ```bash
-# Install from source
-cargo install --path .
-
 # Run with defaults (port 4566)
 laws
 
