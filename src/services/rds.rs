@@ -338,7 +338,7 @@ fn reboot_db_instance(state: &RdsState, payload: &Value) -> Result<Response, Law
     Ok(json_response(json!({ "DBInstance": resp })))
 }
 
-fn describe_db_snapshots(state: &RdsState, payload: &Value) -> Result<Response, LawsError> {
+fn describe_db_snapshots(_state: &RdsState, payload: &Value) -> Result<Response, LawsError> {
     let _filter_id = payload["DBInstanceIdentifier"].as_str();
     // Mock: return empty snapshots list
     Ok(json_response(json!({ "DBSnapshots": [] })))

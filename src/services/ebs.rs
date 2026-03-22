@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::extract::{Path, State};
-use axum::response::{IntoResponse, Response};
+use axum::response::Response;
 use axum::routing::{get, post, put};
 use axum::Json;
 use chrono::Utc;
@@ -143,9 +143,7 @@ async fn list_snapshot_blocks(
     match state.snapshots.get(&snapshot_id) {
         Some(s) => {
             let blocks: Vec<Value> = s
-                .blocks
-                .iter()
-                .map(|(idx, _)| {
+                .blocks.keys().map(|idx| {
                     json!({
                         "BlockIndex": idx,
                         "BlockToken": format!("token-{}", idx),
@@ -172,9 +170,7 @@ async fn list_changed_blocks(
     match state.snapshots.get(&snapshot_id) {
         Some(s) => {
             let blocks: Vec<Value> = s
-                .blocks
-                .iter()
-                .map(|(idx, _)| {
+                .blocks.keys().map(|idx| {
                     json!({
                         "BlockIndex": idx,
                         "FirstBlockToken": format!("token-{}", idx),

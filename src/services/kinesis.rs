@@ -73,7 +73,7 @@ pub fn router(state: Arc<KinesisState>) -> axum::Router {
 // ---------------------------------------------------------------------------
 
 pub fn handle_request(state: &KinesisState, target: &str, body: &[u8]) -> Response {
-    let action = target.split('.').last().unwrap_or("");
+    let action = target.split('.').next_back().unwrap_or("");
 
     let body: Value = match serde_json::from_slice(body) {
         Ok(v) => v,

@@ -6,7 +6,6 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use dashmap::DashMap;
 use http::StatusCode;
-use serde_json::{json, Value};
 
 use crate::error::LawsError;
 use crate::protocol::rest_xml;

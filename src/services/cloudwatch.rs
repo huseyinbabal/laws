@@ -192,7 +192,7 @@ fn put_metric_data(
         state
             .metrics
             .entry(key)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(data_point);
 
         n += 1;

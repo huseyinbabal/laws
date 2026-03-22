@@ -109,7 +109,7 @@ async fn create_network(
 
     let id = format!(
         "n-{}",
-        uuid::Uuid::new_v4().to_string().replace('-', "")[..24].to_string()
+        &uuid::Uuid::new_v4().to_string().replace('-', "")[..24]
     );
     let now = chrono::Utc::now().to_rfc3339();
 
@@ -205,7 +205,7 @@ async fn create_node(
 
     let id = format!(
         "nd-{}",
-        uuid::Uuid::new_v4().to_string().replace('-', "")[..24].to_string()
+        &uuid::Uuid::new_v4().to_string().replace('-', "")[..24]
     );
     let now = chrono::Utc::now().to_rfc3339();
 

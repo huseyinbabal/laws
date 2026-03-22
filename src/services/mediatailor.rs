@@ -107,7 +107,7 @@ async fn put_playback_configuration(
     let arn = format!("arn:aws:mediatailor:{REGION}:{ACCOUNT_ID}:playbackConfiguration/{name}");
     let session_prefix = format!(
         "https://{}.mediatailor.{REGION}.amazonaws.com/v1/session/{ACCOUNT_ID}/{name}",
-        uuid::Uuid::new_v4().to_string().replace('-', "")[..8].to_string()
+        &uuid::Uuid::new_v4().to_string().replace('-', "")[..8]
     );
     let hls_prefix = format!("{session_prefix}/");
 

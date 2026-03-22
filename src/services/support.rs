@@ -123,7 +123,7 @@ fn create_case(state: &SupportState, payload: &Value) -> Result<Response, LawsEr
     let language = payload["language"].as_str().unwrap_or("en").to_string();
 
     let case_id = format!("case-{}", &uuid::Uuid::new_v4().to_string()[..12]);
-    let display_id = format!("{}", &uuid::Uuid::new_v4().to_string()[..8]);
+    let display_id = uuid::Uuid::new_v4().to_string()[..8].to_string();
     let time_created = chrono::Utc::now().to_rfc3339();
 
     let case = SupportCase {

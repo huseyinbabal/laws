@@ -103,7 +103,7 @@ fn create_container(state: &MediaStoreState, payload: &Value) -> Result<Response
     let arn = format!("arn:aws:mediastore:{REGION}:{ACCOUNT_ID}:container/{name}");
     let endpoint = format!(
         "https://{}.mediastore.{REGION}.amazonaws.com",
-        uuid::Uuid::new_v4().to_string().replace('-', "")[..8].to_string()
+        &uuid::Uuid::new_v4().to_string().replace('-', "")[..8]
     );
     let now = chrono::Utc::now().to_rfc3339();
 

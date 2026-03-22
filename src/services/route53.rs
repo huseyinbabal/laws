@@ -80,9 +80,7 @@ fn random_zone_id() -> String {
     let suffix: String = rand::rng()
         .sample_iter(&rand::distr::Alphanumeric)
         .take(13)
-        .map(|c| char::from(c).to_ascii_uppercase())
-        .map(char::from)
-        .collect();
+        .map(|c| char::from(c).to_ascii_uppercase()).collect();
     format!("Z{suffix}")
 }
 

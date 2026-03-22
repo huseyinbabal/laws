@@ -1,10 +1,8 @@
 use std::sync::Arc;
 
 use axum::extract::{Path, State};
-use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum::response::Response;
 use dashmap::DashMap;
-use http::StatusCode;
 use serde_json::{json, Value};
 
 use crate::error::LawsError;

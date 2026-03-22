@@ -121,7 +121,7 @@ async fn create_data_lake(
     State(state): State<Arc<SecurityLakeState>>,
     Json(payload): Json<Value>,
 ) -> Response {
-    let result = (|| -> Result<Response, LawsError> {
+    let result = {
         let configurations = payload["configurations"]
             .as_array()
             .cloned()
@@ -181,7 +181,7 @@ async fn create_data_lake(
         Ok(rest_json::ok(json!({
             "dataLakes": data_lakes,
         })))
-    })();
+    };
 
     match result {
         Ok(resp) => resp,

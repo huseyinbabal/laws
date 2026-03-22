@@ -37,7 +37,7 @@ pub fn parse_query_request(
 ) -> Result<QueryRequest, LawsError> {
     // Check for JSON protocol via X-Amz-Target header
     if let Some(target) = headers.get("x-amz-target").and_then(|v| v.to_str().ok()) {
-        if let Some(action) = target.split('.').last() {
+        if let Some(action) = target.split('.').next_back() {
             let mut params = HashMap::new();
             params.insert("Action".to_string(), action.to_string());
 

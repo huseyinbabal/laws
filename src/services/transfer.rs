@@ -100,7 +100,7 @@ fn json_response(body: Value) -> Response {
 fn create_server(state: &TransferState, payload: &Value) -> Result<Response, LawsError> {
     let server_id = format!(
         "s-{}",
-        uuid::Uuid::new_v4().to_string().replace("-", "")[..17].to_string()
+        &uuid::Uuid::new_v4().to_string().replace("-", "")[..17]
     );
 
     let endpoint_type = payload["EndpointType"]

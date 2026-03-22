@@ -117,7 +117,7 @@ fn make_arn(state: &SecretsManagerState, name: &str) -> String {
     )
 }
 
-fn resolve_secret_id<'a>(payload: &'a serde_json::Value) -> Result<&'a str, LawsError> {
+fn resolve_secret_id(payload: &serde_json::Value) -> Result<&str, LawsError> {
     payload["SecretId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("SecretId is required".to_string()))

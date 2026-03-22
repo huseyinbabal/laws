@@ -95,7 +95,7 @@ async fn create_environment(
     Path(name): Path<String>,
     Json(payload): Json<Value>,
 ) -> Response {
-    let result = (|| -> Result<Response, LawsError> {
+    let result = {
         let arn = format!("arn:aws:airflow:{REGION}:{ACCOUNT_ID}:environment/{name}");
 
         let execution_role_arn = payload["ExecutionRoleArn"]
@@ -122,7 +122,7 @@ async fn create_environment(
 
         let webserver_url = format!(
             "{}.{}.airflow.amazonaws.com",
-            uuid::Uuid::new_v4().to_string()[..8].to_string(),
+            &uuid::Uuid::new_v4().to_string()[..8],
             REGION,
         );
 
@@ -144,7 +144,7 @@ async fn create_environment(
         state.environments.insert(name, env);
 
         Ok(rest_json::ok(json!({ "Arn": arn })))
-    })();
+    };
 
     match result {
         Ok(resp) => resp,

@@ -206,7 +206,7 @@ fn get_models(state: &FraudDetectorState, payload: &Value) -> Result<Response, L
     Ok(json_response(json!({ "models": models })))
 }
 
-fn create_rule(state: &FraudDetectorState, payload: &Value) -> Result<Response, LawsError> {
+fn create_rule(_state: &FraudDetectorState, payload: &Value) -> Result<Response, LawsError> {
     let rule_id = payload["ruleId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ruleId".into()))?;
@@ -224,8 +224,8 @@ fn create_rule(state: &FraudDetectorState, payload: &Value) -> Result<Response, 
     })))
 }
 
-fn get_rules(state: &FraudDetectorState, payload: &Value) -> Result<Response, LawsError> {
-    let detector_id = payload["detectorId"]
+fn get_rules(_state: &FraudDetectorState, payload: &Value) -> Result<Response, LawsError> {
+    let _detector_id = payload["detectorId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing detectorId".into()))?;
 
@@ -237,11 +237,11 @@ fn get_event_prediction(
     _state: &FraudDetectorState,
     payload: &Value,
 ) -> Result<Response, LawsError> {
-    let detector_id = payload["detectorId"]
+    let _detector_id = payload["detectorId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing detectorId".into()))?;
 
-    let event_id = payload["eventId"].as_str().unwrap_or("unknown");
+    let _event_id = payload["eventId"].as_str().unwrap_or("unknown");
 
     Ok(json_response(json!({
         "modelScores": [],

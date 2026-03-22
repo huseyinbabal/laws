@@ -113,7 +113,7 @@ fn activate_gateway(state: &StorageGatewayState, body: &Value) -> Result<Respons
         .to_owned();
     let gateway_id = format!(
         "sgw-{}",
-        uuid::Uuid::new_v4().to_string().replace('-', "")[..12].to_string()
+        &uuid::Uuid::new_v4().to_string().replace('-', "")[..12]
     );
     let gateway_arn = format!("arn:aws:storagegateway:{REGION}:{ACCOUNT_ID}:gateway/{gateway_id}");
 
@@ -193,21 +193,21 @@ fn create_stored_iscsi_volume(
     body: &Value,
 ) -> Result<Response, LawsError> {
     let gateway_arn = require_str(body, "GatewayARN")?.to_owned();
-    let disk_id = body
+    let _disk_id = body
         .get("DiskId")
         .and_then(|v| v.as_str())
         .unwrap_or("disk-0")
         .to_owned();
-    let preserve = body
+    let _preserve = body
         .get("PreserveExistingData")
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
     let target_name = require_str(body, "TargetName")?.to_owned();
-    let network_interface = require_str(body, "NetworkInterfaceId")?.to_owned();
+    let _network_interface = require_str(body, "NetworkInterfaceId")?.to_owned();
 
     let volume_id = format!(
         "vol-{}",
-        uuid::Uuid::new_v4().to_string().replace('-', "")[..12].to_string()
+        &uuid::Uuid::new_v4().to_string().replace('-', "")[..12]
     );
     let volume_arn = format!(
         "arn:aws:storagegateway:{REGION}:{ACCOUNT_ID}:gateway/{}/volume/{volume_id}",
@@ -242,7 +242,7 @@ fn list_volumes(state: &StorageGatewayState, body: &Value) -> Result<Response, L
     let volumes: Vec<Value> = state
         .volumes
         .iter()
-        .filter(|entry| gateway_arn.map_or(true, |arn| entry.value().gateway_arn == arn))
+        .filter(|entry| gateway_arn.is_none_or(|arn| entry.value().gateway_arn == arn))
         .map(|entry| {
             let v = entry.value();
             json!({

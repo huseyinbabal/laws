@@ -229,7 +229,7 @@ async fn get_parameters_by_path(
                 true
             }
         })
-        .map(|p| format_parameter(p))
+        .map(format_parameter)
         .collect();
 
     Ok(json_response(serde_json::json!({

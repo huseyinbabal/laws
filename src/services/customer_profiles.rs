@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use axum::extract::{Path, State};
-use axum::response::{IntoResponse, Response};
-use axum::routing::{delete, get, post};
+use axum::response::Response;
+use axum::routing::{get, post};
 use axum::Json;
 use chrono::Utc;
 use dashmap::DashMap;
@@ -199,7 +199,7 @@ async fn put_profile_object(
 async fn search_profiles(
     State(state): State<Arc<CustomerProfilesState>>,
     Path(domain_name): Path<String>,
-    Json(body): Json<Value>,
+    Json(_body): Json<Value>,
 ) -> Response {
     if !state.domains.contains_key(&domain_name) {
         return rest_json::error_response(&LawsError::NotFound(format!(

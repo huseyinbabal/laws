@@ -68,7 +68,7 @@ async fn create_classification_job(
     State(state): State<Arc<MacieState>>,
     Json(payload): Json<Value>,
 ) -> Response {
-    let result = (|| -> Result<Response, LawsError> {
+    let result = {
         let name = payload["name"].as_str().unwrap_or("unnamed").to_string();
 
         let job_type = payload["jobType"]
@@ -98,7 +98,7 @@ async fn create_classification_job(
             "jobId": job_id,
             "jobArn": format!("arn:aws:macie2:{REGION}:{ACCOUNT_ID}:classification-job/{job_id}"),
         })))
-    })();
+    };
 
     match result {
         Ok(resp) => resp,

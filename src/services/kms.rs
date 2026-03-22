@@ -101,7 +101,7 @@ fn make_arn(key_id: &str) -> String {
 }
 
 /// Resolve a KeyId parameter which may be a raw key ID, an ARN, or an alias name.
-fn resolve_key<'a>(state: &'a KmsState, key_id_input: &str) -> Result<KmsKey, LawsError> {
+fn resolve_key(state: &KmsState, key_id_input: &str) -> Result<KmsKey, LawsError> {
     // Direct key ID lookup
     if let Some(key) = state.keys.get(key_id_input) {
         return Ok(key.clone());

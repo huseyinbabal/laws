@@ -396,7 +396,7 @@ fn query_create_stack(
         outputs: Vec::new(),
     };
 
-    let xml = stack_to_xml(&stack);
+    let _xml = stack_to_xml(&stack);
     state.stacks.insert(stack_name, stack);
 
     Ok(xml_response(

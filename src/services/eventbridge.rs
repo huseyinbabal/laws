@@ -75,7 +75,7 @@ pub fn router(state: Arc<EventBridgeState>) -> axum::Router {
 // ---------------------------------------------------------------------------
 
 pub fn handle_request(state: &EventBridgeState, target: &str, body: &[u8]) -> Response {
-    let action = target.split('.').last().unwrap_or("");
+    let action = target.split('.').next_back().unwrap_or("");
 
     let body: Value = match serde_json::from_slice(body) {
         Ok(v) => v,

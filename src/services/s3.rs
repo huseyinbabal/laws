@@ -135,12 +135,10 @@ async fn create_bucket(State(state): State<Arc<S3State>>, Path(bucket): Path<Str
 
     xml_response(
         StatusCode::OK,
-        format!(
-            r#"<?xml version="1.0" encoding="UTF-8"?>
+        r#"<?xml version="1.0" encoding="UTF-8"?>
 <CreateBucketConfiguration>
   <LocationConstraint>us-east-1</LocationConstraint>
-</CreateBucketConfiguration>"#
-        ),
+</CreateBucketConfiguration>"#.to_string(),
     )
 }
 

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::response::Response;
-use axum::routing::{delete, get, post, put};
+use axum::routing::{get, post};
 use axum::Json;
 use dashmap::DashMap;
 use serde_json::{json, Value};

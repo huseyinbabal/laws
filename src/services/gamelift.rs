@@ -259,7 +259,7 @@ fn describe_game_sessions(state: &GameLiftState, payload: &Value) -> Result<Resp
     let sessions: Vec<Value> = state
         .game_sessions
         .iter()
-        .filter(|e| fleet_id.map_or(true, |fid| e.value().fleet_id == fid))
+        .filter(|e| fleet_id.is_none_or(|fid| e.value().fleet_id == fid))
         .map(|e| {
             let s = e.value();
             json!({

@@ -156,7 +156,7 @@ async fn create_job(
     State(state): State<Arc<MediaConvertState>>,
     Json(payload): Json<Value>,
 ) -> Response {
-    let result = (|| -> Result<Response, LawsError> {
+    let result = {
         let role = payload["Role"].as_str().unwrap_or("").to_string();
 
         let queue = payload["Queue"].as_str().unwrap_or("Default").to_string();
@@ -190,7 +190,7 @@ async fn create_job(
                 "CreatedAt": now,
             }
         })))
-    })();
+    };
 
     match result {
         Ok(resp) => resp,

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 mod config;
 mod dashboard;
 mod error;
@@ -401,7 +403,7 @@ fn build_router(_config: &Config, dashboard_state: DashboardState) -> Router {
         codeguru: Arc::new(services::codeguru::CodeGuruState::default()),
         compute_optimizer: Arc::new(services::compute_optimizer::ComputeOptimizerState::default()),
         controltower: Arc::new(services::controltower::ControlTowerState::default()),
-        costexplorer: Arc::new(services::costexplorer::CostExplorerState::default()),
+        costexplorer: Arc::new(services::costexplorer::CostExplorerState),
         cur: Arc::new(services::cur::CurState::default()),
         datapipeline: Arc::new(services::datapipeline::DataPipelineState::default()),
         datasync: Arc::new(services::datasync::DataSyncState::default()),
@@ -419,7 +421,7 @@ fn build_router(_config: &Config, dashboard_state: DashboardState) -> Router {
         license_manager: Arc::new(services::license_manager::LicenseManagerState::default()),
         mediastore: Arc::new(services::mediastore::MediaStoreState::default()),
         network_firewall: Arc::new(services::network_firewall::NetworkFirewallState::default()),
-        pricing: Arc::new(services::pricing::PricingState::default()),
+        pricing: Arc::new(services::pricing::PricingState),
         resiliencehub: Arc::new(services::resiliencehub::ResilienceHubState::default()),
         route53domains: Arc::new(services::route53domains::Route53DomainsState::default()),
         route53resolver: Arc::new(services::route53resolver::Route53ResolverState::default()),
@@ -847,7 +849,7 @@ async fn dispatch_handler(
     let target_action = headers
         .get("x-amz-target")
         .and_then(|v| v.to_str().ok())
-        .and_then(|t| t.split('.').last())
+        .and_then(|t| t.split('.').next_back())
         .map(|a| a.to_string());
     if let Some(action) = extract_action(&body, &uri).or(target_action) {
         let sqs_actions = [

@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use axum::body::Bytes;
 use axum::http::{HeaderMap, Uri};
