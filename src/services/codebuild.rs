@@ -154,10 +154,7 @@ async fn create_project(
         .unwrap_or("CODECOMMIT")
         .to_string();
     let environment = payload["environment"].clone();
-    let service_role = payload["serviceRole"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let service_role = payload["serviceRole"].as_str().unwrap_or("").to_string();
     let now = chrono::Utc::now().to_rfc3339();
 
     let project = CodeBuildProject {
@@ -253,9 +250,7 @@ async fn start_build(
         REGION, ACCOUNT_ID, build_id
     );
     let now = chrono::Utc::now().to_rfc3339();
-    let source_version = payload["sourceVersion"]
-        .as_str()
-        .map(|s| s.to_string());
+    let source_version = payload["sourceVersion"].as_str().map(|s| s.to_string());
 
     let build = CodeBuildBuild {
         id: build_id.clone(),

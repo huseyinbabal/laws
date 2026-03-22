@@ -63,11 +63,7 @@ impl Default for CodeDeployState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &CodeDeployState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &CodeDeployState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("CodeDeploy_20141006.")
         .unwrap_or(target);
@@ -147,7 +143,10 @@ fn create_application(state: &CodeDeployState, payload: &Value) -> Result<Respon
 
     state.applications.insert(name, app);
 
-    Ok(json_response(StatusCode::OK, json!({ "applicationId": app_id })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "applicationId": app_id }),
+    ))
 }
 
 fn delete_application(state: &CodeDeployState, payload: &Value) -> Result<Response, LawsError> {
@@ -161,7 +160,9 @@ fn delete_application(state: &CodeDeployState, payload: &Value) -> Result<Respon
         .ok_or_else(|| LawsError::NotFound(format!("Application '{}' not found", name)))?;
 
     // Also remove associated deployment groups
-    state.deployment_groups.retain(|_, dg| dg.application_name != name);
+    state
+        .deployment_groups
+        .retain(|_, dg| dg.application_name != name);
 
     Ok(json_response(StatusCode::OK, json!({})))
 }
@@ -176,7 +177,10 @@ fn get_application(state: &CodeDeployState, payload: &Value) -> Result<Response,
         .get(name)
         .ok_or_else(|| LawsError::NotFound(format!("Application '{}' not found", name)))?;
 
-    Ok(json_response(StatusCode::OK, json!({ "application": application_to_json(&app) })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "application": application_to_json(&app) }),
+    ))
 }
 
 fn list_applications(state: &CodeDeployState) -> Result<Response, LawsError> {
@@ -186,7 +190,10 @@ fn list_applications(state: &CodeDeployState) -> Result<Response, LawsError> {
         .map(|entry| entry.value().name.clone())
         .collect();
 
-    Ok(json_response(StatusCode::OK, json!({ "applications": names })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "applications": names }),
+    ))
 }
 
 fn create_deployment_group(
@@ -207,9 +214,7 @@ fn create_deployment_group(
 
     let dg_name = payload["deploymentGroupName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("deploymentGroupName is required".to_string())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("deploymentGroupName is required".to_string()))?
         .to_string();
 
     let key = format!("{app_name}:{dg_name}");
@@ -221,10 +226,7 @@ fn create_deployment_group(
     }
 
     let dg_id = uuid::Uuid::new_v4().to_string();
-    let service_role_arn = payload["serviceRoleArn"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let service_role_arn = payload["serviceRoleArn"].as_str().unwrap_or("").to_string();
 
     let dg = DeploymentGroup {
         deployment_group_name: dg_name,
@@ -235,7 +237,10 @@ fn create_deployment_group(
 
     state.deployment_groups.insert(key, dg);
 
-    Ok(json_response(StatusCode::OK, json!({ "deploymentGroupId": dg_id })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "deploymentGroupId": dg_id }),
+    ))
 }
 
 fn delete_deployment_group(
@@ -248,25 +253,18 @@ fn delete_deployment_group(
 
     let dg_name = payload["deploymentGroupName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("deploymentGroupName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("deploymentGroupName is required".to_string()))?;
 
     let key = format!("{app_name}:{dg_name}");
     state
         .deployment_groups
         .remove(&key)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Deployment group '{}' not found", dg_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Deployment group '{}' not found", dg_name)))?;
 
     Ok(json_response(StatusCode::OK, json!({})))
 }
 
-fn list_deployment_groups(
-    state: &CodeDeployState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn list_deployment_groups(state: &CodeDeployState, payload: &Value) -> Result<Response, LawsError> {
     let app_name = payload["applicationName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("applicationName is required".to_string()))?;
@@ -278,10 +276,13 @@ fn list_deployment_groups(
         .map(|entry| entry.value().deployment_group_name.clone())
         .collect();
 
-    Ok(json_response(StatusCode::OK, json!({
-        "applicationName": app_name,
-        "deploymentGroups": groups,
-    })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({
+            "applicationName": app_name,
+            "deploymentGroups": groups,
+        }),
+    ))
 }
 
 fn create_deployment(state: &CodeDeployState, payload: &Value) -> Result<Response, LawsError> {
@@ -312,5 +313,8 @@ fn create_deployment(state: &CodeDeployState, payload: &Value) -> Result<Respons
         create_time: chrono::Utc::now().to_rfc3339(),
     };
 
-    Ok(json_response(StatusCode::OK, json!({ "deploymentId": deployment_id })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "deploymentId": deployment_id }),
+    ))
 }

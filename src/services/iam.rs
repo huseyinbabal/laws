@@ -483,9 +483,8 @@ fn list_attached_role_policies(
         .collect::<Vec<_>>()
         .join("\n");
 
-    let xml = format!(
-        "<AttachedPolicies>{members}</AttachedPolicies><IsTruncated>false</IsTruncated>"
-    );
+    let xml =
+        format!("<AttachedPolicies>{members}</AttachedPolicies><IsTruncated>false</IsTruncated>");
     Ok(("ListAttachedRolePolicies".into(), xml))
 }
 
@@ -493,9 +492,7 @@ fn list_attached_role_policies(
 // ListAttachedUserPolicies — stub returning empty list
 // ---------------------------------------------------------------------------
 
-fn list_attached_user_policies(
-    params: &std::collections::HashMap<String, String>,
-) -> ActionResult {
+fn list_attached_user_policies(params: &std::collections::HashMap<String, String>) -> ActionResult {
     let _user_name = require_param(params, "UserName")?;
     let xml = "<AttachedPolicies></AttachedPolicies><IsTruncated>false</IsTruncated>".to_string();
     Ok(("ListAttachedUserPolicies".into(), xml))
@@ -505,9 +502,7 @@ fn list_attached_user_policies(
 // ListGroupsForUser — stub returning empty list
 // ---------------------------------------------------------------------------
 
-fn list_groups_for_user(
-    params: &std::collections::HashMap<String, String>,
-) -> ActionResult {
+fn list_groups_for_user(params: &std::collections::HashMap<String, String>) -> ActionResult {
     let _user_name = require_param(params, "UserName")?;
     let xml = "<Groups></Groups><IsTruncated>false</IsTruncated>".to_string();
     Ok(("ListGroupsForUser".into(), xml))
@@ -517,9 +512,7 @@ fn list_groups_for_user(
 // ListAccessKeys — stub returning empty list
 // ---------------------------------------------------------------------------
 
-fn list_access_keys(
-    params: &std::collections::HashMap<String, String>,
-) -> ActionResult {
+fn list_access_keys(params: &std::collections::HashMap<String, String>) -> ActionResult {
     let _user_name = require_param(params, "UserName")?;
     let xml = "<AccessKeyMetadata></AccessKeyMetadata><IsTruncated>false</IsTruncated>".to_string();
     Ok(("ListAccessKeys".into(), xml))

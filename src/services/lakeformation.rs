@@ -53,14 +53,8 @@ impl Default for LakeFormationState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &LakeFormationState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AWSLakeFormation.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &LakeFormationState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AWSLakeFormation.").unwrap_or(target);
 
     let result = match action {
         "RegisterResource" => register_resource(state, payload),
@@ -103,19 +97,13 @@ fn now_epoch() -> f64 {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn register_resource(
-    state: &LakeFormationState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn register_resource(state: &LakeFormationState, payload: &Value) -> Result<Response, LawsError> {
     let resource_arn = payload["ResourceArn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("ResourceArn is required".to_string()))?
         .to_string();
 
-    let role_arn = payload["RoleArn"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let role_arn = payload["RoleArn"].as_str().unwrap_or("").to_string();
 
     if state.resources.contains_key(&resource_arn) {
         return Err(LawsError::AlreadyExists(format!(
@@ -135,10 +123,7 @@ fn register_resource(
     Ok(json_response(json!({})))
 }
 
-fn deregister_resource(
-    state: &LakeFormationState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn deregister_resource(state: &LakeFormationState, payload: &Value) -> Result<Response, LawsError> {
     let resource_arn = payload["ResourceArn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("ResourceArn is required".to_string()))?;
@@ -146,9 +131,7 @@ fn deregister_resource(
     state
         .resources
         .remove(resource_arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Resource '{}' not found", resource_arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Resource '{}' not found", resource_arn)))?;
 
     Ok(json_response(json!({})))
 }
@@ -172,10 +155,7 @@ fn list_resources(state: &LakeFormationState) -> Result<Response, LawsError> {
     })))
 }
 
-fn grant_permissions(
-    state: &LakeFormationState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn grant_permissions(state: &LakeFormationState, payload: &Value) -> Result<Response, LawsError> {
     let principal = payload["Principal"]["DataLakePrincipalIdentifier"]
         .as_str()
         .ok_or_else(|| {
@@ -209,10 +189,7 @@ fn grant_permissions(
     Ok(json_response(json!({})))
 }
 
-fn revoke_permissions(
-    state: &LakeFormationState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn revoke_permissions(state: &LakeFormationState, payload: &Value) -> Result<Response, LawsError> {
     let principal = payload["Principal"]["DataLakePrincipalIdentifier"]
         .as_str()
         .ok_or_else(|| {

@@ -29,11 +29,7 @@ impl Default for PricingState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    _state: &PricingState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(_state: &PricingState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AWSPriceListService.")
         .unwrap_or(target);
@@ -73,9 +69,7 @@ fn json_response(body: Value) -> Response {
 // ---------------------------------------------------------------------------
 
 fn describe_services(payload: &Value) -> Result<Response, LawsError> {
-    let service_code = payload["ServiceCode"]
-        .as_str()
-        .unwrap_or("");
+    let service_code = payload["ServiceCode"].as_str().unwrap_or("");
 
     let services = if service_code.is_empty() {
         vec![
@@ -136,9 +130,7 @@ fn get_attribute_values(payload: &Value) -> Result<Response, LawsError> {
             json!({"Value": "Windows"}),
             json!({"Value": "RHEL"}),
         ],
-        _ => vec![
-            json!({"Value": "default"}),
-        ],
+        _ => vec![json!({"Value": "default"})],
     };
 
     Ok(json_response(json!({

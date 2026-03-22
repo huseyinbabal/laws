@@ -66,11 +66,7 @@ impl Default for AppStreamState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &AppStreamState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &AppStreamState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("PhotonAdminProxyService.")
         .unwrap_or(target);
@@ -224,10 +220,7 @@ fn create_stack(state: &AppStreamState, payload: &Value) -> Result<Response, Law
         )));
     }
 
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
 
     let arn = format!("arn:aws:appstream:{REGION}:{ACCOUNT_ID}:stack/{name}");
     let now = chrono::Utc::now().to_rfc3339();
@@ -280,10 +273,7 @@ fn describe_stacks(state: &AppStreamState, payload: &Value) -> Result<Response, 
     Ok(json_response(json!({ "Stacks": stacks })))
 }
 
-fn create_image_builder(
-    state: &AppStreamState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_image_builder(state: &AppStreamState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["Name"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Name is required".to_string()))?

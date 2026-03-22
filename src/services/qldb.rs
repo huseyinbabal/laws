@@ -53,13 +53,12 @@ impl Default for QldbState {
 
 pub fn router(state: Arc<QldbState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/ledgers",
-            post(create_ledger).get(list_ledgers),
-        )
+        .route("/ledgers", post(create_ledger).get(list_ledgers))
         .route(
             "/ledgers/{name}",
-            get(describe_ledger).delete(delete_ledger).put(update_ledger),
+            get(describe_ledger)
+                .delete(delete_ledger)
+                .put(update_ledger),
         )
         .with_state(state)
 }
@@ -83,13 +82,9 @@ async fn create_ledger(
             .unwrap_or("ALLOW_ALL")
             .to_string();
 
-        let deletion_protection = payload["DeletionProtection"]
-            .as_bool()
-            .unwrap_or(true);
+        let deletion_protection = payload["DeletionProtection"].as_bool().unwrap_or(true);
 
-        let arn = format!(
-            "arn:aws:qldb:{REGION}:{ACCOUNT_ID}:ledger/{name}"
-        );
+        let arn = format!("arn:aws:qldb:{REGION}:{ACCOUNT_ID}:ledger/{name}");
         let now = chrono::Utc::now().to_rfc3339();
 
         let ledger = QldbLedger {
@@ -149,23 +144,18 @@ async fn describe_ledger(
             "PermissionsMode": ledger.permissions_mode,
             "DeletionProtection": ledger.deletion_protection,
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Ledger '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Ledger '{}' not found", name)))
+        }
     }
 }
 
-async fn delete_ledger(
-    State(state): State<Arc<QldbState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn delete_ledger(State(state): State<Arc<QldbState>>, Path(name): Path<String>) -> Response {
     match state.ledgers.remove(&name) {
         Some(_) => rest_json::ok(json!({})),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Ledger '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Ledger '{}' not found", name)))
+        }
     }
 }
 
@@ -192,9 +182,8 @@ async fn update_ledger(
                 "DeletionProtection": ledger.deletion_protection,
             }))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Ledger '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Ledger '{}' not found", name)))
+        }
     }
 }

@@ -196,10 +196,7 @@ fn create_data_source(state: &KendraState, payload: &Value) -> Result<Response, 
         .ok_or_else(|| LawsError::InvalidRequest("Name is required".to_string()))?
         .to_string();
 
-    let ds_type = payload["Type"]
-        .as_str()
-        .unwrap_or("S3")
-        .to_string();
+    let ds_type = payload["Type"].as_str().unwrap_or("S3").to_string();
 
     if !state.indexes.contains_key(&index_id) {
         return Err(LawsError::NotFound(format!(

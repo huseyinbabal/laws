@@ -69,10 +69,7 @@ pub fn handle_request(state: &StsState, body: &[u8]) -> Response {
     }
 }
 
-async fn handle_sts_action(
-    State(state): State<Arc<StsState>>,
-    body: String,
-) -> Response {
+async fn handle_sts_action(State(state): State<Arc<StsState>>, body: String) -> Response {
     handle_request(&state, body.as_bytes())
 }
 
@@ -93,12 +90,7 @@ fn get_caller_identity(state: &StsState) -> Result<Response, LawsError> {
         request_id = request_id,
     );
 
-    Ok((
-        StatusCode::OK,
-        [("Content-Type", "text/xml")],
-        xml,
-    )
-        .into_response())
+    Ok((StatusCode::OK, [("Content-Type", "text/xml")], xml).into_response())
 }
 
 fn assume_role(
@@ -107,9 +99,7 @@ fn assume_role(
     role_session_name: &str,
 ) -> Result<Response, LawsError> {
     if role_arn.is_empty() {
-        return Err(LawsError::InvalidRequest(
-            "RoleArn is required".to_string(),
-        ));
+        return Err(LawsError::InvalidRequest("RoleArn is required".to_string()));
     }
     if role_session_name.is_empty() {
         return Err(LawsError::InvalidRequest(
@@ -119,7 +109,8 @@ fn assume_role(
 
     let request_id = uuid::Uuid::new_v4();
     let session_token = format!("FwoGZXIvYXdzE{}", uuid::Uuid::new_v4().simple());
-    let access_key_id = format!("ASIA{}", &uuid::Uuid::new_v4().simple().to_string()[..16]).to_uppercase();
+    let access_key_id =
+        format!("ASIA{}", &uuid::Uuid::new_v4().simple().to_string()[..16]).to_uppercase();
     let secret_access_key = format!(
         "{}{}",
         uuid::Uuid::new_v4().simple(),
@@ -139,10 +130,7 @@ fn assume_role(
     let assumed_role_arn = format!(
         "arn:aws:sts::{}:assumed-role/{}/{}",
         state.account_id,
-        role_arn
-            .rsplit('/')
-            .next()
-            .unwrap_or("role"),
+        role_arn.rsplit('/').next().unwrap_or("role"),
         role_session_name
     );
 
@@ -173,10 +161,5 @@ fn assume_role(
         request_id = request_id,
     );
 
-    Ok((
-        StatusCode::OK,
-        [("Content-Type", "text/xml")],
-        xml,
-    )
-        .into_response())
+    Ok((StatusCode::OK, [("Content-Type", "text/xml")], xml).into_response())
 }

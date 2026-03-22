@@ -44,9 +44,7 @@ pub async fn handle_request(
     target: &str,
     payload: &serde_json::Value,
 ) -> Response {
-    let action = target
-        .strip_prefix("CertificateManager.")
-        .unwrap_or(target);
+    let action = target.strip_prefix("CertificateManager.").unwrap_or(target);
 
     let result = match action {
         "RequestCertificate" => request_certificate(state, payload).await,
@@ -81,17 +79,12 @@ fn json_response(body: serde_json::Value) -> Response {
         .into_response()
 }
 
-fn find_certificate(
-    state: &AcmState,
-    arn: &str,
-) -> Result<AcmCertificate, LawsError> {
+fn find_certificate(state: &AcmState, arn: &str) -> Result<AcmCertificate, LawsError> {
     state
         .certificates
         .get(arn)
         .map(|entry| entry.clone())
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Certificate '{}' not found", arn))
-        })
+        .ok_or_else(|| LawsError::NotFound(format!("Certificate '{}' not found", arn)))
 }
 
 // ---------------------------------------------------------------------------
@@ -114,15 +107,10 @@ async fn request_certificate(
         None => vec![domain_name.to_string()],
     };
 
-    let _validation_method = payload["ValidationMethod"]
-        .as_str()
-        .unwrap_or("DNS");
+    let _validation_method = payload["ValidationMethod"].as_str().unwrap_or("DNS");
 
     let cert_id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:acm:us-east-1:000000000000:certificate/{}",
-        cert_id
-    );
+    let arn = format!("arn:aws:acm:us-east-1:000000000000:certificate/{}", cert_id);
     let now = chrono::Utc::now().timestamp() as f64;
 
     let cert = AcmCertificate {
@@ -147,9 +135,7 @@ async fn describe_certificate(
 ) -> Result<Response, LawsError> {
     let arn = payload["CertificateArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("CertificateArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("CertificateArn is required".to_string()))?;
 
     let cert = find_certificate(state, arn)?;
 
@@ -198,16 +184,12 @@ async fn delete_certificate(
 ) -> Result<Response, LawsError> {
     let arn = payload["CertificateArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("CertificateArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("CertificateArn is required".to_string()))?;
 
     state
         .certificates
         .remove(arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Certificate '{}' not found", arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Certificate '{}' not found", arn)))?;
 
     Ok(json_response(serde_json::json!({})))
 }
@@ -218,9 +200,7 @@ async fn add_tags_to_certificate(
 ) -> Result<Response, LawsError> {
     let arn = payload["CertificateArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("CertificateArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("CertificateArn is required".to_string()))?;
 
     let tags = payload["Tags"]
         .as_array()
@@ -238,9 +218,7 @@ async fn add_tags_to_certificate(
     let mut entry = state
         .certificates
         .get_mut(arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Certificate '{}' not found", arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Certificate '{}' not found", arn)))?;
 
     entry.tags.extend(new_tags);
 
@@ -253,9 +231,7 @@ async fn list_tags_for_certificate(
 ) -> Result<Response, LawsError> {
     let arn = payload["CertificateArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("CertificateArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("CertificateArn is required".to_string()))?;
 
     let cert = find_certificate(state, arn)?;
 
@@ -281,9 +257,7 @@ async fn get_certificate(
 ) -> Result<Response, LawsError> {
     let arn = payload["CertificateArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("CertificateArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("CertificateArn is required".to_string()))?;
 
     // Verify certificate exists
     let _cert = find_certificate(state, arn)?;

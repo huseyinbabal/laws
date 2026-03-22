@@ -61,11 +61,7 @@ impl Default for TimestreamState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &TimestreamState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &TimestreamState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("Timestream_20181101.")
         .unwrap_or(target);
@@ -112,10 +108,7 @@ fn now_epoch() -> f64 {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_database(
-    state: &TimestreamState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_database(state: &TimestreamState, payload: &Value) -> Result<Response, LawsError> {
     let database_name = payload["DatabaseName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("DatabaseName is required".to_string()))?
@@ -128,9 +121,7 @@ fn create_database(
         )));
     }
 
-    let arn = format!(
-        "arn:aws:timestream:{REGION}:{ACCOUNT_ID}:database/{database_name}"
-    );
+    let arn = format!("arn:aws:timestream:{REGION}:{ACCOUNT_ID}:database/{database_name}");
     let creation_time = now_epoch();
 
     let db = TimestreamDatabase {
@@ -152,22 +143,15 @@ fn create_database(
     })))
 }
 
-fn delete_database(
-    state: &TimestreamState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_database(state: &TimestreamState, payload: &Value) -> Result<Response, LawsError> {
     let database_name = payload["DatabaseName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("DatabaseName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("DatabaseName is required".to_string()))?;
 
     state
         .databases
         .remove(database_name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Database '{}' not found", database_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Database '{}' not found", database_name)))?;
 
     // Remove associated tables
     state.tables.retain(|_, t| t.database_name != database_name);
@@ -175,22 +159,15 @@ fn delete_database(
     Ok(json_response(json!({})))
 }
 
-fn describe_database(
-    state: &TimestreamState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_database(state: &TimestreamState, payload: &Value) -> Result<Response, LawsError> {
     let database_name = payload["DatabaseName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("DatabaseName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("DatabaseName is required".to_string()))?;
 
     let db = state
         .databases
         .get(database_name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Database '{}' not found", database_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Database '{}' not found", database_name)))?;
 
     let table_count = state
         .tables
@@ -226,10 +203,7 @@ fn list_databases(state: &TimestreamState) -> Result<Response, LawsError> {
     Ok(json_response(json!({ "Databases": databases })))
 }
 
-fn create_table(
-    state: &TimestreamState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_table(state: &TimestreamState, payload: &Value) -> Result<Response, LawsError> {
     let database_name = payload["DatabaseName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("DatabaseName is required".to_string()))?
@@ -300,56 +274,38 @@ fn create_table(
     })))
 }
 
-fn delete_table(
-    state: &TimestreamState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_table(state: &TimestreamState, payload: &Value) -> Result<Response, LawsError> {
     let database_name = payload["DatabaseName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("DatabaseName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("DatabaseName is required".to_string()))?;
 
     let table_name = payload["TableName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("TableName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("TableName is required".to_string()))?;
 
     let table_key = format!("{}:{}", database_name, table_name);
     state
         .tables
         .remove(&table_key)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Table '{}' not found", table_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Table '{}' not found", table_name)))?;
 
     Ok(json_response(json!({})))
 }
 
-fn describe_table(
-    state: &TimestreamState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_table(state: &TimestreamState, payload: &Value) -> Result<Response, LawsError> {
     let database_name = payload["DatabaseName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("DatabaseName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("DatabaseName is required".to_string()))?;
 
     let table_name = payload["TableName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("TableName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("TableName is required".to_string()))?;
 
     let table_key = format!("{}:{}", database_name, table_name);
     let table = state
         .tables
         .get(&table_key)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Table '{}' not found", table_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Table '{}' not found", table_name)))?;
 
     Ok(json_response(json!({
         "Table": {
@@ -365,21 +321,15 @@ fn describe_table(
     })))
 }
 
-fn list_tables(
-    state: &TimestreamState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let database_name = payload["DatabaseName"]
-        .as_str();
+fn list_tables(state: &TimestreamState, payload: &Value) -> Result<Response, LawsError> {
+    let database_name = payload["DatabaseName"].as_str();
 
     let tables: Vec<Value> = state
         .tables
         .iter()
-        .filter(|entry| {
-            match database_name {
-                Some(db) => entry.database_name == db,
-                None => true,
-            }
+        .filter(|entry| match database_name {
+            Some(db) => entry.database_name == db,
+            None => true,
         })
         .map(|entry| {
             let t = entry.value();

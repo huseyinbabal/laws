@@ -54,9 +54,7 @@ impl Default for ProtonState {
 // ---------------------------------------------------------------------------
 
 pub async fn handle_request(state: &ProtonState, target: &str, payload: &Value) -> Response {
-    let action = target
-        .strip_prefix("AwsProton20200720.")
-        .unwrap_or(target);
+    let action = target.strip_prefix("AwsProton20200720.").unwrap_or(target);
 
     let result = match action {
         "CreateEnvironmentTemplate" => create_environment_template(state, payload),
@@ -66,7 +64,9 @@ pub async fn handle_request(state: &ProtonState, target: &str, payload: &Value) 
         "DeleteService" => delete_service(state, payload),
         "ListServices" => list_services(state),
         "GetService" => get_service(state, payload),
-        other => Err(LawsError::InvalidRequest(format!("unknown action: {other}"))),
+        other => Err(LawsError::InvalidRequest(format!(
+            "unknown action: {other}"
+        ))),
     };
 
     match result {
@@ -80,7 +80,12 @@ pub async fn handle_request(state: &ProtonState, target: &str, payload: &Value) 
 // ---------------------------------------------------------------------------
 
 fn json_response(body: Value) -> Response {
-    (StatusCode::OK, [("Content-Type", "application/x-amz-json-1.1")], serde_json::to_string(&body).unwrap_or_default()).into_response()
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/x-amz-json-1.1")],
+        serde_json::to_string(&body).unwrap_or_default(),
+    )
+        .into_response()
 }
 
 fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
@@ -95,7 +100,11 @@ fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
 
 fn create_environment_template(state: &ProtonState, body: &Value) -> Result<Response, LawsError> {
     let name = require_str(body, "Name")?.to_owned();
-    let description = body.get("Description").and_then(|v| v.as_str()).unwrap_or("").to_owned();
+    let description = body
+        .get("Description")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_owned();
     let arn = format!("arn:aws:proton:{REGION}:{ACCOUNT_ID}:environment-template/{name}");
     let created_at = chrono::Utc::now().to_rfc3339();
 
@@ -122,7 +131,9 @@ fn create_environment_template(state: &ProtonState, body: &Value) -> Result<Resp
 
 fn delete_environment_template(state: &ProtonState, body: &Value) -> Result<Response, LawsError> {
     let name = require_str(body, "Name")?;
-    let removed = state.environments.remove(name)
+    let removed = state
+        .environments
+        .remove(name)
         .ok_or_else(|| LawsError::NotFound(format!("environment template not found: {name}")))?;
 
     let t = removed.1;
@@ -136,16 +147,20 @@ fn delete_environment_template(state: &ProtonState, body: &Value) -> Result<Resp
 }
 
 fn list_environment_templates(state: &ProtonState) -> Result<Response, LawsError> {
-    let templates: Vec<Value> = state.environments.iter().map(|entry| {
-        let t = entry.value();
-        json!({
-            "arn": t.arn,
-            "name": t.name,
-            "description": t.description,
-            "status": t.status,
-            "createdAt": t.created_at
+    let templates: Vec<Value> = state
+        .environments
+        .iter()
+        .map(|entry| {
+            let t = entry.value();
+            json!({
+                "arn": t.arn,
+                "name": t.name,
+                "description": t.description,
+                "status": t.status,
+                "createdAt": t.created_at
+            })
         })
-    }).collect();
+        .collect();
 
     Ok(json_response(json!({
         "templates": templates
@@ -154,8 +169,16 @@ fn list_environment_templates(state: &ProtonState) -> Result<Response, LawsError
 
 fn create_service(state: &ProtonState, body: &Value) -> Result<Response, LawsError> {
     let name = require_str(body, "Name")?.to_owned();
-    let description = body.get("Description").and_then(|v| v.as_str()).unwrap_or("").to_owned();
-    let template_name = body.get("TemplateName").and_then(|v| v.as_str()).unwrap_or("").to_owned();
+    let description = body
+        .get("Description")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_owned();
+    let template_name = body
+        .get("TemplateName")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_owned();
     let arn = format!("arn:aws:proton:{REGION}:{ACCOUNT_ID}:service/{name}");
     let created_at = chrono::Utc::now().to_rfc3339();
 
@@ -184,7 +207,9 @@ fn create_service(state: &ProtonState, body: &Value) -> Result<Response, LawsErr
 
 fn delete_service(state: &ProtonState, body: &Value) -> Result<Response, LawsError> {
     let name = require_str(body, "Name")?;
-    let removed = state.services.remove(name)
+    let removed = state
+        .services
+        .remove(name)
         .ok_or_else(|| LawsError::NotFound(format!("service not found: {name}")))?;
 
     let s = removed.1;
@@ -198,17 +223,21 @@ fn delete_service(state: &ProtonState, body: &Value) -> Result<Response, LawsErr
 }
 
 fn list_services(state: &ProtonState) -> Result<Response, LawsError> {
-    let services: Vec<Value> = state.services.iter().map(|entry| {
-        let s = entry.value();
-        json!({
-            "arn": s.arn,
-            "name": s.name,
-            "description": s.description,
-            "status": s.status,
-            "createdAt": s.created_at,
-            "templateName": s.template_name
+    let services: Vec<Value> = state
+        .services
+        .iter()
+        .map(|entry| {
+            let s = entry.value();
+            json!({
+                "arn": s.arn,
+                "name": s.name,
+                "description": s.description,
+                "status": s.status,
+                "createdAt": s.created_at,
+                "templateName": s.template_name
+            })
         })
-    }).collect();
+        .collect();
 
     Ok(json_response(json!({
         "services": services
@@ -217,7 +246,9 @@ fn list_services(state: &ProtonState) -> Result<Response, LawsError> {
 
 fn get_service(state: &ProtonState, body: &Value) -> Result<Response, LawsError> {
     let name = require_str(body, "Name")?;
-    let s = state.services.get(name)
+    let s = state
+        .services
+        .get(name)
         .ok_or_else(|| LawsError::NotFound(format!("service not found: {name}")))?;
 
     Ok(json_response(json!({

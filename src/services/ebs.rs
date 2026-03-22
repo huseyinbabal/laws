@@ -53,10 +53,7 @@ pub fn router(state: Arc<EbsState>) -> axum::Router {
         .with_state(state)
 }
 
-async fn start_snapshot(
-    State(state): State<Arc<EbsState>>,
-    Json(body): Json<Value>,
-) -> Response {
+async fn start_snapshot(State(state): State<Arc<EbsState>>, Json(body): Json<Value>) -> Response {
     let volume_size = body["VolumeSize"].as_i64().unwrap_or(1);
     let block_size = 524288;
     let snapshot_id = format!("snap-{}", &uuid::Uuid::new_v4().to_string()[..8]);

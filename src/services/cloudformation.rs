@@ -159,13 +159,8 @@ fn create_stack(state: &CloudFormationState, payload: &Value) -> Result<Response
     }
 
     let stack_id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:cloudformation:{REGION}:{ACCOUNT_ID}:stack/{stack_name}/{stack_id}"
-    );
-    let template_body = payload["TemplateBody"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let arn = format!("arn:aws:cloudformation:{REGION}:{ACCOUNT_ID}:stack/{stack_name}/{stack_id}");
+    let template_body = payload["TemplateBody"].as_str().unwrap_or("").to_string();
     let parameters = parse_parameters(payload);
     let now = chrono::Utc::now().to_rfc3339();
 
@@ -205,20 +200,13 @@ fn describe_stacks(state: &CloudFormationState, payload: &Value) -> Result<Respo
     let stacks: Vec<Value> = state
         .stacks
         .iter()
-        .filter(|entry| {
-            filter_name
-                .map(|name| entry.key() == name)
-                .unwrap_or(true)
-        })
+        .filter(|entry| filter_name.map(|name| entry.key() == name).unwrap_or(true))
         .map(|entry| stack_to_json(entry.value()))
         .collect();
 
     if let Some(name) = filter_name {
         if stacks.is_empty() {
-            return Err(LawsError::NotFound(format!(
-                "Stack '{}' not found",
-                name
-            )));
+            return Err(LawsError::NotFound(format!("Stack '{}' not found", name)));
         }
     }
 
@@ -305,9 +293,7 @@ fn stack_to_xml(stack: &CfStack) -> String {
         .outputs
         .iter()
         .map(|(k, v)| {
-            format!(
-                "<member><OutputKey>{k}</OutputKey><OutputValue>{v}</OutputValue></member>"
-            )
+            format!("<member><OutputKey>{k}</OutputKey><OutputValue>{v}</OutputValue></member>")
         })
         .collect::<Vec<_>>()
         .join("");
@@ -383,9 +369,7 @@ fn query_create_stack(
     }
 
     let stack_id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:cloudformation:{REGION}:{ACCOUNT_ID}:stack/{stack_name}/{stack_id}"
-    );
+    let arn = format!("arn:aws:cloudformation:{REGION}:{ACCOUNT_ID}:stack/{stack_name}/{stack_id}");
     let template_body = params.get("TemplateBody").cloned().unwrap_or_default();
     let now = chrono::Utc::now().to_rfc3339();
 
@@ -415,7 +399,10 @@ fn query_create_stack(
     let xml = stack_to_xml(&stack);
     state.stacks.insert(stack_name, stack);
 
-    Ok(xml_response("CreateStack", &format!("<StackId>{stack_id}</StackId>")))
+    Ok(xml_response(
+        "CreateStack",
+        &format!("<StackId>{stack_id}</StackId>"),
+    ))
 }
 
 fn query_delete_stack(
@@ -443,20 +430,13 @@ fn query_describe_stacks(
     let stacks: Vec<String> = state
         .stacks
         .iter()
-        .filter(|entry| {
-            filter_name
-                .map(|name| entry.key() == name)
-                .unwrap_or(true)
-        })
+        .filter(|entry| filter_name.map(|name| entry.key() == name).unwrap_or(true))
         .map(|entry| stack_to_xml(entry.value()))
         .collect();
 
     if let Some(name) = filter_name {
         if stacks.is_empty() {
-            return Err(LawsError::NotFound(format!(
-                "Stack '{}' not found",
-                name
-            )));
+            return Err(LawsError::NotFound(format!("Stack '{}' not found", name)));
         }
     }
 
@@ -512,7 +492,10 @@ fn query_update_stack(
     stack.status = "UPDATE_COMPLETE".to_string();
     let stack_id = stack.stack_id.clone();
 
-    Ok(xml_response("UpdateStack", &format!("<StackId>{stack_id}</StackId>")))
+    Ok(xml_response(
+        "UpdateStack",
+        &format!("<StackId>{stack_id}</StackId>"),
+    ))
 }
 
 fn query_describe_stack_resources(

@@ -54,14 +54,8 @@ impl Default for AcmPcaState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &AcmPcaState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("ACMPrivateCA.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &AcmPcaState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("ACMPrivateCA.").unwrap_or(target);
 
     let result = match action {
         "CreateCertificateAuthority" => create_certificate_authority(state, payload),
@@ -121,9 +115,7 @@ fn create_certificate_authority(
     let subject = payload["CertificateAuthorityConfiguration"]["Subject"].clone();
 
     let ca_id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:acm-pca:{REGION}:{ACCOUNT_ID}:certificate-authority/{ca_id}"
-    );
+    let arn = format!("arn:aws:acm-pca:{REGION}:{ACCOUNT_ID}:certificate-authority/{ca_id}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let ca = CertificateAuthority {
@@ -146,18 +138,14 @@ fn delete_certificate_authority(
     state: &AcmPcaState,
     payload: &Value,
 ) -> Result<Response, LawsError> {
-    let arn = payload["CertificateAuthorityArn"]
-        .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("CertificateAuthorityArn is required".to_string())
-        })?;
+    let arn = payload["CertificateAuthorityArn"].as_str().ok_or_else(|| {
+        LawsError::InvalidRequest("CertificateAuthorityArn is required".to_string())
+    })?;
 
     state
         .certificate_authorities
         .remove(arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Certificate authority '{}' not found", arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Certificate authority '{}' not found", arn)))?;
 
     Ok(json_response(json!({})))
 }
@@ -166,18 +154,14 @@ fn describe_certificate_authority(
     state: &AcmPcaState,
     payload: &Value,
 ) -> Result<Response, LawsError> {
-    let arn = payload["CertificateAuthorityArn"]
-        .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("CertificateAuthorityArn is required".to_string())
-        })?;
+    let arn = payload["CertificateAuthorityArn"].as_str().ok_or_else(|| {
+        LawsError::InvalidRequest("CertificateAuthorityArn is required".to_string())
+    })?;
 
     let ca = state
         .certificate_authorities
         .get(arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Certificate authority '{}' not found", arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Certificate authority '{}' not found", arn)))?;
 
     Ok(json_response(json!({
         "CertificateAuthority": ca_to_json(ca.value()),
@@ -197,18 +181,13 @@ fn list_certificate_authorities(state: &AcmPcaState) -> Result<Response, LawsErr
 }
 
 fn issue_certificate(state: &AcmPcaState, payload: &Value) -> Result<Response, LawsError> {
-    let ca_arn = payload["CertificateAuthorityArn"]
-        .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("CertificateAuthorityArn is required".to_string())
-        })?;
+    let ca_arn = payload["CertificateAuthorityArn"].as_str().ok_or_else(|| {
+        LawsError::InvalidRequest("CertificateAuthorityArn is required".to_string())
+    })?;
 
-    let ca = state
-        .certificate_authorities
-        .get(ca_arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Certificate authority '{}' not found", ca_arn))
-        })?;
+    let ca = state.certificate_authorities.get(ca_arn).ok_or_else(|| {
+        LawsError::NotFound(format!("Certificate authority '{}' not found", ca_arn))
+    })?;
 
     let cert_id = uuid::Uuid::new_v4().to_string();
     let cert_arn = format!(
@@ -232,29 +211,22 @@ fn issue_certificate(state: &AcmPcaState, payload: &Value) -> Result<Response, L
 }
 
 fn get_certificate(state: &AcmPcaState, payload: &Value) -> Result<Response, LawsError> {
-    let ca_arn = payload["CertificateAuthorityArn"]
-        .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("CertificateAuthorityArn is required".to_string())
-        })?;
+    let ca_arn = payload["CertificateAuthorityArn"].as_str().ok_or_else(|| {
+        LawsError::InvalidRequest("CertificateAuthorityArn is required".to_string())
+    })?;
 
     let cert_arn = payload["CertificateArn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("CertificateArn is required".to_string()))?;
 
-    let ca = state
-        .certificate_authorities
-        .get(ca_arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Certificate authority '{}' not found", ca_arn))
-        })?;
+    let ca = state.certificate_authorities.get(ca_arn).ok_or_else(|| {
+        LawsError::NotFound(format!("Certificate authority '{}' not found", ca_arn))
+    })?;
 
     let _cert = ca
         .certificates
         .get(cert_arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Certificate '{}' not found", cert_arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Certificate '{}' not found", cert_arn)))?;
 
     // Return a mock PEM certificate
     Ok(json_response(json!({

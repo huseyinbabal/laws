@@ -109,9 +109,7 @@ async fn create_backup_vault(
     Path(name): Path<String>,
     Json(_payload): Json<Value>,
 ) -> Response {
-    let arn = format!(
-        "arn:aws:backup:{REGION}:{ACCOUNT_ID}:backup-vault:{name}"
-    );
+    let arn = format!("arn:aws:backup:{REGION}:{ACCOUNT_ID}:backup-vault:{name}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let vault = BackupVault {
@@ -177,15 +175,10 @@ async fn create_backup_plan(
             .ok_or_else(|| LawsError::InvalidRequest("Missing BackupPlanName".into()))?
             .to_string();
 
-        let rules = backup_plan
-            .get("Rules")
-            .cloned()
-            .unwrap_or(json!([]));
+        let rules = backup_plan.get("Rules").cloned().unwrap_or(json!([]));
 
         let plan_id = uuid::Uuid::new_v4().to_string();
-        let arn = format!(
-            "arn:aws:backup:{REGION}:{ACCOUNT_ID}:backup-plan:{plan_id}"
-        );
+        let arn = format!("arn:aws:backup:{REGION}:{ACCOUNT_ID}:backup-plan:{plan_id}");
         let now = chrono::Utc::now().to_rfc3339();
 
         let plan = BackupPlan {

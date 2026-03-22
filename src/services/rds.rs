@@ -66,9 +66,7 @@ pub async fn handle_request(
     target: &str,
     payload: &serde_json::Value,
 ) -> Response {
-    let action = target
-        .strip_prefix("AmazonRDSv19.")
-        .unwrap_or(target);
+    let action = target.strip_prefix("AmazonRDSv19.").unwrap_or(target);
 
     let result = match action {
         "CreateDBInstance" => create_db_instance(state, payload),
@@ -155,10 +153,7 @@ fn create_db_instance(state: &RdsState, payload: &Value) -> Result<Response, Law
         )));
     }
 
-    let engine = payload["Engine"]
-        .as_str()
-        .unwrap_or("mysql")
-        .to_string();
+    let engine = payload["Engine"].as_str().unwrap_or("mysql").to_string();
     let db_instance_class = payload["DBInstanceClass"]
         .as_str()
         .unwrap_or("db.t3.micro")
@@ -197,7 +192,9 @@ fn delete_db_instance(state: &RdsState, payload: &Value) -> Result<Response, Law
         .remove(id)
         .ok_or_else(|| LawsError::NotFound(format!("DB instance '{}' not found", id)))?;
 
-    Ok(json_response(json!({ "DBInstance": instance_to_json(&instance) })))
+    Ok(json_response(
+        json!({ "DBInstance": instance_to_json(&instance) }),
+    ))
 }
 
 fn describe_db_instances(state: &RdsState, payload: &Value) -> Result<Response, LawsError> {
@@ -206,11 +203,7 @@ fn describe_db_instances(state: &RdsState, payload: &Value) -> Result<Response, 
     let instances: Vec<Value> = state
         .instances
         .iter()
-        .filter(|entry| {
-            filter_id
-                .map(|fid| entry.key() == fid)
-                .unwrap_or(true)
-        })
+        .filter(|entry| filter_id.map(|fid| entry.key() == fid).unwrap_or(true))
         .map(|entry| instance_to_json(entry.value()))
         .collect();
 
@@ -302,7 +295,9 @@ fn delete_db_cluster(state: &RdsState, payload: &Value) -> Result<Response, Laws
         .remove(id)
         .ok_or_else(|| LawsError::NotFound(format!("DB cluster '{}' not found", id)))?;
 
-    Ok(json_response(json!({ "DBCluster": cluster_to_json(&cluster) })))
+    Ok(json_response(
+        json!({ "DBCluster": cluster_to_json(&cluster) }),
+    ))
 }
 
 fn describe_db_clusters(state: &RdsState, payload: &Value) -> Result<Response, LawsError> {
@@ -311,11 +306,7 @@ fn describe_db_clusters(state: &RdsState, payload: &Value) -> Result<Response, L
     let clusters: Vec<Value> = state
         .clusters
         .iter()
-        .filter(|entry| {
-            filter_id
-                .map(|fid| entry.key() == fid)
-                .unwrap_or(true)
-        })
+        .filter(|entry| filter_id.map(|fid| entry.key() == fid).unwrap_or(true))
         .map(|entry| cluster_to_json(entry.value()))
         .collect();
 
@@ -359,7 +350,9 @@ fn delete_db_snapshot(_state: &RdsState, payload: &Value) -> Result<Response, La
         .ok_or_else(|| LawsError::InvalidRequest("DBSnapshotIdentifier is required".to_string()))?;
 
     // Mock: just acknowledge the delete
-    Ok(json_response(json!({ "DBSnapshot": { "DBSnapshotIdentifier": snap_id, "Status": "deleted" } })))
+    Ok(json_response(
+        json!({ "DBSnapshot": { "DBSnapshotIdentifier": snap_id, "Status": "deleted" } }),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -427,11 +420,7 @@ fn query_describe_db_instances(
     let instances: Vec<String> = state
         .instances
         .iter()
-        .filter(|entry| {
-            filter_id
-                .map(|fid| entry.key() == fid)
-                .unwrap_or(true)
-        })
+        .filter(|entry| filter_id.map(|fid| entry.key() == fid).unwrap_or(true))
         .map(|entry| instance_to_xml(entry.value()))
         .collect();
 
@@ -560,9 +549,20 @@ fn query_create_db_instance(
         )));
     }
 
-    let engine = params.get("Engine").map(|s| s.as_str()).unwrap_or("mysql").to_string();
-    let db_instance_class = params.get("DBInstanceClass").map(|s| s.as_str()).unwrap_or("db.t3.micro").to_string();
-    let port = params.get("Port").and_then(|s| s.parse::<u16>().ok()).unwrap_or_else(|| default_port_for_engine(&engine));
+    let engine = params
+        .get("Engine")
+        .map(|s| s.as_str())
+        .unwrap_or("mysql")
+        .to_string();
+    let db_instance_class = params
+        .get("DBInstanceClass")
+        .map(|s| s.as_str())
+        .unwrap_or("db.t3.micro")
+        .to_string();
+    let port = params
+        .get("Port")
+        .and_then(|s| s.parse::<u16>().ok())
+        .unwrap_or_else(|| default_port_for_engine(&engine));
 
     let arn = format!("arn:aws:rds:{REGION}:{ACCOUNT_ID}:db:{id}");
     let endpoint = format!("{id}.{ACCOUNT_ID}.{REGION}.rds.amazonaws.com");

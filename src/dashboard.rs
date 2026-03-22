@@ -335,14 +335,35 @@ fn parse_amz_target(target: &str) -> (String, String) {
 
 fn guess_service_from_action(action: &str) -> String {
     match action {
-        a if a.contains("Queue") || a == "SendMessage" || a == "ReceiveMessage" || a == "DeleteMessage" => "SQS".to_string(),
-        a if a.contains("Topic") || a == "Subscribe" || a == "Unsubscribe" || a == "Publish" => "SNS".to_string(),
+        a if a.contains("Queue")
+            || a == "SendMessage"
+            || a == "ReceiveMessage"
+            || a == "DeleteMessage" =>
+        {
+            "SQS".to_string()
+        }
+        a if a.contains("Topic") || a == "Subscribe" || a == "Unsubscribe" || a == "Publish" => {
+            "SNS".to_string()
+        }
         a if a.contains("User") || a.contains("Role") || a.contains("Policy") => "IAM".to_string(),
         a if a == "GetCallerIdentity" || a == "AssumeRole" => "STS".to_string(),
-        a if a.contains("Instances") || a.contains("SecurityGroup") || a.contains("Vpc") || a.contains("Subnet") => "EC2".to_string(),
+        a if a.contains("Instances")
+            || a.contains("SecurityGroup")
+            || a.contains("Vpc")
+            || a.contains("Subnet") =>
+        {
+            "EC2".to_string()
+        }
         a if a.contains("Metric") || a.contains("Alarm") => "CloudWatch".to_string(),
-        a if a.contains("AutoScalingGroup") || a.contains("LaunchConfiguration") || a == "SetDesiredCapacity" => "Auto Scaling".to_string(),
-        a if a.contains("Application") || a.contains("Environment") => "Elastic Beanstalk".to_string(),
+        a if a.contains("AutoScalingGroup")
+            || a.contains("LaunchConfiguration")
+            || a == "SetDesiredCapacity" =>
+        {
+            "Auto Scaling".to_string()
+        }
+        a if a.contains("Application") || a.contains("Environment") => {
+            "Elastic Beanstalk".to_string()
+        }
         a if a.contains("Domain") => "CloudSearch".to_string(),
         _ => "Unknown".to_string(),
     }
@@ -357,14 +378,20 @@ fn guess_service_from_path(path: &str) -> (String, String) {
         Some("2013-04-01") => ("Route 53", path),
         Some("clusters") if path.contains("/eks") || !path.contains("/ecs") => ("EKS", path),
         Some("2020-05-31") => ("CloudFront", path),
-        Some("v1") if path.contains("/batch") || path.contains("/compute") || path.contains("/job") => ("Batch", path),
+        Some("v1")
+            if path.contains("/batch") || path.contains("/compute") || path.contains("/job") =>
+        {
+            ("Batch", path)
+        }
         Some("backup") => ("Backup", path),
         Some("v1") if path.contains("/broker") => ("MQ", path),
         Some("Traces") | Some("TraceIds") | Some("Groups") | Some("GetGroups") => ("X-Ray", path),
         Some("v1") if path.contains("/apis") && path.contains("graphql") => ("AppSync", path),
         Some("2015-02-01") => ("EFS", path),
         Some("detector") => ("GuardDuty", path),
-        Some("things") | Some("policies") if path.contains("/iot") || segments.len() <= 3 => ("IoT", path),
+        Some("things") | Some("policies") if path.contains("/iot") || segments.len() <= 3 => {
+            ("IoT", path)
+        }
         Some("2021-01-01") => ("OpenSearch", path),
         Some("v1") if path.contains("/lexicons") || path.contains("/speech") => ("Polly", path),
         Some("ledgers") => ("QLDB", path),
@@ -375,14 +402,24 @@ fn guess_service_from_path(path: &str) -> (String, String) {
         Some("bots") => ("Lex", path),
         Some("maps") | Some("geofences") | Some("trackers") => ("Location", path),
         Some("productSubscriptions") | Some("findings") => ("Security Hub", path),
-        Some("foundation-models") | Some("model-customization") | Some("custom-models") => ("Bedrock", path),
-        Some("v1") if path.contains("/domain") || path.contains("/repository") => ("CodeArtifact", path),
+        Some("foundation-models") | Some("model-customization") | Some("custom-models") => {
+            ("Bedrock", path)
+        }
+        Some("v1") if path.contains("/domain") || path.contains("/repository") => {
+            ("CodeArtifact", path)
+        }
         Some("v1") if path.contains("/apps") => ("Pinpoint", path),
         Some("connect") => ("Connect", path),
-        Some("vaults") if path.contains("glacier") || path.contains("archives") => ("Glacier", path),
-        Some("prod") if path.contains("/channels") || path.contains("/inputs") => ("MediaLive", path),
+        Some("vaults") if path.contains("glacier") || path.contains("archives") => {
+            ("Glacier", path)
+        }
+        Some("prod") if path.contains("/channels") || path.contains("/inputs") => {
+            ("MediaLive", path)
+        }
         Some("accounts") => ("QuickSight", path),
-        Some("workspaces") if path.contains("/prometheus") || path.contains("/amp") => ("AMP", path),
+        Some("workspaces") if path.contains("/prometheus") || path.contains("/amp") => {
+            ("AMP", path)
+        }
         Some("v20190125") => ("App Mesh", path),
         Some("assessments") => ("Audit Manager", path),
         Some("quantum-task") | Some("device") => ("Braket", path),
@@ -399,7 +436,9 @@ fn guess_service_from_path(path: &str) -> (String, String) {
         Some("experimentTemplates") | Some("experiments") => ("FIS", path),
         Some("greengrass") => ("Greengrass", path),
         Some("satellite") | Some("config") => ("Ground Station", path),
-        Some("images") | Some("components") if path.contains("/imagebuilder") => ("Image Builder", path),
+        Some("images") | Some("components") if path.contains("/imagebuilder") => {
+            ("Image Builder", path)
+        }
         Some("v20210603") => ("Internet Monitor", path),
         Some("networks") => ("Managed Blockchain", path),
         Some("playbackConfiguration") => ("MediaTailor", path),
@@ -414,7 +453,9 @@ fn guess_service_from_path(path: &str) -> (String, String) {
         Some("appmonitors") => ("RUM", path),
         Some("schedules") | Some("schedule-groups") => ("EventBridge Scheduler", path),
         Some("canary") | Some("canaries") => ("Synthetics", path),
-        Some("services") if path.contains("/lattice") || path.contains("/targetgroups") => ("VPC Lattice", path),
+        Some("services") if path.contains("/lattice") || path.contains("/targetgroups") => {
+            ("VPC Lattice", path)
+        }
         Some("workloads") => ("Well-Architected", path),
         Some("api") if path.contains("/v1") => ("WorkDocs", path),
         _ => ("Unknown", path),

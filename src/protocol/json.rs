@@ -30,13 +30,11 @@ pub fn parse_target(headers: &HeaderMap) -> Result<JsonTarget, LawsError> {
         .to_str()
         .map_err(|e| LawsError::InvalidRequest(format!("invalid X-Amz-Target header: {e}")))?;
 
-    let (service, action) = value
-        .split_once('.')
-        .ok_or_else(|| {
-            LawsError::InvalidRequest(format!(
-                "X-Amz-Target must be in ServiceName.ActionName format, got: {value}"
-            ))
-        })?;
+    let (service, action) = value.split_once('.').ok_or_else(|| {
+        LawsError::InvalidRequest(format!(
+            "X-Amz-Target must be in ServiceName.ActionName format, got: {value}"
+        ))
+    })?;
 
     Ok(JsonTarget {
         full: value.to_owned(),

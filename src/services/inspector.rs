@@ -58,14 +58,8 @@ impl Default for InspectorState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &InspectorState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("InspectorService.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &InspectorState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("InspectorService.").unwrap_or(target);
 
     let result = match action {
         "CreateAssessmentTemplate" => create_assessment_template(state, payload),
@@ -130,9 +124,7 @@ fn create_assessment_template(
 ) -> Result<Response, LawsError> {
     let name = payload["assessmentTemplateName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("assessmentTemplateName is required".to_string())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("assessmentTemplateName is required".to_string()))?
         .to_string();
 
     let target_arn = payload["assessmentTargetArn"]
@@ -140,9 +132,7 @@ fn create_assessment_template(
         .unwrap_or("")
         .to_string();
 
-    let duration = payload["durationInSeconds"]
-        .as_u64()
-        .unwrap_or(3600) as u32;
+    let duration = payload["durationInSeconds"].as_u64().unwrap_or(3600) as u32;
 
     let rules_arns: Vec<String> = payload["rulesPackageArns"]
         .as_array()
@@ -154,9 +144,8 @@ fn create_assessment_template(
         .unwrap_or_default();
 
     let template_id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:inspector:{REGION}:{ACCOUNT_ID}:target/0-abc123/template/{template_id}"
-    );
+    let arn =
+        format!("arn:aws:inspector:{REGION}:{ACCOUNT_ID}:target/0-abc123/template/{template_id}");
 
     let template = AssessmentTemplate {
         arn: arn.clone(),
@@ -179,18 +168,14 @@ fn delete_assessment_template(
     state: &InspectorState,
     payload: &Value,
 ) -> Result<Response, LawsError> {
-    let arn = payload["assessmentTemplateArn"]
-        .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("assessmentTemplateArn is required".to_string())
-        })?;
+    let arn = payload["assessmentTemplateArn"].as_str().ok_or_else(|| {
+        LawsError::InvalidRequest("assessmentTemplateArn is required".to_string())
+    })?;
 
     state
         .assessment_templates
         .remove(arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Assessment template not found: {}", arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Assessment template not found: {}", arn)))?;
 
     Ok(json_response(StatusCode::OK, json!({})))
 }
@@ -221,10 +206,7 @@ fn list_findings(state: &InspectorState) -> Result<Response, LawsError> {
     ))
 }
 
-fn describe_findings(
-    state: &InspectorState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_findings(state: &InspectorState, payload: &Value) -> Result<Response, LawsError> {
     let finding_arns = payload["findingArns"]
         .as_array()
         .cloned()
@@ -244,8 +226,11 @@ fn describe_findings(
         }
     }
 
-    Ok(json_response(StatusCode::OK, json!({
-        "findings": found,
-        "failedItems": failed,
-    })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({
+            "findings": found,
+            "failedItems": failed,
+        }),
+    ))
 }

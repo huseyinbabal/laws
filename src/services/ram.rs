@@ -54,7 +54,9 @@ pub async fn handle_request(state: &RamState, target: &str, payload: &Value) -> 
         "UpdateResourceShare" => update_resource_share(state, payload),
         "AssociateResourceShare" => associate_resource_share(state, payload),
         "DisassociateResourceShare" => disassociate_resource_share(state, payload),
-        other => Err(LawsError::InvalidRequest(format!("unknown action: {other}"))),
+        other => Err(LawsError::InvalidRequest(format!(
+            "unknown action: {other}"
+        ))),
     };
 
     match result {
@@ -68,7 +70,12 @@ pub async fn handle_request(state: &RamState, target: &str, payload: &Value) -> 
 // ---------------------------------------------------------------------------
 
 fn json_response(body: Value) -> Response {
-    (StatusCode::OK, [("Content-Type", "application/x-amz-json-1.1")], serde_json::to_string(&body).unwrap_or_default()).into_response()
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/x-amz-json-1.1")],
+        serde_json::to_string(&body).unwrap_or_default(),
+    )
+        .into_response()
 }
 
 fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
@@ -87,14 +94,24 @@ fn create_resource_share(state: &RamState, body: &Value) -> Result<Response, Law
     let resource_share_arn = format!("arn:aws:ram:{REGION}:{ACCOUNT_ID}:resource-share/{share_id}");
     let created_at = chrono::Utc::now().to_rfc3339();
 
-    let resource_arns: Vec<String> = body.get("ResourceArns")
+    let resource_arns: Vec<String> = body
+        .get("ResourceArns")
         .and_then(|v| v.as_array())
-        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_owned())).collect())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_owned()))
+                .collect()
+        })
         .unwrap_or_default();
 
-    let principals: Vec<String> = body.get("Principals")
+    let principals: Vec<String> = body
+        .get("Principals")
         .and_then(|v| v.as_array())
-        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_owned())).collect())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_owned()))
+                .collect()
+        })
         .unwrap_or_default();
 
     let share = ResourceShare {
@@ -106,7 +123,9 @@ fn create_resource_share(state: &RamState, body: &Value) -> Result<Response, Law
         created_at: created_at.clone(),
     };
 
-    state.resource_shares.insert(resource_share_arn.clone(), share);
+    state
+        .resource_shares
+        .insert(resource_share_arn.clone(), share);
 
     Ok(json_response(json!({
         "resourceShare": {
@@ -121,8 +140,12 @@ fn create_resource_share(state: &RamState, body: &Value) -> Result<Response, Law
 
 fn delete_resource_share(state: &RamState, body: &Value) -> Result<Response, LawsError> {
     let resource_share_arn = require_str(body, "ResourceShareArn")?;
-    let removed = state.resource_shares.remove(resource_share_arn)
-        .ok_or_else(|| LawsError::NotFound(format!("resource share not found: {resource_share_arn}")))?;
+    let removed = state
+        .resource_shares
+        .remove(resource_share_arn)
+        .ok_or_else(|| {
+            LawsError::NotFound(format!("resource share not found: {resource_share_arn}"))
+        })?;
 
     let s = removed.1;
     Ok(json_response(json!({
@@ -137,16 +160,20 @@ fn delete_resource_share(state: &RamState, body: &Value) -> Result<Response, Law
 fn get_resource_shares(state: &RamState, body: &Value) -> Result<Response, LawsError> {
     let _resource_owner = require_str(body, "ResourceOwner")?;
 
-    let shares: Vec<Value> = state.resource_shares.iter().map(|entry| {
-        let s = entry.value();
-        json!({
-            "resourceShareArn": s.resource_share_arn,
-            "name": s.name,
-            "status": s.status,
-            "createdAt": s.created_at,
-            "owningAccountId": ACCOUNT_ID
+    let shares: Vec<Value> = state
+        .resource_shares
+        .iter()
+        .map(|entry| {
+            let s = entry.value();
+            json!({
+                "resourceShareArn": s.resource_share_arn,
+                "name": s.name,
+                "status": s.status,
+                "createdAt": s.created_at,
+                "owningAccountId": ACCOUNT_ID
+            })
         })
-    }).collect();
+        .collect();
 
     Ok(json_response(json!({
         "resourceShares": shares
@@ -156,8 +183,12 @@ fn get_resource_shares(state: &RamState, body: &Value) -> Result<Response, LawsE
 fn update_resource_share(state: &RamState, body: &Value) -> Result<Response, LawsError> {
     let resource_share_arn = require_str(body, "ResourceShareArn")?;
 
-    let mut share = state.resource_shares.get_mut(resource_share_arn)
-        .ok_or_else(|| LawsError::NotFound(format!("resource share not found: {resource_share_arn}")))?;
+    let mut share = state
+        .resource_shares
+        .get_mut(resource_share_arn)
+        .ok_or_else(|| {
+            LawsError::NotFound(format!("resource share not found: {resource_share_arn}"))
+        })?;
 
     if let Some(name) = body.get("Name").and_then(|v| v.as_str()) {
         share.name = name.to_owned();
@@ -177,8 +208,12 @@ fn update_resource_share(state: &RamState, body: &Value) -> Result<Response, Law
 fn associate_resource_share(state: &RamState, body: &Value) -> Result<Response, LawsError> {
     let resource_share_arn = require_str(body, "ResourceShareArn")?;
 
-    let mut share = state.resource_shares.get_mut(resource_share_arn)
-        .ok_or_else(|| LawsError::NotFound(format!("resource share not found: {resource_share_arn}")))?;
+    let mut share = state
+        .resource_shares
+        .get_mut(resource_share_arn)
+        .ok_or_else(|| {
+            LawsError::NotFound(format!("resource share not found: {resource_share_arn}"))
+        })?;
 
     let mut associations = Vec::new();
 
@@ -218,8 +253,12 @@ fn associate_resource_share(state: &RamState, body: &Value) -> Result<Response, 
 fn disassociate_resource_share(state: &RamState, body: &Value) -> Result<Response, LawsError> {
     let resource_share_arn = require_str(body, "ResourceShareArn")?;
 
-    let mut share = state.resource_shares.get_mut(resource_share_arn)
-        .ok_or_else(|| LawsError::NotFound(format!("resource share not found: {resource_share_arn}")))?;
+    let mut share = state
+        .resource_shares
+        .get_mut(resource_share_arn)
+        .ok_or_else(|| {
+            LawsError::NotFound(format!("resource share not found: {resource_share_arn}"))
+        })?;
 
     let mut associations = Vec::new();
 

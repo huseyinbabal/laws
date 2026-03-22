@@ -58,14 +58,8 @@ impl Default for EmrState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &EmrState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("ElasticMapReduce.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &EmrState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("ElasticMapReduce.").unwrap_or(target);
 
     let result = match action {
         "RunJobFlow" => run_job_flow(state, payload),
@@ -149,19 +143,18 @@ fn run_job_flow(state: &EmrState, payload: &Value) -> Result<Response, LawsError
         .ok_or_else(|| LawsError::InvalidRequest("Name is required".to_string()))?
         .to_string();
 
-    let cluster_id = format!("j-{}", &uuid::Uuid::new_v4().to_string()[..13].to_uppercase());
-    let arn = format!(
-        "arn:aws:elasticmapreduce:{REGION}:{ACCOUNT_ID}:cluster/{cluster_id}"
+    let cluster_id = format!(
+        "j-{}",
+        &uuid::Uuid::new_v4().to_string()[..13].to_uppercase()
     );
+    let arn = format!("arn:aws:elasticmapreduce:{REGION}:{ACCOUNT_ID}:cluster/{cluster_id}");
 
     let release_label = payload["ReleaseLabel"]
         .as_str()
         .unwrap_or("emr-6.10.0")
         .to_string();
 
-    let instance_count = payload["Instances"]["InstanceCount"]
-        .as_u64()
-        .unwrap_or(3) as u32;
+    let instance_count = payload["Instances"]["InstanceCount"].as_u64().unwrap_or(3) as u32;
 
     let master_instance_type = payload["Instances"]["MasterInstanceType"]
         .as_str()
@@ -181,7 +174,10 @@ fn run_job_flow(state: &EmrState, payload: &Value) -> Result<Response, LawsError
 
     state.clusters.insert(cluster_id.clone(), cluster);
 
-    Ok(json_response(StatusCode::OK, json!({ "JobFlowId": cluster_id })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "JobFlowId": cluster_id }),
+    ))
 }
 
 fn terminate_job_flows(state: &EmrState, payload: &Value) -> Result<Response, LawsError> {
@@ -206,7 +202,10 @@ fn list_clusters(state: &EmrState) -> Result<Response, LawsError> {
         .map(|entry| cluster_summary_to_json(entry.value()))
         .collect();
 
-    Ok(json_response(StatusCode::OK, json!({ "Clusters": clusters })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "Clusters": clusters }),
+    ))
 }
 
 fn describe_cluster(state: &EmrState, payload: &Value) -> Result<Response, LawsError> {
@@ -217,9 +216,7 @@ fn describe_cluster(state: &EmrState, payload: &Value) -> Result<Response, LawsE
     let cluster = state
         .clusters
         .get(cluster_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Cluster '{}' not found", cluster_id))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Cluster '{}' not found", cluster_id)))?;
 
     Ok(json_response(
         StatusCode::OK,
@@ -235,9 +232,7 @@ fn add_job_flow_steps(state: &EmrState, payload: &Value) -> Result<Response, Law
     let mut cluster = state
         .clusters
         .get_mut(cluster_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Cluster '{}' not found", cluster_id))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Cluster '{}' not found", cluster_id)))?;
 
     let steps_input = payload["Steps"]
         .as_array()
@@ -245,7 +240,10 @@ fn add_job_flow_steps(state: &EmrState, payload: &Value) -> Result<Response, Law
 
     let mut step_ids = Vec::new();
     for step_val in steps_input {
-        let step_id = format!("s-{}", &uuid::Uuid::new_v4().to_string()[..13].to_uppercase());
+        let step_id = format!(
+            "s-{}",
+            &uuid::Uuid::new_v4().to_string()[..13].to_uppercase()
+        );
         let name = step_val["Name"].as_str().unwrap_or("Step").to_string();
         let action_on_failure = step_val["ActionOnFailure"]
             .as_str()
@@ -277,7 +275,10 @@ fn add_job_flow_steps(state: &EmrState, payload: &Value) -> Result<Response, Law
         step_ids.push(json!(step_id));
     }
 
-    Ok(json_response(StatusCode::OK, json!({ "StepIds": step_ids })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "StepIds": step_ids }),
+    ))
 }
 
 fn list_steps(state: &EmrState, payload: &Value) -> Result<Response, LawsError> {
@@ -288,9 +289,7 @@ fn list_steps(state: &EmrState, payload: &Value) -> Result<Response, LawsError> 
     let cluster = state
         .clusters
         .get(cluster_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Cluster '{}' not found", cluster_id))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Cluster '{}' not found", cluster_id)))?;
 
     let steps: Vec<Value> = cluster.steps.iter().map(step_to_json).collect();
 

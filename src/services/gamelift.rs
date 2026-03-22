@@ -79,14 +79,8 @@ impl Default for GameLiftState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &GameLiftState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("GameLift.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &GameLiftState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("GameLift.").unwrap_or(target);
 
     let result = match action {
         "CreateFleet" => create_fleet(state, payload),
@@ -125,10 +119,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_fleet(
-    state: &GameLiftState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_fleet(state: &GameLiftState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["Name"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
@@ -173,10 +164,7 @@ fn create_fleet(
     })))
 }
 
-fn delete_fleet(
-    state: &GameLiftState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_fleet(state: &GameLiftState, payload: &Value) -> Result<Response, LawsError> {
     let fleet_id = payload["FleetId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing FleetId".into()))?;
@@ -199,7 +187,11 @@ fn describe_fleet_attributes(
         .unwrap_or_default();
 
     let attrs: Vec<Value> = if fleet_ids.is_empty() {
-        state.fleets.iter().map(|e| fleet_to_json(e.value())).collect()
+        state
+            .fleets
+            .iter()
+            .map(|e| fleet_to_json(e.value()))
+            .collect()
     } else {
         fleet_ids
             .iter()
@@ -261,18 +253,13 @@ fn create_game_session_queue(
     })))
 }
 
-fn describe_game_sessions(
-    state: &GameLiftState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_game_sessions(state: &GameLiftState, payload: &Value) -> Result<Response, LawsError> {
     let fleet_id = payload["FleetId"].as_str();
 
     let sessions: Vec<Value> = state
         .game_sessions
         .iter()
-        .filter(|e| {
-            fleet_id.map_or(true, |fid| e.value().fleet_id == fid)
-        })
+        .filter(|e| fleet_id.map_or(true, |fid| e.value().fleet_id == fid))
         .map(|e| {
             let s = e.value();
             json!({

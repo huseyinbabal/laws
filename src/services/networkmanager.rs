@@ -144,15 +144,10 @@ async fn create_global_network(
     State(state): State<Arc<NetworkManagerState>>,
     Json(payload): Json<Value>,
 ) -> Response {
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
 
     let id = random_id("global-network");
-    let arn = format!(
-        "arn:aws:networkmanager:{REGION}:{ACCOUNT_ID}:global-network/{id}"
-    );
+    let arn = format!("arn:aws:networkmanager:{REGION}:{ACCOUNT_ID}:global-network/{id}");
     let created_at = chrono::Utc::now().to_rfc3339();
 
     let gn = GlobalNetwork {
@@ -169,9 +164,7 @@ async fn create_global_network(
     rest_json::created(json!({ "GlobalNetwork": resp }))
 }
 
-async fn get_global_networks(
-    State(state): State<Arc<NetworkManagerState>>,
-) -> Response {
+async fn get_global_networks(State(state): State<Arc<NetworkManagerState>>) -> Response {
     let networks: Vec<Value> = state
         .global_networks
         .iter()
@@ -210,15 +203,11 @@ async fn create_site(
         )));
     }
 
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
 
     let site_id = random_id("site");
-    let site_arn = format!(
-        "arn:aws:networkmanager:{REGION}:{ACCOUNT_ID}:site/{global_network_id}/{site_id}"
-    );
+    let site_arn =
+        format!("arn:aws:networkmanager:{REGION}:{ACCOUNT_ID}:site/{global_network_id}/{site_id}");
     let created_at = chrono::Utc::now().to_rfc3339();
 
     let site = Site {
@@ -262,15 +251,9 @@ async fn create_device(
         )));
     }
 
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
 
-    let site_id = payload["SiteId"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let site_id = payload["SiteId"].as_str().unwrap_or("").to_string();
 
     let device_id = random_id("device");
     let device_arn = format!(

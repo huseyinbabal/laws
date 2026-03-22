@@ -53,14 +53,8 @@ impl Default for ShieldState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &ShieldState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AWSShield_20160616.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &ShieldState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AWSShield_20160616.").unwrap_or(target);
 
     let result = match action {
         "CreateProtection" => create_protection(state, payload),
@@ -98,10 +92,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_protection(
-    state: &ShieldState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_protection(state: &ShieldState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["Name"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
@@ -113,9 +104,7 @@ fn create_protection(
         .to_string();
 
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:shield:{REGION}:{ACCOUNT_ID}:protection/{id}"
-    );
+    let arn = format!("arn:aws:shield:{REGION}:{ACCOUNT_ID}:protection/{id}");
 
     let protection = Protection {
         id: id.clone(),
@@ -131,10 +120,7 @@ fn create_protection(
     })))
 }
 
-fn delete_protection(
-    state: &ShieldState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_protection(state: &ShieldState, payload: &Value) -> Result<Response, LawsError> {
     let id = payload["ProtectionId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ProtectionId".into()))?;
@@ -147,9 +133,7 @@ fn delete_protection(
     Ok(json_response(json!({})))
 }
 
-fn list_protections(
-    state: &ShieldState,
-) -> Result<Response, LawsError> {
+fn list_protections(state: &ShieldState) -> Result<Response, LawsError> {
     let protections: Vec<Value> = state
         .protections
         .iter()
@@ -169,10 +153,7 @@ fn list_protections(
     })))
 }
 
-fn describe_protection(
-    state: &ShieldState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_protection(state: &ShieldState, payload: &Value) -> Result<Response, LawsError> {
     let id = payload["ProtectionId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ProtectionId".into()))?;
@@ -192,9 +173,7 @@ fn describe_protection(
     })))
 }
 
-fn create_subscription(
-    state: &ShieldState,
-) -> Result<Response, LawsError> {
+fn create_subscription(state: &ShieldState) -> Result<Response, LawsError> {
     let now = chrono::Utc::now().to_rfc3339();
 
     let subscription = Subscription {
@@ -203,14 +182,14 @@ fn create_subscription(
         auto_renew: "ENABLED".to_string(),
     };
 
-    state.subscription.insert("default".to_string(), subscription);
+    state
+        .subscription
+        .insert("default".to_string(), subscription);
 
     Ok(json_response(json!({})))
 }
 
-fn describe_subscription(
-    state: &ShieldState,
-) -> Result<Response, LawsError> {
+fn describe_subscription(state: &ShieldState) -> Result<Response, LawsError> {
     match state.subscription.get("default") {
         Some(sub) => Ok(json_response(json!({
             "Subscription": {
@@ -219,8 +198,6 @@ fn describe_subscription(
                 "AutoRenew": sub.auto_renew,
             }
         }))),
-        None => Err(LawsError::NotFound(
-            "No subscription found".to_string(),
-        )),
+        None => Err(LawsError::NotFound("No subscription found".to_string())),
     }
 }

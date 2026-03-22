@@ -1,7 +1,10 @@
 use clap::Parser;
 
 #[derive(Parser, Debug, Clone)]
-#[command(name = "laws", about = "Local AWS - a lightweight alternative to LocalStack")]
+#[command(
+    name = "laws",
+    about = "Local AWS - a lightweight alternative to LocalStack"
+)]
 pub struct Config {
     /// Port to listen on
     #[arg(short, long, default_value = "4566")]

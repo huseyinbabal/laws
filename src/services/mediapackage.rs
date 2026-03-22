@@ -99,9 +99,8 @@ async fn create_channel(
         .to_owned();
 
     let arn = format!("arn:aws:mediapackage:{REGION}:{ACCOUNT_ID}:channels/{id}");
-    let hls_ingest_url = format!(
-        "https://{id}.mediapackage.{REGION}.amazonaws.com/in/v2/{id}/channel"
-    );
+    let hls_ingest_url =
+        format!("https://{id}.mediapackage.{REGION}.amazonaws.com/in/v2/{id}/channel");
 
     let channel = Channel {
         id: id.clone(),
@@ -124,9 +123,7 @@ async fn create_channel(
     }))
 }
 
-async fn list_channels(
-    State(state): State<Arc<MediaPackageState>>,
-) -> Response {
+async fn list_channels(State(state): State<Arc<MediaPackageState>>) -> Response {
     let channels: Vec<Value> = state
         .channels
         .iter()
@@ -165,9 +162,7 @@ async fn describe_channel(
                 }]
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Channel not found: {id}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("Channel not found: {id}"))),
     }
 }
 
@@ -177,9 +172,7 @@ async fn delete_channel(
 ) -> Response {
     match state.channels.remove(&id) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Channel not found: {id}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("Channel not found: {id}"))),
     }
 }
 
@@ -215,12 +208,8 @@ async fn create_origin_endpoint(
         .and_then(|v| v.as_u64())
         .unwrap_or(0) as u32;
 
-    let arn = format!(
-        "arn:aws:mediapackage:{REGION}:{ACCOUNT_ID}:origin_endpoints/{id}"
-    );
-    let url = format!(
-        "https://{id}.mediapackage.{REGION}.amazonaws.com/out/v1/{id}.m3u8"
-    );
+    let arn = format!("arn:aws:mediapackage:{REGION}:{ACCOUNT_ID}:origin_endpoints/{id}");
+    let url = format!("https://{id}.mediapackage.{REGION}.amazonaws.com/out/v1/{id}.m3u8");
 
     let endpoint = OriginEndpoint {
         id: id.clone(),
@@ -245,9 +234,7 @@ async fn create_origin_endpoint(
     }))
 }
 
-async fn list_origin_endpoints(
-    State(state): State<Arc<MediaPackageState>>,
-) -> Response {
+async fn list_origin_endpoints(State(state): State<Arc<MediaPackageState>>) -> Response {
     let endpoints: Vec<Value> = state
         .origin_endpoints
         .iter()

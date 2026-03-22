@@ -58,14 +58,8 @@ impl Default for LightsailState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &LightsailState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("Lightsail_20161128.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &LightsailState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("Lightsail_20161128.").unwrap_or(target);
 
     let result = match action {
         "CreateInstances" => create_instances(state, payload),
@@ -104,10 +98,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_instances(
-    state: &LightsailState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_instances(state: &LightsailState, payload: &Value) -> Result<Response, LawsError> {
     let instance_names = payload["instanceNames"]
         .as_array()
         .ok_or_else(|| LawsError::InvalidRequest("Missing instanceNames".into()))?;
@@ -132,9 +123,7 @@ fn create_instances(
             .ok_or_else(|| LawsError::InvalidRequest("Invalid instance name".into()))?
             .to_string();
 
-        let arn = format!(
-            "arn:aws:lightsail:{REGION}:{ACCOUNT_ID}:Instance/{name}"
-        );
+        let arn = format!("arn:aws:lightsail:{REGION}:{ACCOUNT_ID}:Instance/{name}");
 
         let instance = LightsailInstance {
             name: name.clone(),
@@ -159,10 +148,7 @@ fn create_instances(
     Ok(json_response(json!({ "operations": operations })))
 }
 
-fn delete_instance(
-    state: &LightsailState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_instance(state: &LightsailState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["instanceName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing instanceName".into()))?;
@@ -183,10 +169,7 @@ fn delete_instance(
     })))
 }
 
-fn get_instance(
-    state: &LightsailState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn get_instance(state: &LightsailState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["instanceName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing instanceName".into()))?;
@@ -234,9 +217,7 @@ fn create_relational_database(
 ) -> Result<Response, LawsError> {
     let name = payload["relationalDatabaseName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("Missing relationalDatabaseName".into())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("Missing relationalDatabaseName".into()))?
         .to_string();
 
     let engine = payload["relationalDatabaseBlueprintId"]
@@ -249,9 +230,7 @@ fn create_relational_database(
         .unwrap_or("admin")
         .to_string();
 
-    let arn = format!(
-        "arn:aws:lightsail:{REGION}:{ACCOUNT_ID}:RelationalDatabase/{name}"
-    );
+    let arn = format!("arn:aws:lightsail:{REGION}:{ACCOUNT_ID}:RelationalDatabase/{name}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let db = LightsailDatabase {
@@ -281,16 +260,12 @@ fn delete_relational_database(
 ) -> Result<Response, LawsError> {
     let name = payload["relationalDatabaseName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("Missing relationalDatabaseName".into())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("Missing relationalDatabaseName".into()))?;
 
     state
         .databases
         .remove(name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("RelationalDatabase '{}' not found", name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("RelationalDatabase '{}' not found", name)))?;
 
     Ok(json_response(json!({
         "operations": [{
@@ -302,9 +277,7 @@ fn delete_relational_database(
     })))
 }
 
-fn get_relational_databases(
-    state: &LightsailState,
-) -> Result<Response, LawsError> {
+fn get_relational_databases(state: &LightsailState) -> Result<Response, LawsError> {
     let databases: Vec<Value> = state
         .databases
         .iter()

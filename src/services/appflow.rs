@@ -47,11 +47,7 @@ impl Default for AppFlowState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &AppFlowState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &AppFlowState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("SandstoneConfigurationServiceLambda.")
         .unwrap_or(target);
@@ -132,10 +128,7 @@ fn create_flow(state: &AppFlowState, payload: &Value) -> Result<Response, LawsEr
         .unwrap_or("S3")
         .to_string();
 
-    let description = payload["description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["description"].as_str().unwrap_or("").to_string();
 
     let flow = Flow {
         flow_name: flow_name.clone(),
@@ -149,7 +142,9 @@ fn create_flow(state: &AppFlowState, payload: &Value) -> Result<Response, LawsEr
 
     state.flows.insert(flow_name, flow);
 
-    Ok(json_response(json!({ "flowArn": arn, "flowStatus": "Active" })))
+    Ok(json_response(
+        json!({ "flowArn": arn, "flowStatus": "Active" }),
+    ))
 }
 
 fn delete_flow(state: &AppFlowState, payload: &Value) -> Result<Response, LawsError> {

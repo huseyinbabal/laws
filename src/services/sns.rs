@@ -60,9 +60,7 @@ impl SnsState {
 // ---------------------------------------------------------------------------
 
 pub fn router(state: Arc<SnsState>) -> Router {
-    Router::new()
-        .route("/", post(handle_sns))
-        .with_state(state)
+    Router::new().route("/", post(handle_sns)).with_state(state)
 }
 
 // ---------------------------------------------------------------------------
@@ -81,12 +79,7 @@ fn subscription_arn(topic_name: &str, id: &str) -> String {
 // Dispatch handler
 // ---------------------------------------------------------------------------
 
-pub fn handle_request(
-    state: &SnsState,
-    headers: &HeaderMap,
-    body: &Bytes,
-    uri: &Uri,
-) -> Response {
+pub fn handle_request(state: &SnsState, headers: &HeaderMap, body: &Bytes, uri: &Uri) -> Response {
     let req = match parse_query_request(uri, headers, body) {
         Ok(r) => r,
         Err(e) => return xml_error_response(&e),
@@ -181,9 +174,7 @@ fn list_topics(state: &SnsState) -> Result<Response, LawsError> {
     let mut members_xml = String::new();
     for topic in &topics {
         let arn = quick_xml::escape::escape(&topic.arn);
-        members_xml.push_str(&format!(
-            "  <member><TopicArn>{arn}</TopicArn></member>\n"
-        ));
+        members_xml.push_str(&format!("  <member><TopicArn>{arn}</TopicArn></member>\n"));
     }
 
     let inner = format!("<Topics>\n{members_xml}</Topics>");
@@ -205,9 +196,7 @@ fn subscribe(
         .ok_or_else(|| LawsError::InvalidRequest("Missing Endpoint".into()))?;
 
     if !state.topics.contains(topic_arn) {
-        return Err(LawsError::NotFound(format!(
-            "Topic {topic_arn} not found"
-        )));
+        return Err(LawsError::NotFound(format!("Topic {topic_arn} not found")));
     }
 
     // Derive topic name from ARN for subscription ARN construction
@@ -270,9 +259,7 @@ fn list_subscriptions(state: &SnsState) -> Result<Response, LawsError> {
     Ok(xml_response("ListSubscriptions", &inner))
 }
 
-fn publish(
-    params: &std::collections::HashMap<String, String>,
-) -> Result<Response, LawsError> {
+fn publish(params: &std::collections::HashMap<String, String>) -> Result<Response, LawsError> {
     let _topic_arn = params
         .get("TopicArn")
         .ok_or_else(|| LawsError::InvalidRequest("Missing TopicArn".into()))?;
@@ -299,9 +286,6 @@ mod tests {
     #[test]
     fn subscription_arn_format() {
         let arn = subscription_arn("my-topic", "abc-123");
-        assert_eq!(
-            arn,
-            "arn:aws:sns:us-east-1:000000000000:my-topic:abc-123"
-        );
+        assert_eq!(arn, "arn:aws:sns:us-east-1:000000000000:my-topic:abc-123");
     }
 }

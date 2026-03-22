@@ -95,9 +95,8 @@ async fn create_component_version(
         .unwrap_or("1.0.0")
         .to_owned();
 
-    let arn = format!(
-        "arn:aws:greengrass:{REGION}:{ACCOUNT_ID}:components:{name}:versions:{version}"
-    );
+    let arn =
+        format!("arn:aws:greengrass:{REGION}:{ACCOUNT_ID}:components:{name}:versions:{version}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let component = Component {
@@ -119,9 +118,7 @@ async fn create_component_version(
     }))
 }
 
-async fn list_components(
-    State(state): State<Arc<GreengrassState>>,
-) -> Response {
+async fn list_components(State(state): State<Arc<GreengrassState>>) -> Response {
     let components: Vec<Value> = state
         .components
         .iter()
@@ -156,9 +153,9 @@ async fn get_component(
             "creationTimestamp": c.created_at,
             "status": { "componentState": c.status }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Component not found: {arn}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Component not found: {arn}")))
+        }
     }
 }
 
@@ -168,15 +165,13 @@ async fn delete_component(
 ) -> Response {
     match state.components.remove(&arn) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Component not found: {arn}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Component not found: {arn}")))
+        }
     }
 }
 
-async fn list_core_devices(
-    State(state): State<Arc<GreengrassState>>,
-) -> Response {
+async fn list_core_devices(State(state): State<Arc<GreengrassState>>) -> Response {
     let devices: Vec<Value> = state
         .core_devices
         .iter()

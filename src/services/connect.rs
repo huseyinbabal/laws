@@ -129,20 +129,22 @@ async fn create_instance(
     }))
 }
 
-async fn list_instances(
-    State(state): State<Arc<ConnectState>>,
-) -> Response {
-    let instances: Vec<Value> = state.instances.iter().map(|entry| {
-        let i = entry.value();
-        json!({
-            "Id": i.id,
-            "Arn": i.arn,
-            "IdentityManagementType": i.identity_management_type,
-            "InstanceAlias": i.instance_alias,
-            "InstanceStatus": i.status,
-            "CreatedTime": i.created_time
+async fn list_instances(State(state): State<Arc<ConnectState>>) -> Response {
+    let instances: Vec<Value> = state
+        .instances
+        .iter()
+        .map(|entry| {
+            let i = entry.value();
+            json!({
+                "Id": i.id,
+                "Arn": i.arn,
+                "IdentityManagementType": i.identity_management_type,
+                "InstanceAlias": i.instance_alias,
+                "InstanceStatus": i.status,
+                "CreatedTime": i.created_time
+            })
         })
-    }).collect();
+        .collect();
 
     rest_json::ok(json!({
         "InstanceSummaryList": instances
@@ -164,9 +166,9 @@ async fn describe_instance(
                 "CreatedTime": i.created_time
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "instance not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("instance not found: {id}")))
+        }
     }
 }
 
@@ -179,9 +181,9 @@ async fn delete_instance(
             state.contact_flows.retain(|_, cf| cf.instance_id != id);
             rest_json::no_content()
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "instance not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("instance not found: {id}")))
+        }
     }
 }
 
@@ -208,9 +210,8 @@ async fn create_contact_flow(
         .to_owned();
 
     let id = random_id();
-    let arn = format!(
-        "arn:aws:connect:{REGION}:{ACCOUNT_ID}:instance/{instance_id}/contact-flow/{id}"
-    );
+    let arn =
+        format!("arn:aws:connect:{REGION}:{ACCOUNT_ID}:instance/{instance_id}/contact-flow/{id}");
 
     let cf = ContactFlow {
         id: id.clone(),

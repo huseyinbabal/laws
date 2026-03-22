@@ -112,13 +112,8 @@ fn create_application(
         )));
     }
 
-    let arn = format!(
-        "arn:aws:elasticbeanstalk:{REGION}:{ACCOUNT_ID}:application/{name}"
-    );
-    let description = params
-        .get("Description")
-        .cloned()
-        .unwrap_or_default();
+    let arn = format!("arn:aws:elasticbeanstalk:{REGION}:{ACCOUNT_ID}:application/{name}");
+    let description = params.get("Description").cloned().unwrap_or_default();
     let now = chrono::Utc::now().to_rfc3339();
 
     let app = BeanstalkApplication {
@@ -148,7 +143,9 @@ fn delete_application(
         .ok_or_else(|| LawsError::NotFound(format!("Application not found: {name}")))?;
 
     // Also remove associated environments
-    state.environments.retain(|_, e| e.application_name != *name);
+    state
+        .environments
+        .retain(|_, e| e.application_name != *name);
 
     Ok(xml_response("DeleteApplication", ""))
 }
@@ -207,9 +204,8 @@ fn create_environment(
     }
 
     let env_id = format!("e-{}", &uuid::Uuid::new_v4().to_string()[..12]);
-    let arn = format!(
-        "arn:aws:elasticbeanstalk:{REGION}:{ACCOUNT_ID}:environment/{app_name}/{env_name}"
-    );
+    let arn =
+        format!("arn:aws:elasticbeanstalk:{REGION}:{ACCOUNT_ID}:environment/{app_name}/{env_name}");
     let solution_stack = params
         .get("SolutionStackName")
         .cloned()

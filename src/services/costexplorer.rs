@@ -20,11 +20,7 @@ impl Default for CostExplorerState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    _state: &CostExplorerState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(_state: &CostExplorerState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AWSInsightsIndexService.")
         .unwrap_or(target);
@@ -168,9 +164,7 @@ fn get_savings_plans_utilization(_payload: &Value) -> Result<Response, LawsError
 }
 
 fn get_dimension_values(payload: &Value) -> Result<Response, LawsError> {
-    let dimension = payload["Dimension"]
-        .as_str()
-        .unwrap_or("SERVICE");
+    let dimension = payload["Dimension"].as_str().unwrap_or("SERVICE");
 
     let mock_values = match dimension {
         "SERVICE" => vec![
@@ -179,17 +173,8 @@ fn get_dimension_values(payload: &Value) -> Result<Response, LawsError> {
             "Amazon Relational Database Service",
             "AWS Lambda",
         ],
-        "REGION" => vec![
-            "us-east-1",
-            "us-west-2",
-            "eu-west-1",
-        ],
-        "INSTANCE_TYPE" => vec![
-            "t3.micro",
-            "t3.small",
-            "m5.large",
-            "r5.xlarge",
-        ],
+        "REGION" => vec!["us-east-1", "us-west-2", "eu-west-1"],
+        "INSTANCE_TYPE" => vec!["t3.micro", "t3.small", "m5.large", "r5.xlarge"],
         _ => vec!["value1", "value2"],
     };
 

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post, delete};
+use axum::routing::{delete, get, post};
 use axum::Json;
 use chrono::Utc;
 use dashmap::DashMap;
@@ -88,7 +88,9 @@ async fn create_domain(
 ) -> Response {
     let name = match body["name"].as_str() {
         Some(n) => n.to_string(),
-        None => return rest_json::error_response(&LawsError::InvalidRequest("Missing name".into())),
+        None => {
+            return rest_json::error_response(&LawsError::InvalidRequest("Missing name".into()))
+        }
     };
 
     let id = uuid::Uuid::new_v4().to_string();
@@ -183,7 +185,9 @@ async fn create_project(
 
     let name = match body["name"].as_str() {
         Some(n) => n.to_string(),
-        None => return rest_json::error_response(&LawsError::InvalidRequest("Missing name".into())),
+        None => {
+            return rest_json::error_response(&LawsError::InvalidRequest("Missing name".into()))
+        }
     };
 
     let id = uuid::Uuid::new_v4().to_string();

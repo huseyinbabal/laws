@@ -121,9 +121,7 @@ async fn create_image(
         .to_owned();
 
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:imagebuilder:{REGION}:{ACCOUNT_ID}:image/{name}/{version}/{id}"
-    );
+    let arn = format!("arn:aws:imagebuilder:{REGION}:{ACCOUNT_ID}:image/{name}/{version}/{id}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let image = Image {
@@ -158,15 +156,11 @@ async fn get_image(
                 "dateCreated": img.created_at
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Image not found: {arn}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("Image not found: {arn}"))),
     }
 }
 
-async fn list_images(
-    State(state): State<Arc<ImageBuilderState>>,
-) -> Response {
+async fn list_images(State(state): State<Arc<ImageBuilderState>>) -> Response {
     let images: Vec<Value> = state
         .images
         .iter()
@@ -196,9 +190,7 @@ async fn delete_image(
         Some(_) => rest_json::ok(json!({
             "imageBuildVersionArn": arn
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Image not found: {arn}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("Image not found: {arn}"))),
     }
 }
 
@@ -231,9 +223,7 @@ async fn create_component(
         .to_owned();
 
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:imagebuilder:{REGION}:{ACCOUNT_ID}:component/{name}/{version}/{id}"
-    );
+    let arn = format!("arn:aws:imagebuilder:{REGION}:{ACCOUNT_ID}:component/{name}/{version}/{id}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let component = Component {
@@ -253,9 +243,7 @@ async fn create_component(
     }))
 }
 
-async fn list_components(
-    State(state): State<Arc<ImageBuilderState>>,
-) -> Response {
+async fn list_components(State(state): State<Arc<ImageBuilderState>>) -> Response {
     let components: Vec<Value> = state
         .components
         .iter()
@@ -294,9 +282,7 @@ async fn create_image_pipeline(
         .to_owned();
 
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:imagebuilder:{REGION}:{ACCOUNT_ID}:image-pipeline/{name}"
-    );
+    let arn = format!("arn:aws:imagebuilder:{REGION}:{ACCOUNT_ID}:image-pipeline/{name}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let pipeline = ImagePipeline {

@@ -60,14 +60,8 @@ impl Default for WorkMailState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &WorkMailState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("WorkMailService.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &WorkMailState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("WorkMailService.").unwrap_or(target);
 
     let result = match action {
         "CreateOrganization" => create_organization(state, payload),
@@ -108,9 +102,7 @@ fn create_organization(state: &WorkMailState, payload: &Value) -> Result<Respons
         .to_string();
 
     let organization_id = format!("m-{}", uuid::Uuid::new_v4().simple());
-    let arn = format!(
-        "arn:aws:workmail:{REGION}:{ACCOUNT_ID}:organization/{organization_id}"
-    );
+    let arn = format!("arn:aws:workmail:{REGION}:{ACCOUNT_ID}:organization/{organization_id}");
     let now = Utc::now().to_rfc3339();
 
     let org = Organization {
@@ -138,11 +130,7 @@ fn delete_organization(state: &WorkMailState, payload: &Value) -> Result<Respons
     state
         .organizations
         .remove(organization_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!(
-                "Organization not found: {organization_id}"
-            ))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Organization not found: {organization_id}")))?;
 
     Ok(json_response(
         StatusCode::OK,
@@ -179,11 +167,7 @@ fn describe_organization(state: &WorkMailState, payload: &Value) -> Result<Respo
     let org = state
         .organizations
         .get(organization_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!(
-                "Organization not found: {organization_id}"
-            ))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Organization not found: {organization_id}")))?;
 
     Ok(json_response(
         StatusCode::OK,
@@ -214,10 +198,7 @@ fn create_user(state: &WorkMailState, payload: &Value) -> Result<Response, LawsE
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
         .to_string();
-    let display_name = payload["DisplayName"]
-        .as_str()
-        .unwrap_or(&name)
-        .to_string();
+    let display_name = payload["DisplayName"].as_str().unwrap_or(&name).to_string();
 
     let user_id = uuid::Uuid::new_v4().to_string();
 
@@ -233,10 +214,7 @@ fn create_user(state: &WorkMailState, payload: &Value) -> Result<Response, LawsE
 
     state.users.insert(user_id.clone(), user);
 
-    Ok(json_response(
-        StatusCode::OK,
-        json!({ "UserId": user_id }),
-    ))
+    Ok(json_response(StatusCode::OK, json!({ "UserId": user_id })))
 }
 
 fn list_users(state: &WorkMailState, payload: &Value) -> Result<Response, LawsError> {
@@ -261,10 +239,7 @@ fn list_users(state: &WorkMailState, payload: &Value) -> Result<Response, LawsEr
         })
         .collect();
 
-    Ok(json_response(
-        StatusCode::OK,
-        json!({ "Users": users }),
-    ))
+    Ok(json_response(StatusCode::OK, json!({ "Users": users })))
 }
 
 fn register_to_workmail(state: &WorkMailState, payload: &Value) -> Result<Response, LawsError> {

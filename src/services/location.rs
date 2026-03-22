@@ -74,10 +74,7 @@ pub fn router(state: Arc<LocationState>) -> axum::Router {
     axum::Router::new()
         .route("/maps/v0/maps", post(create_map))
         .route("/maps/v0/list-maps", post(list_maps))
-        .route(
-            "/maps/v0/maps/{name}",
-            get(get_map).delete(delete_map),
-        )
+        .route("/maps/v0/maps/{name}", get(get_map).delete(delete_map))
         .route(
             "/geofencing/v0/collections",
             post(create_geofence_collection),
@@ -103,17 +100,11 @@ async fn create_map(
             .ok_or_else(|| LawsError::InvalidRequest("MapName is required".into()))?
             .to_string();
 
-        let description = payload["Description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["Description"].as_str().unwrap_or("").to_string();
 
-        let configuration = payload["Configuration"]
-            .clone();
+        let configuration = payload["Configuration"].clone();
 
-        let arn = format!(
-            "arn:aws:geo:{REGION}:{ACCOUNT_ID}:map/{map_name}"
-        );
+        let arn = format!("arn:aws:geo:{REGION}:{ACCOUNT_ID}:map/{map_name}");
         let now = chrono::Utc::now().to_rfc3339();
 
         let map = LocationMap {
@@ -157,10 +148,7 @@ async fn list_maps(State(state): State<Arc<LocationState>>) -> Response {
     rest_json::ok(json!({ "Entries": entries }))
 }
 
-async fn get_map(
-    State(state): State<Arc<LocationState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn get_map(State(state): State<Arc<LocationState>>, Path(name): Path<String>) -> Response {
     match state.maps.get(&name) {
         Some(m) => rest_json::ok(json!({
             "MapName": m.map_name,
@@ -169,23 +157,18 @@ async fn get_map(
             "Configuration": m.configuration,
             "CreateTime": m.created,
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Map '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Map '{}' not found", name)))
+        }
     }
 }
 
-async fn delete_map(
-    State(state): State<Arc<LocationState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn delete_map(State(state): State<Arc<LocationState>>, Path(name): Path<String>) -> Response {
     match state.maps.remove(&name) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Map '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Map '{}' not found", name)))
+        }
     }
 }
 
@@ -199,14 +182,10 @@ async fn create_geofence_collection(
             .ok_or_else(|| LawsError::InvalidRequest("CollectionName is required".into()))?
             .to_string();
 
-        let description = payload["Description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["Description"].as_str().unwrap_or("").to_string();
 
-        let arn = format!(
-            "arn:aws:geo:{REGION}:{ACCOUNT_ID}:geofence-collection/{collection_name}"
-        );
+        let arn =
+            format!("arn:aws:geo:{REGION}:{ACCOUNT_ID}:geofence-collection/{collection_name}");
         let now = chrono::Utc::now().to_rfc3339();
 
         let collection = GeofenceCollection {
@@ -233,9 +212,7 @@ async fn create_geofence_collection(
     }
 }
 
-async fn list_geofence_collections(
-    State(state): State<Arc<LocationState>>,
-) -> Response {
+async fn list_geofence_collections(State(state): State<Arc<LocationState>>) -> Response {
     let entries: Vec<Value> = state
         .geofence_collections
         .iter()

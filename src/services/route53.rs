@@ -7,7 +7,6 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use chrono::Utc;
 use dashmap::DashMap;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::error::LawsError;
@@ -77,8 +76,9 @@ pub fn router(state: Arc<Route53State>) -> axum::Router {
 // ---------------------------------------------------------------------------
 
 fn random_zone_id() -> String {
-    let suffix: String = rand::thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
+    use rand::RngExt;
+    let suffix: String = rand::rng()
+        .sample_iter(&rand::distr::Alphanumeric)
         .take(13)
         .map(|c| char::from(c).to_ascii_uppercase())
         .map(char::from)
@@ -113,12 +113,7 @@ fn extract_all_xml_tags(xml: &str, tag: &str) -> Vec<String> {
 }
 
 fn xml_response(status: StatusCode, body: String) -> Response {
-    (
-        status,
-        [("content-type", "application/xml")],
-        body,
-    )
-        .into_response()
+    (status, [("content-type", "application/xml")], body).into_response()
 }
 
 fn hosted_zone_xml(zone: &HostedZone) -> String {
@@ -164,10 +159,7 @@ fn record_set_xml(rrs: &ResourceRecordSet) -> String {
 // Handlers
 // ---------------------------------------------------------------------------
 
-async fn create_hosted_zone(
-    State(state): State<Arc<Route53State>>,
-    body: Bytes,
-) -> Response {
+async fn create_hosted_zone(State(state): State<Arc<Route53State>>, body: Bytes) -> Response {
     let xml = match std::str::from_utf8(&body) {
         Ok(s) => s.to_string(),
         Err(_) => {
@@ -196,7 +188,10 @@ async fn create_hosted_zone(
     };
 
     // Check for duplicate caller reference.
-    let duplicate = state.zones.iter().any(|z| z.caller_reference == caller_reference);
+    let duplicate = state
+        .zones
+        .iter()
+        .any(|z| z.caller_reference == caller_reference);
     if duplicate {
         return rest_xml::error_response(&LawsError::AlreadyExists(format!(
             "HostedZone with CallerReference {} already exists",
@@ -363,7 +358,10 @@ async fn change_resource_record_sets(
             records,
         };
 
-        let mut record_sets = state.record_sets.entry(zone_id.clone()).or_insert_with(Vec::new);
+        let mut record_sets = state
+            .record_sets
+            .entry(zone_id.clone())
+            .or_insert_with(Vec::new);
 
         match action.as_str() {
             "CREATE" => {

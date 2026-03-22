@@ -104,8 +104,7 @@ async fn handle_action(
 
     let action = target.strip_prefix("Logs_20140328.").unwrap_or(target);
 
-    let payload: serde_json::Value =
-        serde_json::from_str(&body).unwrap_or(serde_json::Value::Null);
+    let payload: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::Value::Null);
 
     match action {
         "CreateLogGroup" => create_log_group(&state, &payload).await,
@@ -258,9 +257,7 @@ async fn delete_log_stream(
     group
         .streams
         .remove(stream_name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Log stream '{}' not found", stream_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Log stream '{}' not found", stream_name)))?;
 
     Ok(json_response(serde_json::json!({})))
 }
@@ -324,18 +321,13 @@ async fn put_log_events(
     let stream = group
         .streams
         .get_mut(stream_name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Log stream '{}' not found", stream_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Log stream '{}' not found", stream_name)))?;
 
     let now = chrono::Utc::now().timestamp_millis();
 
     for event in log_events {
         let timestamp = event["timestamp"].as_i64().unwrap_or(now);
-        let message = event["message"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let message = event["message"].as_str().unwrap_or("").to_string();
 
         let log_event = LogEvent {
             timestamp,
@@ -382,9 +374,7 @@ async fn get_log_events(
     let stream = group
         .streams
         .get(stream_name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Log stream '{}' not found", stream_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Log stream '{}' not found", stream_name)))?;
 
     let events: Vec<serde_json::Value> = stream
         .events

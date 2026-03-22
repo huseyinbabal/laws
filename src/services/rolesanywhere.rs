@@ -107,15 +107,13 @@ async fn create_trust_anchor(
     Json(req): Json<CreateTrustAnchorRequest>,
 ) -> Response {
     let trust_anchor_id = uuid::Uuid::new_v4().to_string();
-    let trust_anchor_arn = format!(
-        "arn:aws:rolesanywhere:{REGION}:{ACCOUNT_ID}:trust-anchor/{trust_anchor_id}"
-    );
+    let trust_anchor_arn =
+        format!("arn:aws:rolesanywhere:{REGION}:{ACCOUNT_ID}:trust-anchor/{trust_anchor_id}");
     let now = Utc::now().to_rfc3339();
 
     let (source_type, source_data) = match req.source {
         Some(s) => (
-            s.source_type
-                .unwrap_or_else(|| "AWS_ACM_PCA".into()),
+            s.source_type.unwrap_or_else(|| "AWS_ACM_PCA".into()),
             s.source_data.unwrap_or(Value::Null),
         ),
         None => ("AWS_ACM_PCA".to_string(), Value::Null),
@@ -221,9 +219,7 @@ async fn create_profile(
     Json(req): Json<CreateProfileRequest>,
 ) -> Response {
     let profile_id = uuid::Uuid::new_v4().to_string();
-    let profile_arn = format!(
-        "arn:aws:rolesanywhere:{REGION}:{ACCOUNT_ID}:profile/{profile_id}"
-    );
+    let profile_arn = format!("arn:aws:rolesanywhere:{REGION}:{ACCOUNT_ID}:profile/{profile_id}");
     let now = Utc::now().to_rfc3339();
 
     let profile = Profile {

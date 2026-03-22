@@ -59,14 +59,8 @@ impl Default for StepFunctionsState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &StepFunctionsState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AWSStepFunctions.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &StepFunctionsState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AWSStepFunctions.").unwrap_or(target);
 
     let result = match action {
         "CreateStateMachine" => create_state_machine(state, payload),
@@ -130,9 +124,7 @@ fn create_state_machine(
         .ok_or_else(|| LawsError::InvalidRequest("roleArn is required".to_string()))?
         .to_string();
 
-    let arn = format!(
-        "arn:aws:states:{REGION}:{ACCOUNT_ID}:stateMachine:{name}"
-    );
+    let arn = format!("arn:aws:states:{REGION}:{ACCOUNT_ID}:stateMachine:{name}");
 
     if state.state_machines.contains_key(&arn) {
         return Err(LawsError::AlreadyExists(format!(
@@ -166,16 +158,12 @@ fn delete_state_machine(
 ) -> Result<Response, LawsError> {
     let arn = payload["stateMachineArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("stateMachineArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("stateMachineArn is required".to_string()))?;
 
     state
         .state_machines
         .remove(arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("State machine '{}' not found", arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("State machine '{}' not found", arn)))?;
 
     Ok(json_response(json!({})))
 }
@@ -204,16 +192,12 @@ fn describe_state_machine(
 ) -> Result<Response, LawsError> {
     let arn = payload["stateMachineArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("stateMachineArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("stateMachineArn is required".to_string()))?;
 
     let sm = state
         .state_machines
         .get(arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("State machine '{}' not found", arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("State machine '{}' not found", arn)))?;
 
     Ok(json_response(json!({
         "stateMachineArn": sm.arn,
@@ -226,22 +210,15 @@ fn describe_state_machine(
     })))
 }
 
-fn start_execution(
-    state: &StepFunctionsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn start_execution(state: &StepFunctionsState, payload: &Value) -> Result<Response, LawsError> {
     let sm_arn = payload["stateMachineArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("stateMachineArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("stateMachineArn is required".to_string()))?;
 
     let sm = state
         .state_machines
         .get(sm_arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("State machine '{}' not found", sm_arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("State machine '{}' not found", sm_arn)))?;
     let sm_name = sm.name.clone();
 
     let exec_name = payload["name"]
@@ -249,14 +226,9 @@ fn start_execution(
         .map(|s| s.to_string())
         .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
 
-    let input = payload["input"]
-        .as_str()
-        .unwrap_or("{}")
-        .to_string();
+    let input = payload["input"].as_str().unwrap_or("{}").to_string();
 
-    let exec_arn = format!(
-        "arn:aws:states:{REGION}:{ACCOUNT_ID}:execution:{sm_name}:{exec_name}"
-    );
+    let exec_arn = format!("arn:aws:states:{REGION}:{ACCOUNT_ID}:execution:{sm_name}:{exec_name}");
 
     let start_date = now_epoch();
 
@@ -279,22 +251,15 @@ fn start_execution(
     })))
 }
 
-fn stop_execution(
-    state: &StepFunctionsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn stop_execution(state: &StepFunctionsState, payload: &Value) -> Result<Response, LawsError> {
     let exec_arn = payload["executionArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("executionArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("executionArn is required".to_string()))?;
 
     let mut exec = state
         .executions
         .get_mut(exec_arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Execution '{}' not found", exec_arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Execution '{}' not found", exec_arn)))?;
 
     exec.status = "ABORTED".to_string();
     let stop_date = now_epoch();
@@ -304,22 +269,15 @@ fn stop_execution(
     })))
 }
 
-fn describe_execution(
-    state: &StepFunctionsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_execution(state: &StepFunctionsState, payload: &Value) -> Result<Response, LawsError> {
     let exec_arn = payload["executionArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("executionArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("executionArn is required".to_string()))?;
 
     let exec = state
         .executions
         .get(exec_arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Execution '{}' not found", exec_arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Execution '{}' not found", exec_arn)))?;
 
     let mut resp = json!({
         "executionArn": exec.execution_arn,
@@ -337,15 +295,10 @@ fn describe_execution(
     Ok(json_response(resp))
 }
 
-fn list_executions(
-    state: &StepFunctionsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn list_executions(state: &StepFunctionsState, payload: &Value) -> Result<Response, LawsError> {
     let sm_arn = payload["stateMachineArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("stateMachineArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("stateMachineArn is required".to_string()))?;
 
     let executions: Vec<Value> = state
         .executions
@@ -372,9 +325,7 @@ fn get_execution_history(
 ) -> Result<Response, LawsError> {
     let exec_arn = payload["executionArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("executionArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("executionArn is required".to_string()))?;
 
     // Verify execution exists
     if !state.executions.contains_key(exec_arn) {

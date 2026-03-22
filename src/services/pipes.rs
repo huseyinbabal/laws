@@ -54,10 +54,7 @@ impl Default for PipesState {
 
 pub fn router(state: Arc<PipesState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/v1/pipes",
-            axum::routing::get(list_pipes),
-        )
+        .route("/v1/pipes", axum::routing::get(list_pipes))
         .route(
             "/v1/pipes/{name}",
             axum::routing::post(create_pipe)
@@ -65,14 +62,8 @@ pub fn router(state: Arc<PipesState>) -> axum::Router {
                 .delete(delete_pipe)
                 .put(update_pipe),
         )
-        .route(
-            "/v1/pipes/{name}/start",
-            axum::routing::post(start_pipe),
-        )
-        .route(
-            "/v1/pipes/{name}/stop",
-            axum::routing::post(stop_pipe),
-        )
+        .route("/v1/pipes/{name}/start", axum::routing::post(start_pipe))
+        .route("/v1/pipes/{name}/stop", axum::routing::post(stop_pipe))
         .with_state(state)
 }
 
@@ -132,19 +123,14 @@ async fn create_pipe(
             .ok_or_else(|| LawsError::InvalidRequest("Missing Target".into()))?
             .to_string();
 
-        let description = payload["Description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["Description"].as_str().unwrap_or("").to_string();
 
         let desired_state = payload["DesiredState"]
             .as_str()
             .unwrap_or("RUNNING")
             .to_string();
 
-        let arn = format!(
-            "arn:aws:pipes:{REGION}:{ACCOUNT_ID}:pipe/{name}"
-        );
+        let arn = format!("arn:aws:pipes:{REGION}:{ACCOUNT_ID}:pipe/{name}");
         let created_at = chrono::Utc::now().to_rfc3339();
 
         let pipe = Pipe {
@@ -175,9 +161,7 @@ async fn create_pipe(
     }
 }
 
-async fn list_pipes(
-    State(state): State<Arc<PipesState>>,
-) -> Response {
+async fn list_pipes(State(state): State<Arc<PipesState>>) -> Response {
     let pipes: Vec<Value> = state
         .pipes
         .iter()
@@ -187,23 +171,16 @@ async fn list_pipes(
     rest_json::ok(json!({ "Pipes": pipes }))
 }
 
-async fn describe_pipe(
-    State(state): State<Arc<PipesState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn describe_pipe(State(state): State<Arc<PipesState>>, Path(name): Path<String>) -> Response {
     match state.pipes.get(&name) {
         Some(p) => rest_json::ok(pipe_to_json(p.value())),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Pipe '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Pipe '{}' not found", name)))
+        }
     }
 }
 
-async fn delete_pipe(
-    State(state): State<Arc<PipesState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn delete_pipe(State(state): State<Arc<PipesState>>, Path(name): Path<String>) -> Response {
     match state.pipes.remove(&name) {
         Some((_, p)) => rest_json::ok(json!({
             "Name": p.name,
@@ -211,17 +188,13 @@ async fn delete_pipe(
             "DesiredState": "DELETED",
             "CurrentState": "DELETING",
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Pipe '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Pipe '{}' not found", name)))
+        }
     }
 }
 
-async fn start_pipe(
-    State(state): State<Arc<PipesState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn start_pipe(State(state): State<Arc<PipesState>>, Path(name): Path<String>) -> Response {
     match state.pipes.get_mut(&name) {
         Some(mut p) => {
             p.desired_state = "RUNNING".to_string();
@@ -233,17 +206,13 @@ async fn start_pipe(
                 "CurrentState": "RUNNING",
             }))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Pipe '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Pipe '{}' not found", name)))
+        }
     }
 }
 
-async fn stop_pipe(
-    State(state): State<Arc<PipesState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn stop_pipe(State(state): State<Arc<PipesState>>, Path(name): Path<String>) -> Response {
     match state.pipes.get_mut(&name) {
         Some(mut p) => {
             p.desired_state = "STOPPED".to_string();
@@ -255,10 +224,9 @@ async fn stop_pipe(
                 "CurrentState": "STOPPED",
             }))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Pipe '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Pipe '{}' not found", name)))
+        }
     }
 }
 
@@ -286,9 +254,8 @@ async fn update_pipe(
                 "CurrentState": p.current_state,
             }))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Pipe '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Pipe '{}' not found", name)))
+        }
     }
 }

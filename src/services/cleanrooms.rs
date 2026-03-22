@@ -76,7 +76,10 @@ pub fn router(state: Arc<CleanRoomsState>) -> axum::Router {
             "/collaborations/{collaboration_id}",
             get(get_collaboration).delete(delete_collaboration),
         )
-        .route("/memberships", post(create_membership).get(list_memberships))
+        .route(
+            "/memberships",
+            post(create_membership).get(list_memberships),
+        )
         .with_state(state)
 }
 
@@ -126,9 +129,7 @@ async fn create_collaboration(
     Json(req): Json<CreateCollaborationRequest>,
 ) -> Response {
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:cleanrooms:{REGION}:{ACCOUNT_ID}:collaboration/{id}"
-    );
+    let arn = format!("arn:aws:cleanrooms:{REGION}:{ACCOUNT_ID}:collaboration/{id}");
     let now = Utc::now().to_rfc3339();
 
     let collaboration = Collaboration {
@@ -211,9 +212,7 @@ async fn create_membership(
     };
 
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:cleanrooms:{REGION}:{ACCOUNT_ID}:membership/{id}"
-    );
+    let arn = format!("arn:aws:cleanrooms:{REGION}:{ACCOUNT_ID}:membership/{id}");
     let now = Utc::now().to_rfc3339();
 
     let membership = Membership {

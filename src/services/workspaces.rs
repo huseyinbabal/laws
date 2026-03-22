@@ -57,14 +57,8 @@ impl Default for WorkSpacesState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &WorkSpacesState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("WorkspacesService.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &WorkSpacesState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("WorkspacesService.").unwrap_or(target);
 
     let result = match action {
         "CreateWorkspaces" => create_workspaces(state, payload),
@@ -103,10 +97,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_workspaces(
-    state: &WorkSpacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_workspaces(state: &WorkSpacesState, payload: &Value) -> Result<Response, LawsError> {
     let workspaces_arr = payload["Workspaces"]
         .as_array()
         .ok_or_else(|| LawsError::InvalidRequest("Workspaces array is required".to_string()))?;
@@ -137,12 +128,12 @@ fn create_workspaces(
             }
         };
 
-        let bundle_id = ws["BundleId"]
-            .as_str()
-            .unwrap_or("wsb-default")
-            .to_string();
+        let bundle_id = ws["BundleId"].as_str().unwrap_or("wsb-default").to_string();
 
-        let workspace_id = format!("ws-{}", &uuid::Uuid::new_v4().to_string().replace("-", "")[..12]);
+        let workspace_id = format!(
+            "ws-{}",
+            &uuid::Uuid::new_v4().to_string().replace("-", "")[..12]
+        );
 
         let workspace = Workspace {
             workspace_id: workspace_id.clone(),
@@ -170,10 +161,7 @@ fn create_workspaces(
     })))
 }
 
-fn terminate_workspaces(
-    state: &WorkSpacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn terminate_workspaces(state: &WorkSpacesState, payload: &Value) -> Result<Response, LawsError> {
     let requests = payload["TerminateWorkspaceRequests"]
         .as_array()
         .ok_or_else(|| {
@@ -202,21 +190,17 @@ fn terminate_workspaces(
     })))
 }
 
-fn describe_workspaces(
-    state: &WorkSpacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let workspace_ids = payload["WorkspaceIds"]
-        .as_array();
+fn describe_workspaces(state: &WorkSpacesState, payload: &Value) -> Result<Response, LawsError> {
+    let workspace_ids = payload["WorkspaceIds"].as_array();
 
     let workspaces: Vec<Value> = state
         .workspaces
         .iter()
-        .filter(|entry| {
-            match workspace_ids {
-                Some(ids) => ids.iter().any(|id| id.as_str() == Some(entry.key().as_str())),
-                None => true,
-            }
+        .filter(|entry| match workspace_ids {
+            Some(ids) => ids
+                .iter()
+                .any(|id| id.as_str() == Some(entry.key().as_str())),
+            None => true,
         })
         .map(|entry| {
             let ws = entry.value();
@@ -234,10 +218,7 @@ fn describe_workspaces(
     Ok(json_response(json!({ "Workspaces": workspaces })))
 }
 
-fn start_workspaces(
-    state: &WorkSpacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn start_workspaces(state: &WorkSpacesState, payload: &Value) -> Result<Response, LawsError> {
     let requests = payload["StartWorkspaceRequests"]
         .as_array()
         .ok_or_else(|| {
@@ -271,15 +252,10 @@ fn start_workspaces(
     })))
 }
 
-fn stop_workspaces(
-    state: &WorkSpacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let requests = payload["StopWorkspaceRequests"]
-        .as_array()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("StopWorkspaceRequests is required".to_string())
-        })?;
+fn stop_workspaces(state: &WorkSpacesState, payload: &Value) -> Result<Response, LawsError> {
+    let requests = payload["StopWorkspaceRequests"].as_array().ok_or_else(|| {
+        LawsError::InvalidRequest("StopWorkspaceRequests is required".to_string())
+    })?;
 
     let mut failed = Vec::new();
 
@@ -340,9 +316,7 @@ fn register_workspace_directory(
     Ok(json_response(json!({})))
 }
 
-fn describe_workspace_directories(
-    state: &WorkSpacesState,
-) -> Result<Response, LawsError> {
+fn describe_workspace_directories(state: &WorkSpacesState) -> Result<Response, LawsError> {
     let directories: Vec<Value> = state
         .directories
         .iter()

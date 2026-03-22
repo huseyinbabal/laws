@@ -81,8 +81,7 @@ async fn handle_action(
 
     let action = target.strip_prefix("AmazonSSM.").unwrap_or(target);
 
-    let payload: serde_json::Value =
-        serde_json::from_str(&body).unwrap_or(serde_json::Value::Null);
+    let payload: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::Value::Null);
 
     match action {
         "PutParameter" => put_parameter(&state, &payload).await,
@@ -134,9 +133,7 @@ async fn put_parameter(
     let value = payload["Value"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Value is required".to_string()))?;
-    let param_type = payload["Type"]
-        .as_str()
-        .unwrap_or("String");
+    let param_type = payload["Type"].as_str().unwrap_or("String");
     let overwrite = payload["Overwrite"].as_bool().unwrap_or(false);
 
     // Validate type

@@ -67,9 +67,9 @@ pub fn router(state: Arc<AppSyncState>) -> axum::Router {
 // ---------------------------------------------------------------------------
 
 fn random_id(len: usize) -> String {
-    use rand::Rng;
-    rand::thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
+    use rand::RngExt;
+    rand::rng()
+        .sample_iter(&rand::distr::Alphanumeric)
         .take(len)
         .map(char::from)
         .collect::<String>()
@@ -105,10 +105,7 @@ async fn create_graphql_api(
     };
 
     let api_id = random_id(26);
-    let arn = format!(
-        "arn:aws:appsync:{}:{}:apis/{}",
-        REGION, ACCOUNT_ID, api_id
-    );
+    let arn = format!("arn:aws:appsync:{}:{}:apis/{}", REGION, ACCOUNT_ID, api_id);
     let graphql_url = format!(
         "https://{}.appsync-api.{}.amazonaws.com/graphql",
         api_id, REGION

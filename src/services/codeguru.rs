@@ -46,11 +46,7 @@ impl Default for CodeGuruState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &CodeGuruState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &CodeGuruState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("CodeGuruProfilerService.")
         .unwrap_or(target);
@@ -106,15 +102,10 @@ fn profiling_group_to_json(pg: &ProfilingGroup) -> Value {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_profiling_group(
-    state: &CodeGuruState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_profiling_group(state: &CodeGuruState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["profilingGroupName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("profilingGroupName is required".to_string())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("profilingGroupName is required".to_string()))?
         .to_string();
 
     if state.profiling_groups.contains_key(&name) {
@@ -129,9 +120,7 @@ fn create_profiling_group(
         .unwrap_or("Default")
         .to_string();
 
-    let arn = format!(
-        "arn:aws:codeguru-profiler:{REGION}:{ACCOUNT_ID}:profilingGroup/{name}"
-    );
+    let arn = format!("arn:aws:codeguru-profiler:{REGION}:{ACCOUNT_ID}:profilingGroup/{name}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let pg = ProfilingGroup {
@@ -149,42 +138,28 @@ fn create_profiling_group(
     Ok(json_response(json!({ "profilingGroup": resp })))
 }
 
-fn delete_profiling_group(
-    state: &CodeGuruState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_profiling_group(state: &CodeGuruState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["profilingGroupName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("profilingGroupName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("profilingGroupName is required".to_string()))?;
 
     state
         .profiling_groups
         .remove(name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Profiling group '{}' not found", name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Profiling group '{}' not found", name)))?;
 
     Ok(json_response(json!({})))
 }
 
-fn describe_profiling_group(
-    state: &CodeGuruState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_profiling_group(state: &CodeGuruState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["profilingGroupName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("profilingGroupName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("profilingGroupName is required".to_string()))?;
 
     let pg = state
         .profiling_groups
         .get(name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Profiling group '{}' not found", name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Profiling group '{}' not found", name)))?;
 
     Ok(json_response(json!({
         "profilingGroup": profiling_group_to_json(pg.value()),
@@ -210,22 +185,15 @@ fn list_profiling_groups(state: &CodeGuruState) -> Result<Response, LawsError> {
     })))
 }
 
-fn get_recommendations(
-    state: &CodeGuruState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn get_recommendations(state: &CodeGuruState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["profilingGroupName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("profilingGroupName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("profilingGroupName is required".to_string()))?;
 
     let _pg = state
         .profiling_groups
         .get(name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Profiling group '{}' not found", name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Profiling group '{}' not found", name)))?;
 
     Ok(json_response(json!({
         "anomalies": [],

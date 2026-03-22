@@ -56,10 +56,7 @@ impl Default for MwaaState {
 
 pub fn router(state: Arc<MwaaState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/environments",
-            axum::routing::get(list_environments),
-        )
+        .route("/environments", axum::routing::get(list_environments))
         .route(
             "/environments/{name}",
             axum::routing::put(create_environment)
@@ -99,9 +96,7 @@ async fn create_environment(
     Json(payload): Json<Value>,
 ) -> Response {
     let result = (|| -> Result<Response, LawsError> {
-        let arn = format!(
-            "arn:aws:airflow:{REGION}:{ACCOUNT_ID}:environment/{name}"
-        );
+        let arn = format!("arn:aws:airflow:{REGION}:{ACCOUNT_ID}:environment/{name}");
 
         let execution_role_arn = payload["ExecutionRoleArn"]
             .as_str()
@@ -113,10 +108,7 @@ async fn create_environment(
             .unwrap_or("arn:aws:s3:::mwaa-bucket")
             .to_string();
 
-        let dag_s3_path = payload["DagS3Path"]
-            .as_str()
-            .unwrap_or("dags/")
-            .to_string();
+        let dag_s3_path = payload["DagS3Path"].as_str().unwrap_or("dags/").to_string();
 
         let airflow_version = payload["AirflowVersion"]
             .as_str()
@@ -175,9 +167,7 @@ async fn get_environment(
     }
 }
 
-async fn list_environments(
-    State(state): State<Arc<MwaaState>>,
-) -> Response {
+async fn list_environments(State(state): State<Arc<MwaaState>>) -> Response {
     let envs: Vec<String> = state
         .environments
         .iter()

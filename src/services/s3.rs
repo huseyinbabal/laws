@@ -120,12 +120,11 @@ fn xml_error(err: &LawsError) -> Response {
 // Handlers
 // ---------------------------------------------------------------------------
 
-async fn create_bucket(
-    State(state): State<Arc<S3State>>,
-    Path(bucket): Path<String>,
-) -> Response {
+async fn create_bucket(State(state): State<Arc<S3State>>, Path(bucket): Path<String>) -> Response {
     if state.buckets.contains(&bucket) {
-        return xml_error(&LawsError::AlreadyExists(format!("Bucket {bucket} already exists")));
+        return xml_error(&LawsError::AlreadyExists(format!(
+            "Bucket {bucket} already exists"
+        )));
     }
 
     let b = S3Bucket {
@@ -145,10 +144,7 @@ async fn create_bucket(
     )
 }
 
-async fn delete_bucket(
-    State(state): State<Arc<S3State>>,
-    Path(bucket): Path<String>,
-) -> Response {
+async fn delete_bucket(State(state): State<Arc<S3State>>, Path(bucket): Path<String>) -> Response {
     if !state.buckets.contains(&bucket) {
         return xml_error(&LawsError::NotFound(format!("Bucket {bucket} not found")));
     }

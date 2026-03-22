@@ -53,11 +53,7 @@ impl Default for SupportState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &SupportState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &SupportState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AWSSupport_20130415.")
         .unwrap_or(target);
@@ -68,9 +64,7 @@ pub async fn handle_request(
         "ResolveCase" => resolve_case(state, payload),
         "DescribeServices" => describe_services(),
         "DescribeTrustedAdvisorChecks" => describe_trusted_advisor_checks(),
-        "DescribeTrustedAdvisorCheckResult" => {
-            describe_trusted_advisor_check_result(payload)
-        }
+        "DescribeTrustedAdvisorCheckResult" => describe_trusted_advisor_check_result(payload),
         other => Err(LawsError::InvalidRequest(format!(
             "Unknown action: {}",
             other
@@ -100,10 +94,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_case(
-    state: &SupportState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_case(state: &SupportState, payload: &Value) -> Result<Response, LawsError> {
     let subject = payload["subject"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing subject".into()))?
@@ -129,17 +120,10 @@ fn create_case(
         .unwrap_or("")
         .to_string();
 
-    let language = payload["language"]
-        .as_str()
-        .unwrap_or("en")
-        .to_string();
+    let language = payload["language"].as_str().unwrap_or("en").to_string();
 
-    let case_id = format!(
-        "case-{}", &uuid::Uuid::new_v4().to_string()[..12]
-    );
-    let display_id = format!(
-        "{}", &uuid::Uuid::new_v4().to_string()[..8]
-    );
+    let case_id = format!("case-{}", &uuid::Uuid::new_v4().to_string()[..12]);
+    let display_id = format!("{}", &uuid::Uuid::new_v4().to_string()[..8]);
     let time_created = chrono::Utc::now().to_rfc3339();
 
     let case = SupportCase {
@@ -198,10 +182,7 @@ fn describe_cases(state: &SupportState) -> Result<Response, LawsError> {
     })))
 }
 
-fn resolve_case(
-    state: &SupportState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn resolve_case(state: &SupportState, payload: &Value) -> Result<Response, LawsError> {
     let case_id = payload["caseId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing caseId".into()))?;
@@ -295,9 +276,7 @@ fn describe_trusted_advisor_checks() -> Result<Response, LawsError> {
     })))
 }
 
-fn describe_trusted_advisor_check_result(
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_trusted_advisor_check_result(payload: &Value) -> Result<Response, LawsError> {
     let check_id = payload["checkId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing checkId".into()))?;

@@ -78,11 +78,7 @@ impl Default for EcsState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &EcsState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &EcsState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AmazonEC2ContainerServiceV20141113.")
         .unwrap_or(target);
@@ -210,7 +206,9 @@ fn delete_cluster(state: &EcsState, payload: &Value) -> Result<Response, LawsErr
         .remove(&name)
         .ok_or_else(|| LawsError::NotFound(format!("Cluster '{}' not found", name)))?;
 
-    Ok(json_response(json!({ "cluster": cluster_to_json(&cluster) })))
+    Ok(json_response(
+        json!({ "cluster": cluster_to_json(&cluster) }),
+    ))
 }
 
 fn list_clusters(state: &EcsState) -> Result<Response, LawsError> {
@@ -224,10 +222,7 @@ fn list_clusters(state: &EcsState) -> Result<Response, LawsError> {
 }
 
 fn describe_clusters(state: &EcsState, payload: &Value) -> Result<Response, LawsError> {
-    let identifiers = payload["clusters"]
-        .as_array()
-        .cloned()
-        .unwrap_or_default();
+    let identifiers = payload["clusters"].as_array().cloned().unwrap_or_default();
 
     let mut clusters = Vec::new();
     let mut failures = Vec::new();
@@ -259,9 +254,7 @@ fn register_task_definition(state: &EcsState, payload: &Value) -> Result<Respons
     let container_definitions = payload["containerDefinitions"]
         .as_array()
         .cloned()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("containerDefinitions is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("containerDefinitions is required".to_string()))?;
 
     // Determine next revision number for this family
     let revision = {
@@ -276,9 +269,7 @@ fn register_task_definition(state: &EcsState, payload: &Value) -> Result<Respons
     };
 
     let key = format!("{family}:{revision}");
-    let arn = format!(
-        "arn:aws:ecs:{REGION}:{ACCOUNT_ID}:task-definition/{key}"
-    );
+    let arn = format!("arn:aws:ecs:{REGION}:{ACCOUNT_ID}:task-definition/{key}");
 
     let td = EcsTaskDefinition {
         family: family.clone(),
@@ -294,23 +285,16 @@ fn register_task_definition(state: &EcsState, payload: &Value) -> Result<Respons
     Ok(json_response(json!({ "taskDefinition": resp })))
 }
 
-fn deregister_task_definition(
-    state: &EcsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn deregister_task_definition(state: &EcsState, payload: &Value) -> Result<Response, LawsError> {
     let key = payload["taskDefinition"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("taskDefinition is required".to_string())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("taskDefinition is required".to_string()))?
         .to_string();
 
     let mut td = state
         .task_definitions
         .get_mut(&key)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Task definition '{}' not found", key))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Task definition '{}' not found", key)))?;
 
     td.status = "INACTIVE".to_string();
     let resp = task_def_to_json(&td);
@@ -330,9 +314,7 @@ fn list_task_definitions(state: &EcsState) -> Result<Response, LawsError> {
 }
 
 fn run_task(state: &EcsState, payload: &Value) -> Result<Response, LawsError> {
-    let cluster_id = payload["cluster"]
-        .as_str()
-        .unwrap_or("default");
+    let cluster_id = payload["cluster"].as_str().unwrap_or("default");
     let cluster_name = resolve_cluster_name(cluster_id);
 
     let cluster = state
@@ -343,19 +325,11 @@ fn run_task(state: &EcsState, payload: &Value) -> Result<Response, LawsError> {
 
     let task_def_key = payload["taskDefinition"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("taskDefinition is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("taskDefinition is required".to_string()))?;
 
-    let td = state
-        .task_definitions
-        .get(task_def_key)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!(
-                "Task definition '{}' not found",
-                task_def_key
-            ))
-        })?;
+    let td = state.task_definitions.get(task_def_key).ok_or_else(|| {
+        LawsError::NotFound(format!("Task definition '{}' not found", task_def_key))
+    })?;
     let td_arn = td.arn.clone();
 
     let count = payload["count"].as_u64().unwrap_or(1) as usize;
@@ -364,9 +338,7 @@ fn run_task(state: &EcsState, payload: &Value) -> Result<Response, LawsError> {
     let mut tasks = Vec::new();
     for _ in 0..count {
         let task_id = uuid::Uuid::new_v4().to_string();
-        let task_arn = format!(
-            "arn:aws:ecs:{REGION}:{ACCOUNT_ID}:task/{cluster_name}/{task_id}"
-        );
+        let task_arn = format!("arn:aws:ecs:{REGION}:{ACCOUNT_ID}:task/{cluster_name}/{task_id}");
 
         let task = EcsTask {
             task_arn: task_arn.clone(),
@@ -388,9 +360,7 @@ fn run_task(state: &EcsState, payload: &Value) -> Result<Response, LawsError> {
 }
 
 fn stop_task(state: &EcsState, payload: &Value) -> Result<Response, LawsError> {
-    let _cluster_id = payload["cluster"]
-        .as_str()
-        .unwrap_or("default");
+    let _cluster_id = payload["cluster"].as_str().unwrap_or("default");
 
     let task_arn = payload["task"]
         .as_str()
@@ -408,9 +378,7 @@ fn stop_task(state: &EcsState, payload: &Value) -> Result<Response, LawsError> {
 }
 
 fn list_tasks(state: &EcsState, payload: &Value) -> Result<Response, LawsError> {
-    let cluster_id = payload["cluster"]
-        .as_str()
-        .unwrap_or("default");
+    let cluster_id = payload["cluster"].as_str().unwrap_or("default");
     let cluster_name = resolve_cluster_name(cluster_id);
 
     let cluster = state
@@ -430,14 +398,9 @@ fn list_tasks(state: &EcsState, payload: &Value) -> Result<Response, LawsError> 
 }
 
 fn describe_tasks(state: &EcsState, payload: &Value) -> Result<Response, LawsError> {
-    let _cluster_id = payload["cluster"]
-        .as_str()
-        .unwrap_or("default");
+    let _cluster_id = payload["cluster"].as_str().unwrap_or("default");
 
-    let task_arns = payload["tasks"]
-        .as_array()
-        .cloned()
-        .unwrap_or_default();
+    let task_arns = payload["tasks"].as_array().cloned().unwrap_or_default();
 
     let mut tasks = Vec::new();
     let mut failures = Vec::new();

@@ -63,11 +63,7 @@ impl Default for ElbState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &ElbState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &ElbState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("ElasticLoadBalancingV2.")
         .unwrap_or(target);
@@ -162,9 +158,8 @@ fn create_load_balancer(state: &ElbState, payload: &Value) -> Result<Response, L
     }
 
     let hex = random_hex8();
-    let arn = format!(
-        "arn:aws:elasticloadbalancing:{REGION}:{ACCOUNT_ID}:loadbalancer/app/{name}/{hex}"
-    );
+    let arn =
+        format!("arn:aws:elasticloadbalancing:{REGION}:{ACCOUNT_ID}:loadbalancer/app/{name}/{hex}");
     let dns_name = format!("{name}-{hex}.{REGION}.elb.amazonaws.com");
 
     let lb = LoadBalancer {
@@ -245,14 +240,10 @@ fn create_target_group(state: &ElbState, payload: &Value) -> Result<Response, La
     }
 
     let hex = random_hex8();
-    let arn = format!(
-        "arn:aws:elasticloadbalancing:{REGION}:{ACCOUNT_ID}:targetgroup/{name}/{hex}"
-    );
+    let arn =
+        format!("arn:aws:elasticloadbalancing:{REGION}:{ACCOUNT_ID}:targetgroup/{name}/{hex}");
 
-    let port = payload
-        .get("Port")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(80) as u16;
+    let port = payload.get("Port").and_then(|v| v.as_u64()).unwrap_or(80) as u16;
 
     let tg = TargetGroup {
         name: name.clone(),
@@ -305,22 +296,21 @@ fn delete_target_group(state: &ElbState, payload: &Value) -> Result<Response, La
 }
 
 fn describe_target_groups(state: &ElbState, payload: &Value) -> Result<Response, LawsError> {
-    let tgs: Vec<Value> =
-        if let Some(names) = payload.get("Names").and_then(|v| v.as_array()) {
-            names
-                .iter()
-                .filter_map(|n| {
-                    let name = n.as_str()?;
-                    state.target_groups.get(name).map(|tg| tg_to_json(&tg))
-                })
-                .collect()
-        } else {
-            state
-                .target_groups
-                .iter()
-                .map(|entry| tg_to_json(entry.value()))
-                .collect()
-        };
+    let tgs: Vec<Value> = if let Some(names) = payload.get("Names").and_then(|v| v.as_array()) {
+        names
+            .iter()
+            .filter_map(|n| {
+                let name = n.as_str()?;
+                state.target_groups.get(name).map(|tg| tg_to_json(&tg))
+            })
+            .collect()
+    } else {
+        state
+            .target_groups
+            .iter()
+            .map(|entry| tg_to_json(entry.value()))
+            .collect()
+    };
 
     Ok(json_response(json!({
         "TargetGroups": tgs
@@ -377,10 +367,7 @@ fn create_listener(state: &ElbState, payload: &Value) -> Result<Response, LawsEr
         .find(|entry| entry.value().arn == lb_arn)
         .ok_or_else(|| LawsError::NotFound(format!("load balancer not found: {lb_arn}")))?;
 
-    let port = payload
-        .get("Port")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(80);
+    let port = payload.get("Port").and_then(|v| v.as_u64()).unwrap_or(80);
 
     let protocol = payload
         .get("Protocol")
@@ -463,9 +450,7 @@ fn delete_listener(_state: &ElbState, payload: &Value) -> Result<Response, LawsE
     let _listener_arn = payload
         .get("ListenerArn")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("missing required field: ListenerArn".into())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("missing required field: ListenerArn".into()))?;
     // Mock: just acknowledge the delete
     Ok(json_response(json!({})))
 }
@@ -480,9 +465,7 @@ fn delete_rule(_state: &ElbState, payload: &Value) -> Result<Response, LawsError
     let _rule_arn = payload
         .get("RuleArn")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("missing required field: RuleArn".into())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("missing required field: RuleArn".into()))?;
     // Mock: just acknowledge the delete
     Ok(json_response(json!({})))
 }
@@ -627,9 +610,8 @@ fn query_create_load_balancer(
     }
 
     let hex = random_hex8();
-    let arn = format!(
-        "arn:aws:elasticloadbalancing:{REGION}:{ACCOUNT_ID}:loadbalancer/app/{name}/{hex}"
-    );
+    let arn =
+        format!("arn:aws:elasticloadbalancing:{REGION}:{ACCOUNT_ID}:loadbalancer/app/{name}/{hex}");
     let dns_name = format!("{name}-{hex}.{REGION}.elb.amazonaws.com");
 
     let lb = LoadBalancer {
@@ -637,7 +619,10 @@ fn query_create_load_balancer(
         arn,
         dns_name,
         type_: "application".into(),
-        scheme: params.get("Scheme").cloned().unwrap_or_else(|| "internet-facing".into()),
+        scheme: params
+            .get("Scheme")
+            .cloned()
+            .unwrap_or_else(|| "internet-facing".into()),
         state: "active".into(),
         vpc_id: "vpc-12345678".into(),
     };
@@ -645,7 +630,10 @@ fn query_create_load_balancer(
     let xml = lb_to_xml(&lb);
     state.load_balancers.insert(name, lb);
 
-    Ok(xml_response("CreateLoadBalancer", &format!("<LoadBalancers>{xml}</LoadBalancers>")))
+    Ok(xml_response(
+        "CreateLoadBalancer",
+        &format!("<LoadBalancers>{xml}</LoadBalancers>"),
+    ))
 }
 
 fn query_delete_load_balancer(
@@ -677,9 +665,7 @@ fn query_describe_load_balancers(
     let lbs: Vec<String> = state
         .load_balancers
         .iter()
-        .filter(|entry| {
-            filter_name.map(|n| entry.key() == n).unwrap_or(true)
-        })
+        .filter(|entry| filter_name.map(|n| entry.key() == n).unwrap_or(true))
         .map(|entry| lb_to_xml(entry.value()))
         .collect();
 
@@ -703,25 +689,39 @@ fn query_create_target_group(
     }
 
     let hex = random_hex8();
-    let arn = format!(
-        "arn:aws:elasticloadbalancing:{REGION}:{ACCOUNT_ID}:targetgroup/{name}/{hex}"
-    );
-    let port = params.get("Port").and_then(|s| s.parse::<u16>().ok()).unwrap_or(80);
+    let arn =
+        format!("arn:aws:elasticloadbalancing:{REGION}:{ACCOUNT_ID}:targetgroup/{name}/{hex}");
+    let port = params
+        .get("Port")
+        .and_then(|s| s.parse::<u16>().ok())
+        .unwrap_or(80);
 
     let tg = TargetGroup {
         name: name.clone(),
         arn,
-        protocol: params.get("Protocol").cloned().unwrap_or_else(|| "HTTP".into()),
+        protocol: params
+            .get("Protocol")
+            .cloned()
+            .unwrap_or_else(|| "HTTP".into()),
         port,
-        vpc_id: params.get("VpcId").cloned().unwrap_or_else(|| "vpc-12345678".into()),
-        health_check_path: params.get("HealthCheckPath").cloned().unwrap_or_else(|| "/".into()),
+        vpc_id: params
+            .get("VpcId")
+            .cloned()
+            .unwrap_or_else(|| "vpc-12345678".into()),
+        health_check_path: params
+            .get("HealthCheckPath")
+            .cloned()
+            .unwrap_or_else(|| "/".into()),
         targets: Vec::new(),
     };
 
     let xml = tg_to_xml(&tg);
     state.target_groups.insert(name, tg);
 
-    Ok(xml_response("CreateTargetGroup", &format!("<TargetGroups>{xml}</TargetGroups>")))
+    Ok(xml_response(
+        "CreateTargetGroup",
+        &format!("<TargetGroups>{xml}</TargetGroups>"),
+    ))
 }
 
 fn query_delete_target_group(
@@ -753,9 +753,7 @@ fn query_describe_target_groups(
     let tgs: Vec<String> = state
         .target_groups
         .iter()
-        .filter(|entry| {
-            filter_name.map(|n| entry.key() == n).unwrap_or(true)
-        })
+        .filter(|entry| filter_name.map(|n| entry.key() == n).unwrap_or(true))
         .map(|entry| tg_to_xml(entry.value()))
         .collect();
 
@@ -842,7 +840,10 @@ fn query_create_listener(
         .find(|entry| entry.value().arn == lb_arn.as_str())
         .ok_or_else(|| LawsError::NotFound(format!("load balancer not found: {lb_arn}")))?;
 
-    let port = params.get("Port").and_then(|s| s.parse::<u64>().ok()).unwrap_or(80);
+    let port = params
+        .get("Port")
+        .and_then(|s| s.parse::<u64>().ok())
+        .unwrap_or(80);
     let protocol = params.get("Protocol").map(|s| s.as_str()).unwrap_or("HTTP");
     let listener_arn = format!(
         "arn:aws:elasticloadbalancing:{REGION}:{ACCOUNT_ID}:listener/app/{}/{}",
@@ -871,7 +872,8 @@ fn query_describe_listeners(
     let inner = if let Some(arn) = lb_arn {
         let listener_arn = format!(
             "arn:aws:elasticloadbalancing:{REGION}:{ACCOUNT_ID}:listener/app/{}/{}",
-            random_hex8(), random_hex8()
+            random_hex8(),
+            random_hex8()
         );
         format!(
             "<Listeners><member>\

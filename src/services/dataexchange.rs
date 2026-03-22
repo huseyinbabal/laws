@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post, delete};
+use axum::routing::{delete, get, post};
 use axum::Json;
 use chrono::Utc;
 use dashmap::DashMap;
@@ -89,10 +89,15 @@ async fn create_data_set(
 ) -> Response {
     let name = match body["Name"].as_str() {
         Some(n) => n.to_string(),
-        None => return rest_json::error_response(&LawsError::InvalidRequest("Missing Name".into())),
+        None => {
+            return rest_json::error_response(&LawsError::InvalidRequest("Missing Name".into()))
+        }
     };
 
-    let asset_type = body["AssetType"].as_str().unwrap_or("S3_SNAPSHOT").to_string();
+    let asset_type = body["AssetType"]
+        .as_str()
+        .unwrap_or("S3_SNAPSHOT")
+        .to_string();
     let description = body["Description"].as_str().unwrap_or("").to_string();
     let now = Utc::now().to_rfc3339();
     let id = uuid::Uuid::new_v4().to_string();
@@ -190,7 +195,9 @@ async fn create_revision(
 
     let id = uuid::Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
-    let arn = format!("arn:aws:dataexchange:{REGION}:{ACCOUNT_ID}:data-sets/{data_set_id}/revisions/{id}");
+    let arn = format!(
+        "arn:aws:dataexchange:{REGION}:{ACCOUNT_ID}:data-sets/{data_set_id}/revisions/{id}"
+    );
     let comment = body["Comment"].as_str().unwrap_or("").to_string();
 
     let revision = Revision {

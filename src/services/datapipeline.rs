@@ -45,14 +45,8 @@ impl Default for DataPipelineState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &DataPipelineState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("DataPipeline.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &DataPipelineState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("DataPipeline.").unwrap_or(target);
 
     let result = match action {
         "CreatePipeline" => create_pipeline(state, payload),
@@ -147,7 +141,9 @@ fn describe_pipelines(state: &DataPipelineState, payload: &Value) -> Result<Resp
         }
     }
 
-    Ok(json_response(json!({ "pipelineDescriptionList": pipeline_list })))
+    Ok(json_response(
+        json!({ "pipelineDescriptionList": pipeline_list }),
+    ))
 }
 
 fn list_pipelines(state: &DataPipelineState) -> Result<Response, LawsError> {
@@ -160,7 +156,9 @@ fn list_pipelines(state: &DataPipelineState) -> Result<Response, LawsError> {
         })
         .collect();
 
-    Ok(json_response(json!({ "pipelineIdList": ids, "hasMoreResults": false })))
+    Ok(json_response(
+        json!({ "pipelineIdList": ids, "hasMoreResults": false }),
+    ))
 }
 
 fn activate_pipeline(state: &DataPipelineState, payload: &Value) -> Result<Response, LawsError> {
@@ -177,12 +175,18 @@ fn activate_pipeline(state: &DataPipelineState, payload: &Value) -> Result<Respo
     Ok(json_response(json!({})))
 }
 
-fn put_pipeline_definition(state: &DataPipelineState, payload: &Value) -> Result<Response, LawsError> {
+fn put_pipeline_definition(
+    state: &DataPipelineState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let pipeline_id = payload["pipelineId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing pipelineId".into()))?;
 
-    let definition = payload.get("pipelineObjects").cloned().unwrap_or(Value::Null);
+    let definition = payload
+        .get("pipelineObjects")
+        .cloned()
+        .unwrap_or(Value::Null);
 
     let mut pipeline = state
         .pipelines

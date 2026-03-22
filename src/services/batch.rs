@@ -139,19 +139,12 @@ async fn create_compute_environment(
     let result = (|| -> Result<Response, LawsError> {
         let name = payload["computeEnvironmentName"]
             .as_str()
-            .ok_or_else(|| {
-                LawsError::InvalidRequest("Missing computeEnvironmentName".into())
-            })?
+            .ok_or_else(|| LawsError::InvalidRequest("Missing computeEnvironmentName".into()))?
             .to_string();
 
-        let arn = format!(
-            "arn:aws:batch:{REGION}:{ACCOUNT_ID}:compute-environment/{name}"
-        );
+        let arn = format!("arn:aws:batch:{REGION}:{ACCOUNT_ID}:compute-environment/{name}");
 
-        let type_ = payload["type"]
-            .as_str()
-            .unwrap_or("MANAGED")
-            .to_string();
+        let type_ = payload["type"].as_str().unwrap_or("MANAGED").to_string();
 
         let ce = ComputeEnvironment {
             name: name.clone(),
@@ -182,19 +175,11 @@ async fn delete_compute_environment(
     let result = (|| -> Result<Response, LawsError> {
         let name = payload["computeEnvironment"]
             .as_str()
-            .ok_or_else(|| {
-                LawsError::InvalidRequest("Missing computeEnvironment".into())
-            })?;
+            .ok_or_else(|| LawsError::InvalidRequest("Missing computeEnvironment".into()))?;
 
-        state
-            .compute_environments
-            .remove(name)
-            .ok_or_else(|| {
-                LawsError::NotFound(format!(
-                    "Compute environment '{}' not found",
-                    name
-                ))
-            })?;
+        state.compute_environments.remove(name).ok_or_else(|| {
+            LawsError::NotFound(format!("Compute environment '{}' not found", name))
+        })?;
 
         Ok(rest_json::ok(json!({})))
     })();
@@ -228,9 +213,7 @@ async fn create_job_queue(
             .ok_or_else(|| LawsError::InvalidRequest("Missing jobQueueName".into()))?
             .to_string();
 
-        let arn = format!(
-            "arn:aws:batch:{REGION}:{ACCOUNT_ID}:job-queue/{name}"
-        );
+        let arn = format!("arn:aws:batch:{REGION}:{ACCOUNT_ID}:job-queue/{name}");
 
         let priority = payload["priority"].as_u64().unwrap_or(1) as u32;
 
@@ -278,10 +261,7 @@ async fn describe_job_queues(
     rest_json::ok(json!({ "jobQueues": queues }))
 }
 
-async fn submit_job(
-    State(state): State<Arc<BatchState>>,
-    Json(payload): Json<Value>,
-) -> Response {
+async fn submit_job(State(state): State<Arc<BatchState>>, Json(payload): Json<Value>) -> Response {
     let result = (|| -> Result<Response, LawsError> {
         let job_name = payload["jobName"]
             .as_str()
@@ -322,26 +302,23 @@ async fn describe_jobs(
     State(state): State<Arc<BatchState>>,
     Json(payload): Json<Value>,
 ) -> Response {
-    let job_ids = payload["jobs"]
-        .as_array()
-        .cloned()
-        .unwrap_or_default();
+    let job_ids = payload["jobs"].as_array().cloned().unwrap_or_default();
 
     let jobs: Vec<Value> = job_ids
         .iter()
         .filter_map(|id| {
             let id_str = id.as_str()?;
-            state.jobs.get(id_str).map(|entry| job_to_json(entry.value()))
+            state
+                .jobs
+                .get(id_str)
+                .map(|entry| job_to_json(entry.value()))
         })
         .collect();
 
     rest_json::ok(json!({ "jobs": jobs }))
 }
 
-async fn cancel_job(
-    State(state): State<Arc<BatchState>>,
-    Json(payload): Json<Value>,
-) -> Response {
+async fn cancel_job(State(state): State<Arc<BatchState>>, Json(payload): Json<Value>) -> Response {
     let result = (|| -> Result<Response, LawsError> {
         let job_id = payload["jobId"]
             .as_str()

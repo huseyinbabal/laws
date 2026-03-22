@@ -54,14 +54,8 @@ impl Default for DataSyncState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &DataSyncState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("FmrsService.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &DataSyncState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("FmrsService.").unwrap_or(target);
 
     let result = match action {
         "CreateTask" => create_task(state, payload),
@@ -190,7 +184,11 @@ fn create_location_s3(state: &DataSyncState, payload: &Value) -> Result<Response
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing S3BucketArn".into()))?;
     let subdirectory = payload["Subdirectory"].as_str().unwrap_or("/");
-    let location_uri = format!("s3://{}{}", s3_bucket.rsplit(':').next().unwrap_or(s3_bucket), subdirectory);
+    let location_uri = format!(
+        "s3://{}{}",
+        s3_bucket.rsplit(':').next().unwrap_or(s3_bucket),
+        subdirectory
+    );
 
     let location = DataSyncLocation {
         location_arn: location_arn.clone(),

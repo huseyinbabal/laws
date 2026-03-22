@@ -58,9 +58,7 @@ pub async fn handle_request(
     target: &str,
     payload: &Value,
 ) -> Response {
-    let action = target
-        .strip_prefix("AWSFMS_20180101.")
-        .unwrap_or(target);
+    let action = target.strip_prefix("AWSFMS_20180101.").unwrap_or(target);
 
     let result = match action {
         "PutPolicy" => put_policy(state, payload),
@@ -109,7 +107,8 @@ fn policy_to_json(p: &FmsPolicy) -> Value {
 // ---------------------------------------------------------------------------
 
 fn put_policy(state: &FirewallManagerState, payload: &Value) -> Result<Response, LawsError> {
-    let policy = payload.get("Policy")
+    let policy = payload
+        .get("Policy")
         .ok_or_else(|| LawsError::InvalidRequest("Missing Policy".into()))?;
 
     let policy_name = policy["PolicyName"]
@@ -144,7 +143,9 @@ fn put_policy(state: &FirewallManagerState, payload: &Value) -> Result<Response,
 
     let resp = policy_to_json(&fms_policy);
     state.policies.insert(policy_id, fms_policy);
-    Ok(json_response(json!({ "Policy": resp, "PolicyArn": format!("arn:aws:fms:{REGION}:{ACCOUNT_ID}:policy/{}", resp["PolicyId"].as_str().unwrap_or("")) })))
+    Ok(json_response(
+        json!({ "Policy": resp, "PolicyArn": format!("arn:aws:fms:{REGION}:{ACCOUNT_ID}:policy/{}", resp["PolicyId"].as_str().unwrap_or("")) }),
+    ))
 }
 
 fn get_policy(state: &FirewallManagerState, payload: &Value) -> Result<Response, LawsError> {
@@ -158,7 +159,9 @@ fn get_policy(state: &FirewallManagerState, payload: &Value) -> Result<Response,
         .ok_or_else(|| LawsError::NotFound(format!("Policy not found: {policy_id}")))?;
 
     let arn = format!("arn:aws:fms:{REGION}:{ACCOUNT_ID}:policy/{policy_id}");
-    Ok(json_response(json!({ "Policy": policy_to_json(policy.value()), "PolicyArn": arn })))
+    Ok(json_response(
+        json!({ "Policy": policy_to_json(policy.value()), "PolicyArn": arn }),
+    ))
 }
 
 fn list_policies(state: &FirewallManagerState) -> Result<Response, LawsError> {
@@ -194,7 +197,10 @@ fn delete_policy(state: &FirewallManagerState, payload: &Value) -> Result<Respon
     Ok(json_response(json!({})))
 }
 
-fn put_notification_channel(state: &FirewallManagerState, payload: &Value) -> Result<Response, LawsError> {
+fn put_notification_channel(
+    state: &FirewallManagerState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let sns_topic_arn = payload["SnsTopicArn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing SnsTopicArn".into()))?
@@ -210,7 +216,9 @@ fn put_notification_channel(state: &FirewallManagerState, payload: &Value) -> Re
         sns_role_name,
     };
 
-    state.notification_channel.insert("default".to_string(), channel);
+    state
+        .notification_channel
+        .insert("default".to_string(), channel);
     Ok(json_response(json!({})))
 }
 

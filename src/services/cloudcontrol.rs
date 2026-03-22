@@ -44,14 +44,8 @@ impl Default for CloudControlState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &CloudControlState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("CloudApiService.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &CloudControlState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("CloudApiService.").unwrap_or(target);
 
     let result = match action {
         "CreateResource" => create_resource(state, payload),
@@ -106,12 +100,9 @@ fn create_resource(state: &CloudControlState, payload: &Value) -> Result<Respons
         .ok_or_else(|| LawsError::InvalidRequest("TypeName is required".to_string()))?
         .to_string();
 
-    let desired_state = payload["DesiredState"]
-        .as_str()
-        .unwrap_or("{}");
+    let desired_state = payload["DesiredState"].as_str().unwrap_or("{}");
 
-    let properties: Value = serde_json::from_str(desired_state)
-        .unwrap_or(json!({}));
+    let properties: Value = serde_json::from_str(desired_state).unwrap_or(json!({}));
 
     let identifier = uuid::Uuid::new_v4().to_string();
     let key = make_key(&type_name, &identifier);
@@ -218,9 +209,7 @@ fn update_resource(state: &CloudControlState, payload: &Value) -> Result<Respons
 
     let key = make_key(type_name, identifier);
 
-    let patch_document = payload["PatchDocument"]
-        .as_str()
-        .unwrap_or("[]");
+    let patch_document = payload["PatchDocument"].as_str().unwrap_or("[]");
 
     let mut resource = state
         .resources

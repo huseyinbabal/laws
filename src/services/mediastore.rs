@@ -46,11 +46,7 @@ impl Default for MediaStoreState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &MediaStoreState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &MediaStoreState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("MediaStore_20170901.")
         .unwrap_or(target);
@@ -91,10 +87,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_container(
-    state: &MediaStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_container(state: &MediaStoreState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["ContainerName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ContainerName".into()))?
@@ -107,9 +100,7 @@ fn create_container(
         )));
     }
 
-    let arn = format!(
-        "arn:aws:mediastore:{REGION}:{ACCOUNT_ID}:container/{name}"
-    );
+    let arn = format!("arn:aws:mediastore:{REGION}:{ACCOUNT_ID}:container/{name}");
     let endpoint = format!(
         "https://{}.mediastore.{REGION}.amazonaws.com",
         uuid::Uuid::new_v4().to_string().replace('-', "")[..8].to_string()
@@ -138,10 +129,7 @@ fn create_container(
     })))
 }
 
-fn delete_container(
-    state: &MediaStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_container(state: &MediaStoreState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["ContainerName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ContainerName".into()))?;
@@ -154,10 +142,7 @@ fn delete_container(
     Ok(json_response(json!({})))
 }
 
-fn describe_container(
-    state: &MediaStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_container(state: &MediaStoreState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["ContainerName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ContainerName".into()))?;
@@ -178,9 +163,7 @@ fn describe_container(
     })))
 }
 
-fn list_containers(
-    state: &MediaStoreState,
-) -> Result<Response, LawsError> {
+fn list_containers(state: &MediaStoreState) -> Result<Response, LawsError> {
     let containers: Vec<Value> = state
         .containers
         .iter()
@@ -201,10 +184,7 @@ fn list_containers(
     })))
 }
 
-fn put_container_policy(
-    state: &MediaStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn put_container_policy(state: &MediaStoreState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["ContainerName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ContainerName".into()))?;
@@ -224,10 +204,7 @@ fn put_container_policy(
     Ok(json_response(json!({})))
 }
 
-fn get_container_policy(
-    state: &MediaStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn get_container_policy(state: &MediaStoreState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["ContainerName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ContainerName".into()))?;

@@ -73,9 +73,7 @@ async fn enable_security_hub(
     State(state): State<Arc<SecurityHubState>>,
     Json(_payload): Json<Value>,
 ) -> Response {
-    let hub_arn = format!(
-        "arn:aws:securityhub:{REGION}:{ACCOUNT_ID}:hub/default"
-    );
+    let hub_arn = format!("arn:aws:securityhub:{REGION}:{ACCOUNT_ID}:hub/default");
 
     state.hub_enabled.insert("default".to_string(), true);
 
@@ -84,9 +82,7 @@ async fn enable_security_hub(
     }))
 }
 
-async fn get_enabled_standards(
-    State(state): State<Arc<SecurityHubState>>,
-) -> Response {
+async fn get_enabled_standards(State(state): State<Arc<SecurityHubState>>) -> Response {
     let enabled = state.hub_enabled.contains_key("default");
 
     rest_json::ok(json!({
@@ -119,25 +115,16 @@ async fn batch_import_findings(
                 .unwrap_or(&uuid::Uuid::new_v4().to_string())
                 .to_string();
 
-            let title = finding["Title"]
-                .as_str()
-                .unwrap_or("")
-                .to_string();
+            let title = finding["Title"].as_str().unwrap_or("").to_string();
 
-            let description = finding["Description"]
-                .as_str()
-                .unwrap_or("")
-                .to_string();
+            let description = finding["Description"].as_str().unwrap_or("").to_string();
 
             let severity = finding["Severity"]["Label"]
                 .as_str()
                 .unwrap_or("INFORMATIONAL")
                 .to_string();
 
-            let product_arn = finding["ProductArn"]
-                .as_str()
-                .unwrap_or("")
-                .to_string();
+            let product_arn = finding["ProductArn"].as_str().unwrap_or("").to_string();
 
             let now = chrono::Utc::now().to_rfc3339();
 

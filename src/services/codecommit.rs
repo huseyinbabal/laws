@@ -48,11 +48,7 @@ impl Default for CodeCommitState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &CodeCommitState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &CodeCommitState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("CodeCommit_20150413.")
         .unwrap_or(target);
@@ -120,12 +116,8 @@ fn create_repository(state: &CodeCommitState, payload: &Value) -> Result<Respons
 
     let repo_id = uuid::Uuid::new_v4().to_string();
     let arn = format!("arn:aws:codecommit:{REGION}:{ACCOUNT_ID}:{name}");
-    let clone_url_http = format!(
-        "https://git-codecommit.{REGION}.amazonaws.com/v1/repos/{name}"
-    );
-    let clone_url_ssh = format!(
-        "ssh://git-codecommit.{REGION}.amazonaws.com/v1/repos/{name}"
-    );
+    let clone_url_http = format!("https://git-codecommit.{REGION}.amazonaws.com/v1/repos/{name}");
+    let clone_url_ssh = format!("ssh://git-codecommit.{REGION}.amazonaws.com/v1/repos/{name}");
     let description = payload["repositoryDescription"]
         .as_str()
         .unwrap_or("")
@@ -145,7 +137,10 @@ fn create_repository(state: &CodeCommitState, payload: &Value) -> Result<Respons
     let resp = repository_to_json(&repo);
     state.repositories.insert(name, repo);
 
-    Ok(json_response(StatusCode::OK, json!({ "repositoryMetadata": resp })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "repositoryMetadata": resp }),
+    ))
 }
 
 fn delete_repository(state: &CodeCommitState, payload: &Value) -> Result<Response, LawsError> {
@@ -158,7 +153,10 @@ fn delete_repository(state: &CodeCommitState, payload: &Value) -> Result<Respons
         .remove(name)
         .ok_or_else(|| LawsError::NotFound(format!("Repository '{}' not found", name)))?;
 
-    Ok(json_response(StatusCode::OK, json!({ "repositoryId": repo.repository_id })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "repositoryId": repo.repository_id }),
+    ))
 }
 
 fn get_repository(state: &CodeCommitState, payload: &Value) -> Result<Response, LawsError> {
@@ -171,7 +169,10 @@ fn get_repository(state: &CodeCommitState, payload: &Value) -> Result<Response, 
         .get(name)
         .ok_or_else(|| LawsError::NotFound(format!("Repository '{}' not found", name)))?;
 
-    Ok(json_response(StatusCode::OK, json!({ "repositoryMetadata": repository_to_json(&repo) })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "repositoryMetadata": repository_to_json(&repo) }),
+    ))
 }
 
 fn list_repositories(state: &CodeCommitState) -> Result<Response, LawsError> {
@@ -186,7 +187,10 @@ fn list_repositories(state: &CodeCommitState) -> Result<Response, LawsError> {
         })
         .collect();
 
-    Ok(json_response(StatusCode::OK, json!({ "repositories": repos })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "repositories": repos }),
+    ))
 }
 
 fn create_branch(state: &CodeCommitState, payload: &Value) -> Result<Response, LawsError> {
@@ -229,5 +233,8 @@ fn list_branches(state: &CodeCommitState, payload: &Value) -> Result<Response, L
         .get(repo_name)
         .ok_or_else(|| LawsError::NotFound(format!("Repository '{}' not found", repo_name)))?;
 
-    Ok(json_response(StatusCode::OK, json!({ "branches": repo.branches })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "branches": repo.branches }),
+    ))
 }

@@ -70,11 +70,7 @@ impl Default for SwfState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &SwfState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &SwfState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("SimpleWorkflowService.")
         .unwrap_or(target);
@@ -226,10 +222,7 @@ fn list_workflow_types(state: &SwfState, payload: &Value) -> Result<Response, La
         })
         .collect();
 
-    Ok(json_response(
-        StatusCode::OK,
-        json!({ "typeInfos": types }),
-    ))
+    Ok(json_response(StatusCode::OK, json!({ "typeInfos": types })))
 }
 
 fn start_workflow_execution(state: &SwfState, payload: &Value) -> Result<Response, LawsError> {
@@ -269,10 +262,7 @@ fn start_workflow_execution(state: &SwfState, payload: &Value) -> Result<Respons
     Ok(json_response(StatusCode::OK, json!({ "runId": run_id })))
 }
 
-fn list_open_workflow_executions(
-    state: &SwfState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn list_open_workflow_executions(state: &SwfState, payload: &Value) -> Result<Response, LawsError> {
     let domain = payload["domain"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing domain".into()))?;
@@ -307,10 +297,7 @@ fn list_open_workflow_executions(
     ))
 }
 
-fn terminate_workflow_execution(
-    state: &SwfState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn terminate_workflow_execution(state: &SwfState, payload: &Value) -> Result<Response, LawsError> {
     let domain = payload["domain"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing domain".into()))?;

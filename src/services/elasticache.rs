@@ -139,17 +139,12 @@ fn create_cache_cluster(state: &ElastiCacheState, payload: &Value) -> Result<Res
         )));
     }
 
-    let engine = payload["Engine"]
-        .as_str()
-        .unwrap_or("redis")
-        .to_string();
+    let engine = payload["Engine"].as_str().unwrap_or("redis").to_string();
     let cache_node_type = payload["CacheNodeType"]
         .as_str()
         .unwrap_or("cache.t3.micro")
         .to_string();
-    let num_cache_nodes = payload["NumCacheNodes"]
-        .as_u64()
-        .unwrap_or(1) as u32;
+    let num_cache_nodes = payload["NumCacheNodes"].as_u64().unwrap_or(1) as u32;
     let arn = format!("arn:aws:elasticache:{REGION}:{ACCOUNT_ID}:cluster:{id}");
 
     let cluster = CacheCluster {
@@ -177,20 +172,21 @@ fn delete_cache_cluster(state: &ElastiCacheState, payload: &Value) -> Result<Res
         .remove(id)
         .ok_or_else(|| LawsError::NotFound(format!("Cache cluster '{}' not found", id)))?;
 
-    Ok(json_response(json!({ "CacheCluster": cache_cluster_to_json(&cluster) })))
+    Ok(json_response(
+        json!({ "CacheCluster": cache_cluster_to_json(&cluster) }),
+    ))
 }
 
-fn describe_cache_clusters(state: &ElastiCacheState, payload: &Value) -> Result<Response, LawsError> {
+fn describe_cache_clusters(
+    state: &ElastiCacheState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let filter_id = payload["CacheClusterId"].as_str();
 
     let clusters: Vec<Value> = state
         .clusters
         .iter()
-        .filter(|entry| {
-            filter_id
-                .map(|fid| entry.key() == fid)
-                .unwrap_or(true)
-        })
+        .filter(|entry| filter_id.map(|fid| entry.key() == fid).unwrap_or(true))
         .map(|entry| cache_cluster_to_json(entry.value()))
         .collect();
 
@@ -206,7 +202,10 @@ fn describe_cache_clusters(state: &ElastiCacheState, payload: &Value) -> Result<
     Ok(json_response(json!({ "CacheClusters": clusters })))
 }
 
-fn create_replication_group(state: &ElastiCacheState, payload: &Value) -> Result<Response, LawsError> {
+fn create_replication_group(
+    state: &ElastiCacheState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let id = payload["ReplicationGroupId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("ReplicationGroupId is required".to_string()))?
@@ -223,9 +222,7 @@ fn create_replication_group(state: &ElastiCacheState, payload: &Value) -> Result
         .as_str()
         .unwrap_or("")
         .to_string();
-    let num_node_groups = payload["NumNodeGroups"]
-        .as_u64()
-        .unwrap_or(1) as u32;
+    let num_node_groups = payload["NumNodeGroups"].as_u64().unwrap_or(1) as u32;
     let arn = format!("arn:aws:elasticache:{REGION}:{ACCOUNT_ID}:replicationgroup:{id}");
 
     let rg = ReplicationGroup {
@@ -242,7 +239,10 @@ fn create_replication_group(state: &ElastiCacheState, payload: &Value) -> Result
     Ok(json_response(json!({ "ReplicationGroup": resp })))
 }
 
-fn delete_replication_group(state: &ElastiCacheState, payload: &Value) -> Result<Response, LawsError> {
+fn delete_replication_group(
+    state: &ElastiCacheState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let id = payload["ReplicationGroupId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("ReplicationGroupId is required".to_string()))?;
@@ -252,20 +252,21 @@ fn delete_replication_group(state: &ElastiCacheState, payload: &Value) -> Result
         .remove(id)
         .ok_or_else(|| LawsError::NotFound(format!("Replication group '{}' not found", id)))?;
 
-    Ok(json_response(json!({ "ReplicationGroup": replication_group_to_json(&rg) })))
+    Ok(json_response(
+        json!({ "ReplicationGroup": replication_group_to_json(&rg) }),
+    ))
 }
 
-fn describe_replication_groups(state: &ElastiCacheState, payload: &Value) -> Result<Response, LawsError> {
+fn describe_replication_groups(
+    state: &ElastiCacheState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let filter_id = payload["ReplicationGroupId"].as_str();
 
     let groups: Vec<Value> = state
         .replication_groups
         .iter()
-        .filter(|entry| {
-            filter_id
-                .map(|fid| entry.key() == fid)
-                .unwrap_or(true)
-        })
+        .filter(|entry| filter_id.map(|fid| entry.key() == fid).unwrap_or(true))
         .map(|entry| replication_group_to_json(entry.value()))
         .collect();
 
@@ -375,8 +376,14 @@ fn query_create_cache_cluster(
         )));
     }
 
-    let engine = params.get("Engine").cloned().unwrap_or_else(|| "redis".into());
-    let cache_node_type = params.get("CacheNodeType").cloned().unwrap_or_else(|| "cache.t3.micro".into());
+    let engine = params
+        .get("Engine")
+        .cloned()
+        .unwrap_or_else(|| "redis".into());
+    let cache_node_type = params
+        .get("CacheNodeType")
+        .cloned()
+        .unwrap_or_else(|| "cache.t3.micro".into());
     let num_cache_nodes = params
         .get("NumCacheNodes")
         .and_then(|s| s.parse::<u32>().ok())
@@ -395,7 +402,10 @@ fn query_create_cache_cluster(
     let xml = cache_cluster_to_xml(&cluster);
     state.clusters.insert(id, cluster);
 
-    Ok(xml_response("CreateCacheCluster", &format!("<CacheCluster>{}</CacheCluster>", xml)))
+    Ok(xml_response(
+        "CreateCacheCluster",
+        &format!("<CacheCluster>{}</CacheCluster>", xml),
+    ))
 }
 
 fn query_delete_cache_cluster(
@@ -412,7 +422,10 @@ fn query_delete_cache_cluster(
         .ok_or_else(|| LawsError::NotFound(format!("Cache cluster '{}' not found", id)))?;
 
     let xml = cache_cluster_to_xml(&cluster);
-    Ok(xml_response("DeleteCacheCluster", &format!("<CacheCluster>{}</CacheCluster>", xml)))
+    Ok(xml_response(
+        "DeleteCacheCluster",
+        &format!("<CacheCluster>{}</CacheCluster>", xml),
+    ))
 }
 
 fn query_describe_cache_clusters(
@@ -424,11 +437,7 @@ fn query_describe_cache_clusters(
     let clusters: Vec<String> = state
         .clusters
         .iter()
-        .filter(|entry| {
-            filter_id
-                .map(|fid| entry.key() == fid)
-                .unwrap_or(true)
-        })
+        .filter(|entry| filter_id.map(|fid| entry.key() == fid).unwrap_or(true))
         .map(|entry| cache_cluster_to_xml(entry.value()))
         .collect();
 
@@ -461,7 +470,10 @@ fn query_create_replication_group(
         )));
     }
 
-    let description = params.get("ReplicationGroupDescription").cloned().unwrap_or_default();
+    let description = params
+        .get("ReplicationGroupDescription")
+        .cloned()
+        .unwrap_or_default();
     let num_node_groups = params
         .get("NumNodeGroups")
         .and_then(|s| s.parse::<u32>().ok())
@@ -479,7 +491,10 @@ fn query_create_replication_group(
     let xml = replication_group_to_xml(&rg);
     state.replication_groups.insert(id, rg);
 
-    Ok(xml_response("CreateReplicationGroup", &format!("<ReplicationGroup>{}</ReplicationGroup>", xml)))
+    Ok(xml_response(
+        "CreateReplicationGroup",
+        &format!("<ReplicationGroup>{}</ReplicationGroup>", xml),
+    ))
 }
 
 fn query_delete_replication_group(
@@ -496,7 +511,10 @@ fn query_delete_replication_group(
         .ok_or_else(|| LawsError::NotFound(format!("Replication group '{}' not found", id)))?;
 
     let xml = replication_group_to_xml(&rg);
-    Ok(xml_response("DeleteReplicationGroup", &format!("<ReplicationGroup>{}</ReplicationGroup>", xml)))
+    Ok(xml_response(
+        "DeleteReplicationGroup",
+        &format!("<ReplicationGroup>{}</ReplicationGroup>", xml),
+    ))
 }
 
 fn query_describe_replication_groups(
@@ -508,11 +526,7 @@ fn query_describe_replication_groups(
     let groups: Vec<String> = state
         .replication_groups
         .iter()
-        .filter(|entry| {
-            filter_id
-                .map(|fid| entry.key() == fid)
-                .unwrap_or(true)
-        })
+        .filter(|entry| filter_id.map(|fid| entry.key() == fid).unwrap_or(true))
         .map(|entry| replication_group_to_xml(entry.value()))
         .collect();
 

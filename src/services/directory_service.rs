@@ -107,15 +107,9 @@ fn create_directory(state: &DirectoryServiceState, payload: &Value) -> Result<Re
         .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
         .to_string();
 
-    let short_name = payload["ShortName"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let short_name = payload["ShortName"].as_str().unwrap_or("").to_string();
 
-    let size = payload["Size"]
-        .as_str()
-        .unwrap_or("Small")
-        .to_string();
+    let size = payload["Size"].as_str().unwrap_or("Small").to_string();
 
     let dir_id = format!("d-{}", &uuid::Uuid::new_v4().to_string()[..10]);
 
@@ -145,11 +139,19 @@ fn delete_directory(state: &DirectoryServiceState, payload: &Value) -> Result<Re
     Ok(json_response(json!({ "DirectoryId": directory_id })))
 }
 
-fn describe_directories(state: &DirectoryServiceState, payload: &Value) -> Result<Response, LawsError> {
+fn describe_directories(
+    state: &DirectoryServiceState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let directories: Vec<Value> = if let Some(ids) = payload["DirectoryIds"].as_array() {
         ids.iter()
             .filter_map(|id| id.as_str())
-            .filter_map(|id| state.directories.get(id).map(|d| directory_to_json(d.value())))
+            .filter_map(|id| {
+                state
+                    .directories
+                    .get(id)
+                    .map(|d| directory_to_json(d.value()))
+            })
             .collect()
     } else {
         state
@@ -159,24 +161,23 @@ fn describe_directories(state: &DirectoryServiceState, payload: &Value) -> Resul
             .collect()
     };
 
-    Ok(json_response(json!({ "DirectoryDescriptions": directories })))
+    Ok(json_response(
+        json!({ "DirectoryDescriptions": directories }),
+    ))
 }
 
-fn connect_directory(state: &DirectoryServiceState, payload: &Value) -> Result<Response, LawsError> {
+fn connect_directory(
+    state: &DirectoryServiceState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let name = payload["Name"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
         .to_string();
 
-    let short_name = payload["ShortName"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let short_name = payload["ShortName"].as_str().unwrap_or("").to_string();
 
-    let size = payload["Size"]
-        .as_str()
-        .unwrap_or("Small")
-        .to_string();
+    let size = payload["Size"].as_str().unwrap_or("Small").to_string();
 
     let dir_id = format!("d-{}", &uuid::Uuid::new_v4().to_string()[..10]);
 
@@ -193,16 +194,16 @@ fn connect_directory(state: &DirectoryServiceState, payload: &Value) -> Result<R
     Ok(json_response(json!({ "DirectoryId": dir_id })))
 }
 
-fn create_microsoft_ad(state: &DirectoryServiceState, payload: &Value) -> Result<Response, LawsError> {
+fn create_microsoft_ad(
+    state: &DirectoryServiceState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let name = payload["Name"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
         .to_string();
 
-    let short_name = payload["ShortName"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let short_name = payload["ShortName"].as_str().unwrap_or("").to_string();
 
     let edition = payload["Edition"]
         .as_str()

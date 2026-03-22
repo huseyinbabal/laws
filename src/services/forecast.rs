@@ -62,9 +62,7 @@ impl Default for ForecastState {
 // ---------------------------------------------------------------------------
 
 pub async fn handle_request(state: &ForecastState, target: &str, payload: &Value) -> Response {
-    let action = target
-        .strip_prefix("AmazonForecast.")
-        .unwrap_or(target);
+    let action = target.strip_prefix("AmazonForecast.").unwrap_or(target);
 
     let result = match action {
         "CreateDataset" => create_dataset(state, payload),
@@ -76,7 +74,9 @@ pub async fn handle_request(state: &ForecastState, target: &str, payload: &Value
         "ListPredictors" => list_predictors(state),
         "CreateForecast" => create_forecast(state, payload),
         "DescribeForecast" => describe_forecast(state, payload),
-        other => Err(LawsError::InvalidRequest(format!("unknown action: {other}"))),
+        other => Err(LawsError::InvalidRequest(format!(
+            "unknown action: {other}"
+        ))),
     };
 
     match result {
@@ -90,7 +90,12 @@ pub async fn handle_request(state: &ForecastState, target: &str, payload: &Value
 // ---------------------------------------------------------------------------
 
 fn json_response(body: Value) -> Response {
-    (StatusCode::OK, [("Content-Type", "application/x-amz-json-1.1")], serde_json::to_string(&body).unwrap_or_default()).into_response()
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/x-amz-json-1.1")],
+        serde_json::to_string(&body).unwrap_or_default(),
+    )
+        .into_response()
 }
 
 fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
@@ -105,8 +110,16 @@ fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
 
 fn create_dataset(state: &ForecastState, body: &Value) -> Result<Response, LawsError> {
     let dataset_name = require_str(body, "DatasetName")?.to_owned();
-    let dataset_type = body.get("DatasetType").and_then(|v| v.as_str()).unwrap_or("TARGET_TIME_SERIES").to_owned();
-    let domain = body.get("Domain").and_then(|v| v.as_str()).unwrap_or("CUSTOM").to_owned();
+    let dataset_type = body
+        .get("DatasetType")
+        .and_then(|v| v.as_str())
+        .unwrap_or("TARGET_TIME_SERIES")
+        .to_owned();
+    let domain = body
+        .get("Domain")
+        .and_then(|v| v.as_str())
+        .unwrap_or("CUSTOM")
+        .to_owned();
     let dataset_arn = format!("arn:aws:forecast:{REGION}:{ACCOUNT_ID}:dataset/{dataset_name}");
 
     let dataset = ForecastDataset {
@@ -127,7 +140,9 @@ fn create_dataset(state: &ForecastState, body: &Value) -> Result<Response, LawsE
 fn delete_dataset(state: &ForecastState, body: &Value) -> Result<Response, LawsError> {
     let dataset_arn = require_str(body, "DatasetArn")?;
     let name = dataset_arn.rsplit('/').next().unwrap_or(dataset_arn);
-    state.datasets.remove(name)
+    state
+        .datasets
+        .remove(name)
         .ok_or_else(|| LawsError::NotFound(format!("dataset not found: {dataset_arn}")))?;
 
     Ok(json_response(json!({})))
@@ -137,7 +152,9 @@ fn describe_dataset(state: &ForecastState, body: &Value) -> Result<Response, Law
     let dataset_arn = require_str(body, "DatasetArn")?;
     let name = dataset_arn.rsplit('/').next().unwrap_or(dataset_arn);
 
-    let ds = state.datasets.get(name)
+    let ds = state
+        .datasets
+        .get(name)
         .ok_or_else(|| LawsError::NotFound(format!("dataset not found: {dataset_arn}")))?;
 
     Ok(json_response(json!({
@@ -150,15 +167,19 @@ fn describe_dataset(state: &ForecastState, body: &Value) -> Result<Response, Law
 }
 
 fn list_datasets(state: &ForecastState) -> Result<Response, LawsError> {
-    let datasets: Vec<Value> = state.datasets.iter().map(|entry| {
-        let ds = entry.value();
-        json!({
-            "DatasetArn": ds.dataset_arn,
-            "DatasetName": ds.dataset_name,
-            "DatasetType": ds.dataset_type,
-            "Domain": ds.domain
+    let datasets: Vec<Value> = state
+        .datasets
+        .iter()
+        .map(|entry| {
+            let ds = entry.value();
+            json!({
+                "DatasetArn": ds.dataset_arn,
+                "DatasetName": ds.dataset_name,
+                "DatasetType": ds.dataset_type,
+                "Domain": ds.domain
+            })
         })
-    }).collect();
+        .collect();
 
     Ok(json_response(json!({
         "Datasets": datasets
@@ -167,8 +188,13 @@ fn list_datasets(state: &ForecastState) -> Result<Response, LawsError> {
 
 fn create_predictor(state: &ForecastState, body: &Value) -> Result<Response, LawsError> {
     let predictor_name = require_str(body, "PredictorName")?.to_owned();
-    let algorithm_arn = body.get("AlgorithmArn").and_then(|v| v.as_str()).unwrap_or("arn:aws:forecast:::algorithm/NPTS").to_owned();
-    let predictor_arn = format!("arn:aws:forecast:{REGION}:{ACCOUNT_ID}:predictor/{predictor_name}");
+    let algorithm_arn = body
+        .get("AlgorithmArn")
+        .and_then(|v| v.as_str())
+        .unwrap_or("arn:aws:forecast:::algorithm/NPTS")
+        .to_owned();
+    let predictor_arn =
+        format!("arn:aws:forecast:{REGION}:{ACCOUNT_ID}:predictor/{predictor_name}");
 
     let predictor = Predictor {
         predictor_arn: predictor_arn.clone(),
@@ -187,21 +213,27 @@ fn create_predictor(state: &ForecastState, body: &Value) -> Result<Response, Law
 fn delete_predictor(state: &ForecastState, body: &Value) -> Result<Response, LawsError> {
     let predictor_arn = require_str(body, "PredictorArn")?;
     let name = predictor_arn.rsplit('/').next().unwrap_or(predictor_arn);
-    state.predictors.remove(name)
+    state
+        .predictors
+        .remove(name)
         .ok_or_else(|| LawsError::NotFound(format!("predictor not found: {predictor_arn}")))?;
 
     Ok(json_response(json!({})))
 }
 
 fn list_predictors(state: &ForecastState) -> Result<Response, LawsError> {
-    let predictors: Vec<Value> = state.predictors.iter().map(|entry| {
-        let p = entry.value();
-        json!({
-            "PredictorArn": p.predictor_arn,
-            "PredictorName": p.predictor_name,
-            "Status": p.status
+    let predictors: Vec<Value> = state
+        .predictors
+        .iter()
+        .map(|entry| {
+            let p = entry.value();
+            json!({
+                "PredictorArn": p.predictor_arn,
+                "PredictorName": p.predictor_name,
+                "Status": p.status
+            })
         })
-    }).collect();
+        .collect();
 
     Ok(json_response(json!({
         "Predictors": predictors
@@ -231,7 +263,9 @@ fn describe_forecast(state: &ForecastState, body: &Value) -> Result<Response, La
     let forecast_arn = require_str(body, "ForecastArn")?;
     let name = forecast_arn.rsplit('/').next().unwrap_or(forecast_arn);
 
-    let f = state.forecasts.get(name)
+    let f = state
+        .forecasts
+        .get(name)
         .ok_or_else(|| LawsError::NotFound(format!("forecast not found: {forecast_arn}")))?;
 
     Ok(json_response(json!({

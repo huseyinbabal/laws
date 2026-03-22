@@ -107,10 +107,7 @@ async fn create_application(
             .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
             .to_string();
 
-        let description = payload["Description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["Description"].as_str().unwrap_or("").to_string();
 
         let id = random_id();
 
@@ -135,9 +132,7 @@ async fn create_application(
     }
 }
 
-async fn list_applications(
-    State(state): State<Arc<AppConfigState>>,
-) -> Response {
+async fn list_applications(State(state): State<Arc<AppConfigState>>) -> Response {
     let items: Vec<Value> = state
         .applications
         .iter()
@@ -207,10 +202,7 @@ async fn create_environment(
             .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
             .to_string();
 
-        let description = payload["Description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["Description"].as_str().unwrap_or("").to_string();
 
         let id = random_id();
 

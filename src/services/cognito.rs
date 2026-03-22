@@ -1,8 +1,8 @@
 use axum::response::{IntoResponse, Response};
 use dashmap::DashMap;
 use http::StatusCode;
-use rand::Rng;
-use rand::distributions::Alphanumeric;
+use rand::distr::Alphanumeric;
+use rand::RngExt;
 use serde_json::{json, Value};
 
 use crate::error::LawsError;
@@ -112,7 +112,7 @@ fn json_response(body: Value) -> Response {
 }
 
 fn generate_pool_id() -> String {
-    let random_part: String = rand::thread_rng()
+    let random_part: String = rand::rng()
         .sample_iter(&Alphanumeric)
         .take(9)
         .map(char::from)
@@ -121,7 +121,7 @@ fn generate_pool_id() -> String {
 }
 
 fn generate_client_id() -> String {
-    rand::thread_rng()
+    rand::rng()
         .sample_iter(&Alphanumeric)
         .take(26)
         .map(char::from)
@@ -222,7 +222,9 @@ fn describe_user_pool(state: &CognitoState, payload: &Value) -> Result<Response,
         .get(id)
         .ok_or_else(|| LawsError::NotFound(format!("User pool '{}' not found", id)))?;
 
-    Ok(json_response(json!({ "UserPool": user_pool_to_json(&pool) })))
+    Ok(json_response(
+        json!({ "UserPool": user_pool_to_json(&pool) }),
+    ))
 }
 
 fn create_user_pool_client(state: &CognitoState, payload: &Value) -> Result<Response, LawsError> {

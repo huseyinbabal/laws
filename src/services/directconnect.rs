@@ -58,14 +58,8 @@ impl Default for DirectConnectState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &DirectConnectState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("OvertureService.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &DirectConnectState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("OvertureService.").unwrap_or(target);
 
     let result = match action {
         "CreateConnection" => create_connection(state, payload),
@@ -170,7 +164,9 @@ fn delete_connection(state: &DirectConnectState, payload: &Value) -> Result<Resp
         .remove(connection_id)
         .ok_or_else(|| LawsError::NotFound(format!("Connection not found: {connection_id}")))?;
 
-    state.virtual_interfaces.retain(|_, vi| vi.connection_id != connection_id);
+    state
+        .virtual_interfaces
+        .retain(|_, vi| vi.connection_id != connection_id);
 
     let mut resp = connection_to_json(&conn);
     resp["connectionState"] = json!("deleted");
@@ -187,19 +183,27 @@ fn describe_connections(state: &DirectConnectState) -> Result<Response, LawsErro
     Ok(json_response(json!({ "connections": connections })))
 }
 
-fn create_virtual_interface(state: &DirectConnectState, payload: &Value) -> Result<Response, LawsError> {
+fn create_virtual_interface(
+    state: &DirectConnectState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let connection_id = payload["connectionId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing connectionId".into()))?
         .to_string();
 
     if !state.connections.contains_key(&connection_id) {
-        return Err(LawsError::NotFound(format!("Connection not found: {connection_id}")));
+        return Err(LawsError::NotFound(format!(
+            "Connection not found: {connection_id}"
+        )));
     }
 
-    let new_vif = payload.get("newPublicVirtualInterface")
+    let new_vif = payload
+        .get("newPublicVirtualInterface")
         .or_else(|| payload.get("newPrivateVirtualInterface"))
-        .ok_or_else(|| LawsError::InvalidRequest("Missing virtual interface configuration".into()))?;
+        .ok_or_else(|| {
+            LawsError::InvalidRequest("Missing virtual interface configuration".into())
+        })?;
 
     let vif_name = new_vif["virtualInterfaceName"]
         .as_str()
@@ -232,7 +236,10 @@ fn create_virtual_interface(state: &DirectConnectState, payload: &Value) -> Resu
     Ok(json_response(resp))
 }
 
-fn delete_virtual_interface(state: &DirectConnectState, payload: &Value) -> Result<Response, LawsError> {
+fn delete_virtual_interface(
+    state: &DirectConnectState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let vif_id = payload["virtualInterfaceId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing virtualInterfaceId".into()))?;

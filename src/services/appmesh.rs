@@ -77,10 +77,7 @@ impl Default for AppMeshState {
 
 pub fn router(state: Arc<AppMeshState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/v20190125/meshes",
-            post(create_mesh).get(list_meshes),
-        )
+        .route("/v20190125/meshes", post(create_mesh).get(list_meshes))
         .route(
             "/v20190125/meshes/{mesh_name}",
             get(describe_mesh).delete(delete_mesh),
@@ -192,9 +189,9 @@ async fn describe_mesh(
                 "status": { "status": m.status },
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Mesh not found: {mesh_name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Mesh not found: {mesh_name}")))
+        }
     }
 }
 
@@ -217,9 +214,9 @@ async fn delete_mesh(
                 "status": { "status": "DELETED" },
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Mesh not found: {mesh_name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Mesh not found: {mesh_name}")))
+        }
     }
 }
 

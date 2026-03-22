@@ -96,9 +96,7 @@ async fn create_environment(
     Json(req): Json<CreateEnvironmentRequest>,
 ) -> Response {
     let environment_id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:finspace:{REGION}:{ACCOUNT_ID}:environment/{environment_id}"
-    );
+    let arn = format!("arn:aws:finspace:{REGION}:{ACCOUNT_ID}:environment/{environment_id}");
     let now = Utc::now().to_rfc3339();
 
     let env = Environment {

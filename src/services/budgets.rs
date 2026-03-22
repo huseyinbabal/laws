@@ -53,11 +53,7 @@ impl Default for BudgetsState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &BudgetsState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &BudgetsState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AWSBudgetServiceGateway.")
         .unwrap_or(target);
@@ -130,16 +126,10 @@ fn create_budget(state: &BudgetsState, payload: &Value) -> Result<Response, Laws
         )));
     }
 
-    let budget_type = budget["BudgetType"]
-        .as_str()
-        .unwrap_or("COST")
-        .to_string();
+    let budget_type = budget["BudgetType"].as_str().unwrap_or("COST").to_string();
 
     let budget_limit = budget["BudgetLimit"].clone();
-    let time_unit = budget["TimeUnit"]
-        .as_str()
-        .unwrap_or("MONTHLY")
-        .to_string();
+    let time_unit = budget["TimeUnit"].as_str().unwrap_or("MONTHLY").to_string();
 
     let now = chrono::Utc::now().to_rfc3339();
 
@@ -180,7 +170,9 @@ fn describe_budget(state: &BudgetsState, payload: &Value) -> Result<Response, La
         .get(budget_name)
         .ok_or_else(|| LawsError::NotFound(format!("Budget '{}' not found", budget_name)))?;
 
-    Ok(json_response(json!({ "Budget": budget_to_json(budget.value()) })))
+    Ok(json_response(
+        json!({ "Budget": budget_to_json(budget.value()) }),
+    ))
 }
 
 fn describe_budgets(state: &BudgetsState) -> Result<Response, LawsError> {

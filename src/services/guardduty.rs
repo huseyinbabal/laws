@@ -154,9 +154,9 @@ async fn get_detector(
 ) -> Response {
     match state.detectors.get(&id) {
         Some(d) => rest_json::ok(detector_to_json(&d)),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Detector not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Detector not found: {id}")))
+        }
     }
 }
 
@@ -166,9 +166,9 @@ async fn delete_detector(
 ) -> Response {
     match state.detectors.remove(&id) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Detector not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Detector not found: {id}")))
+        }
     }
 }
 
@@ -192,7 +192,10 @@ async fn create_findings(
         .unwrap_or_default();
 
     for ft_val in &finding_types {
-        let finding_type = ft_val.as_str().unwrap_or("UnauthorizedAccess:EC2/MaliciousIPCaller.Custom").to_string();
+        let finding_type = ft_val
+            .as_str()
+            .unwrap_or("UnauthorizedAccess:EC2/MaliciousIPCaller.Custom")
+            .to_string();
         let finding_id = uuid::Uuid::new_v4().to_string().replace("-", "")[..32].to_string();
 
         let finding = Finding {

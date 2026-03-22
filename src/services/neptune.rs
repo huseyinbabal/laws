@@ -60,11 +60,7 @@ impl Default for NeptuneState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &NeptuneState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &NeptuneState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AmazonNeptuneV20171115.")
         .unwrap_or(target);
@@ -105,28 +101,20 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_db_cluster(
-    state: &NeptuneState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_db_cluster(state: &NeptuneState, payload: &Value) -> Result<Response, LawsError> {
     let cluster_id = payload["DBClusterIdentifier"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DBClusterIdentifier".into()))?
         .to_string();
 
-    let engine = payload["Engine"]
-        .as_str()
-        .unwrap_or("neptune")
-        .to_string();
+    let engine = payload["Engine"].as_str().unwrap_or("neptune").to_string();
 
     let engine_version = payload["EngineVersion"]
         .as_str()
         .unwrap_or("1.2.0.0")
         .to_string();
 
-    let arn = format!(
-        "arn:aws:rds:{REGION}:{ACCOUNT_ID}:cluster:{cluster_id}"
-    );
+    let arn = format!("arn:aws:rds:{REGION}:{ACCOUNT_ID}:cluster:{cluster_id}");
     let endpoint = format!("{cluster_id}.cluster-abc123.{REGION}.neptune.amazonaws.com");
     let now = chrono::Utc::now().to_rfc3339();
 
@@ -155,10 +143,7 @@ fn create_db_cluster(
     })))
 }
 
-fn delete_db_cluster(
-    state: &NeptuneState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_db_cluster(state: &NeptuneState, payload: &Value) -> Result<Response, LawsError> {
     let cluster_id = payload["DBClusterIdentifier"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DBClusterIdentifier".into()))?;
@@ -166,9 +151,7 @@ fn delete_db_cluster(
     let (_, cluster) = state
         .clusters
         .remove(cluster_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("DBCluster '{}' not found", cluster_id))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("DBCluster '{}' not found", cluster_id)))?;
 
     Ok(json_response(json!({
         "DBCluster": {
@@ -179,9 +162,7 @@ fn delete_db_cluster(
     })))
 }
 
-fn describe_db_clusters(
-    state: &NeptuneState,
-) -> Result<Response, LawsError> {
+fn describe_db_clusters(state: &NeptuneState) -> Result<Response, LawsError> {
     let clusters: Vec<Value> = state
         .clusters
         .iter()
@@ -204,10 +185,7 @@ fn describe_db_clusters(
     })))
 }
 
-fn create_db_instance(
-    state: &NeptuneState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_db_instance(state: &NeptuneState, payload: &Value) -> Result<Response, LawsError> {
     let instance_id = payload["DBInstanceIdentifier"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DBInstanceIdentifier".into()))?
@@ -223,14 +201,9 @@ fn create_db_instance(
         .unwrap_or("db.r5.large")
         .to_string();
 
-    let engine = payload["Engine"]
-        .as_str()
-        .unwrap_or("neptune")
-        .to_string();
+    let engine = payload["Engine"].as_str().unwrap_or("neptune").to_string();
 
-    let arn = format!(
-        "arn:aws:rds:{REGION}:{ACCOUNT_ID}:db:{instance_id}"
-    );
+    let arn = format!("arn:aws:rds:{REGION}:{ACCOUNT_ID}:db:{instance_id}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let instance = NeptuneInstance {
@@ -258,10 +231,7 @@ fn create_db_instance(
     })))
 }
 
-fn delete_db_instance(
-    state: &NeptuneState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_db_instance(state: &NeptuneState, payload: &Value) -> Result<Response, LawsError> {
     let instance_id = payload["DBInstanceIdentifier"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DBInstanceIdentifier".into()))?;
@@ -269,9 +239,7 @@ fn delete_db_instance(
     let (_, instance) = state
         .instances
         .remove(instance_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("DBInstance '{}' not found", instance_id))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("DBInstance '{}' not found", instance_id)))?;
 
     Ok(json_response(json!({
         "DBInstance": {
@@ -282,9 +250,7 @@ fn delete_db_instance(
     })))
 }
 
-fn describe_db_instances(
-    state: &NeptuneState,
-) -> Result<Response, LawsError> {
+fn describe_db_instances(state: &NeptuneState) -> Result<Response, LawsError> {
     let instances: Vec<Value> = state
         .instances
         .iter()

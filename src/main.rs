@@ -163,80 +163,154 @@ async fn main() {
 fn build_router(_config: &Config, dashboard_state: DashboardState) -> Router {
     // ── REST-based services (original) ──
     let s3_router = services::s3::router(Arc::new(services::s3::S3State::new()));
-    let lambda_router = services::lambda::router(Arc::new(services::lambda::LambdaState::default()));
-    let apigateway_router = services::apigateway::router(Arc::new(services::apigateway::ApiGatewayState::default()));
-    let route53_router = services::route53::router(Arc::new(services::route53::Route53State::default()));
+    let lambda_router =
+        services::lambda::router(Arc::new(services::lambda::LambdaState::default()));
+    let apigateway_router =
+        services::apigateway::router(Arc::new(services::apigateway::ApiGatewayState::default()));
+    let route53_router =
+        services::route53::router(Arc::new(services::route53::Route53State::default()));
     let eks_router = services::eks::router(Arc::new(services::eks::EksState::default()));
-    let cloudfront_router = services::cloudfront::router(Arc::new(services::cloudfront::CloudFrontState::default()));
+    let cloudfront_router =
+        services::cloudfront::router(Arc::new(services::cloudfront::CloudFrontState::default()));
     let batch_router = services::batch::router(Arc::new(services::batch::BatchState::default()));
-    let backup_router = services::backup::router(Arc::new(services::backup::BackupState::default()));
+    let backup_router =
+        services::backup::router(Arc::new(services::backup::BackupState::default()));
     let mq_router = services::mq::router(Arc::new(services::mq::MqState::default()));
     let xray_router = services::xray::router(Arc::new(services::xray::XRayState::default()));
-    let appsync_router = services::appsync::router(Arc::new(services::appsync::AppSyncState::default()));
+    let appsync_router =
+        services::appsync::router(Arc::new(services::appsync::AppSyncState::default()));
     let efs_router = services::efs::router(Arc::new(services::efs::EfsState::default()));
-    let guardduty_router = services::guardduty::router(Arc::new(services::guardduty::GuardDutyState::default()));
+    let guardduty_router =
+        services::guardduty::router(Arc::new(services::guardduty::GuardDutyState::default()));
     let iot_router = services::iot::router(Arc::new(services::iot::IotState::default()));
     let macie_router = services::macie::router(Arc::new(services::macie::MacieState::default()));
-    let opensearch_router = services::opensearch::router(Arc::new(services::opensearch::OpenSearchState::default()));
+    let opensearch_router =
+        services::opensearch::router(Arc::new(services::opensearch::OpenSearchState::default()));
     let polly_router = services::polly::router(Arc::new(services::polly::PollyState::default()));
     let qldb_router = services::qldb::router(Arc::new(services::qldb::QldbState::default()));
-    let mediaconvert_router = services::mediaconvert::router(Arc::new(services::mediaconvert::MediaConvertState::default()));
-    let appconfig_router = services::appconfig::router(Arc::new(services::appconfig::AppConfigState::default()));
-    let detective_router = services::detective::router(Arc::new(services::detective::DetectiveState::default()));
-    let amplify_router = services::amplify::router(Arc::new(services::amplify::AmplifyState::default()));
+    let mediaconvert_router = services::mediaconvert::router(Arc::new(
+        services::mediaconvert::MediaConvertState::default(),
+    ));
+    let appconfig_router =
+        services::appconfig::router(Arc::new(services::appconfig::AppConfigState::default()));
+    let detective_router =
+        services::detective::router(Arc::new(services::detective::DetectiveState::default()));
+    let amplify_router =
+        services::amplify::router(Arc::new(services::amplify::AmplifyState::default()));
     let lex_router = services::lex::router(Arc::new(services::lex::LexState::default()));
-    let location_router = services::location::router(Arc::new(services::location::LocationState::default()));
-    let securityhub_router = services::securityhub::router(Arc::new(services::securityhub::SecurityHubState::default()));
-    let bedrock_router = services::bedrock::router(Arc::new(services::bedrock::BedrockState::default()));
-    let codeartifact_router = services::codeartifact::router(Arc::new(services::codeartifact::CodeArtifactState::default()));
-    let pinpoint_router = services::pinpoint::router(Arc::new(services::pinpoint::PinpointState::default()));
-    let connect_router = services::connect::router(Arc::new(services::connect::ConnectState::default()));
-    let glacier_router = services::glacier::router(Arc::new(services::glacier::GlacierState::default()));
-    let medialive_router = services::medialive::router(Arc::new(services::medialive::MediaLiveState::default()));
-    let quicksight_router = services::quicksight::router(Arc::new(services::quicksight::QuickSightState::default()));
+    let location_router =
+        services::location::router(Arc::new(services::location::LocationState::default()));
+    let securityhub_router =
+        services::securityhub::router(Arc::new(services::securityhub::SecurityHubState::default()));
+    let bedrock_router =
+        services::bedrock::router(Arc::new(services::bedrock::BedrockState::default()));
+    let codeartifact_router = services::codeartifact::router(Arc::new(
+        services::codeartifact::CodeArtifactState::default(),
+    ));
+    let pinpoint_router =
+        services::pinpoint::router(Arc::new(services::pinpoint::PinpointState::default()));
+    let connect_router =
+        services::connect::router(Arc::new(services::connect::ConnectState::default()));
+    let glacier_router =
+        services::glacier::router(Arc::new(services::glacier::GlacierState::default()));
+    let medialive_router =
+        services::medialive::router(Arc::new(services::medialive::MediaLiveState::default()));
+    let quicksight_router =
+        services::quicksight::router(Arc::new(services::quicksight::QuickSightState::default()));
 
     // ── REST-based services (batch 6-10) ──
     let amp_router = services::amp::router(Arc::new(services::amp::AmpState::default()));
-    let apigatewayv2_router = services::apigatewayv2::router(Arc::new(services::apigatewayv2::ApiGatewayV2State::default()));
-    let appmesh_router = services::appmesh::router(Arc::new(services::appmesh::AppMeshState::default()));
-    let auditmanager_router = services::auditmanager::router(Arc::new(services::auditmanager::AuditManagerState::default()));
-    let braket_router = services::braket::router(Arc::new(services::braket::BraketState::default()));
-    let cleanrooms_router = services::cleanrooms::router(Arc::new(services::cleanrooms::CleanRoomsState::default()));
-    let customer_profiles_router = services::customer_profiles::router(Arc::new(services::customer_profiles::CustomerProfilesState::default()));
-    let databrew_router = services::databrew::router(Arc::new(services::databrew::DataBrewState::default()));
-    let dataexchange_router = services::dataexchange::router(Arc::new(services::dataexchange::DataExchangeState::default()));
-    let datazone_router = services::datazone::router(Arc::new(services::datazone::DataZoneState::default()));
-    let devopsguru_router = services::devopsguru::router(Arc::new(services::devopsguru::DevOpsGuruState::default()));
+    let apigatewayv2_router = services::apigatewayv2::router(Arc::new(
+        services::apigatewayv2::ApiGatewayV2State::default(),
+    ));
+    let appmesh_router =
+        services::appmesh::router(Arc::new(services::appmesh::AppMeshState::default()));
+    let auditmanager_router = services::auditmanager::router(Arc::new(
+        services::auditmanager::AuditManagerState::default(),
+    ));
+    let braket_router =
+        services::braket::router(Arc::new(services::braket::BraketState::default()));
+    let cleanrooms_router =
+        services::cleanrooms::router(Arc::new(services::cleanrooms::CleanRoomsState::default()));
+    let customer_profiles_router = services::customer_profiles::router(Arc::new(
+        services::customer_profiles::CustomerProfilesState::default(),
+    ));
+    let databrew_router =
+        services::databrew::router(Arc::new(services::databrew::DataBrewState::default()));
+    let dataexchange_router = services::dataexchange::router(Arc::new(
+        services::dataexchange::DataExchangeState::default(),
+    ));
+    let datazone_router =
+        services::datazone::router(Arc::new(services::datazone::DataZoneState::default()));
+    let devopsguru_router =
+        services::devopsguru::router(Arc::new(services::devopsguru::DevOpsGuruState::default()));
     let dlm_router = services::dlm::router(Arc::new(services::dlm::DlmState::default()));
     let ebs_router = services::ebs::router(Arc::new(services::ebs::EbsState::default()));
-    let emr_serverless_router = services::emr_serverless::router(Arc::new(services::emr_serverless::EmrServerlessState::default()));
-    let entity_resolution_router = services::entity_resolution::router(Arc::new(services::entity_resolution::EntityResolutionState::default()));
-    let eventbridge_scheduler_router = services::eventbridge_scheduler::router(Arc::new(services::eventbridge_scheduler::EventBridgeSchedulerState::default()));
-    let finspace_router = services::finspace::router(Arc::new(services::finspace::FinSpaceState::default()));
+    let emr_serverless_router = services::emr_serverless::router(Arc::new(
+        services::emr_serverless::EmrServerlessState::default(),
+    ));
+    let entity_resolution_router = services::entity_resolution::router(Arc::new(
+        services::entity_resolution::EntityResolutionState::default(),
+    ));
+    let eventbridge_scheduler_router = services::eventbridge_scheduler::router(Arc::new(
+        services::eventbridge_scheduler::EventBridgeSchedulerState::default(),
+    ));
+    let finspace_router =
+        services::finspace::router(Arc::new(services::finspace::FinSpaceState::default()));
     let fis_router = services::fis::router(Arc::new(services::fis::FisState::default()));
-    let greengrass_router = services::greengrass::router(Arc::new(services::greengrass::GreengrassState::default()));
-    let groundstation_router = services::groundstation::router(Arc::new(services::groundstation::GroundStationState::default()));
-    let imagebuilder_router = services::imagebuilder::router(Arc::new(services::imagebuilder::ImageBuilderState::default()));
-    let internetmonitor_router = services::internetmonitor::router(Arc::new(services::internetmonitor::InternetMonitorState::default()));
-    let mainframe_router = services::mainframe::router(Arc::new(services::mainframe::MainframeState::default()));
-    let managedblockchain_router = services::managedblockchain::router(Arc::new(services::managedblockchain::ManagedBlockchainState::default()));
-    let managed_grafana_router = services::managed_grafana::router(Arc::new(services::managed_grafana::ManagedGrafanaState::default()));
-    let mediapackage_router = services::mediapackage::router(Arc::new(services::mediapackage::MediaPackageState::default()));
-    let mediatailor_router = services::mediatailor::router(Arc::new(services::mediatailor::MediaTailorState::default()));
+    let greengrass_router =
+        services::greengrass::router(Arc::new(services::greengrass::GreengrassState::default()));
+    let groundstation_router = services::groundstation::router(Arc::new(
+        services::groundstation::GroundStationState::default(),
+    ));
+    let imagebuilder_router = services::imagebuilder::router(Arc::new(
+        services::imagebuilder::ImageBuilderState::default(),
+    ));
+    let internetmonitor_router = services::internetmonitor::router(Arc::new(
+        services::internetmonitor::InternetMonitorState::default(),
+    ));
+    let mainframe_router =
+        services::mainframe::router(Arc::new(services::mainframe::MainframeState::default()));
+    let managedblockchain_router = services::managedblockchain::router(Arc::new(
+        services::managedblockchain::ManagedBlockchainState::default(),
+    ));
+    let managed_grafana_router = services::managed_grafana::router(Arc::new(
+        services::managed_grafana::ManagedGrafanaState::default(),
+    ));
+    let mediapackage_router = services::mediapackage::router(Arc::new(
+        services::mediapackage::MediaPackageState::default(),
+    ));
+    let mediatailor_router =
+        services::mediatailor::router(Arc::new(services::mediatailor::MediaTailorState::default()));
     let mwaa_router = services::mwaa::router(Arc::new(services::mwaa::MwaaState::default()));
-    let networkmanager_router = services::networkmanager::router(Arc::new(services::networkmanager::NetworkManagerState::default()));
+    let networkmanager_router = services::networkmanager::router(Arc::new(
+        services::networkmanager::NetworkManagerState::default(),
+    ));
     let omics_router = services::omics::router(Arc::new(services::omics::OmicsState::default()));
-    let outposts_router = services::outposts::router(Arc::new(services::outposts::OutpostsState::default()));
+    let outposts_router =
+        services::outposts::router(Arc::new(services::outposts::OutpostsState::default()));
     let pipes_router = services::pipes::router(Arc::new(services::pipes::PipesState::default()));
-    let rolesanywhere_router = services::rolesanywhere::router(Arc::new(services::rolesanywhere::RolesAnywhereState::default()));
+    let rolesanywhere_router = services::rolesanywhere::router(Arc::new(
+        services::rolesanywhere::RolesAnywhereState::default(),
+    ));
     let rum_router = services::rum::router(Arc::new(services::rum::RumState::default()));
-    let schemas_router = services::schemas::router(Arc::new(services::schemas::SchemasState::default()));
-    let securitylake_router = services::securitylake::router(Arc::new(services::securitylake::SecurityLakeState::default()));
-    let serverlessrepo_router = services::serverlessrepo::router(Arc::new(services::serverlessrepo::ServerlessRepoState::default()));
-    let synthetics_router = services::synthetics::router(Arc::new(services::synthetics::SyntheticsState::default()));
-    let vpc_lattice_router = services::vpc_lattice::router(Arc::new(services::vpc_lattice::VpcLatticeState::default()));
-    let wellarchitected_router = services::wellarchitected::router(Arc::new(services::wellarchitected::WellArchitectedState::default()));
-    let workdocs_router = services::workdocs::router(Arc::new(services::workdocs::WorkDocsState::default()));
+    let schemas_router =
+        services::schemas::router(Arc::new(services::schemas::SchemasState::default()));
+    let securitylake_router = services::securitylake::router(Arc::new(
+        services::securitylake::SecurityLakeState::default(),
+    ));
+    let serverlessrepo_router = services::serverlessrepo::router(Arc::new(
+        services::serverlessrepo::ServerlessRepoState::default(),
+    ));
+    let synthetics_router =
+        services::synthetics::router(Arc::new(services::synthetics::SyntheticsState::default()));
+    let vpc_lattice_router =
+        services::vpc_lattice::router(Arc::new(services::vpc_lattice::VpcLatticeState::default()));
+    let wellarchitected_router = services::wellarchitected::router(Arc::new(
+        services::wellarchitected::WellArchitectedState::default(),
+    ));
+    let workdocs_router =
+        services::workdocs::router(Arc::new(services::workdocs::WorkDocsState::default()));
 
     // ── Dispatch-based services (JSON + Query protocol) ──
     let dispatch_state = DispatchState {
@@ -316,7 +390,9 @@ fn build_router(_config: &Config, dashboard_state: DashboardState) -> Router {
         acm_pca: Arc::new(services::acm_pca::AcmPcaState::default()),
         appflow: Arc::new(services::appflow::AppFlowState::default()),
         appstream: Arc::new(services::appstream::AppStreamState::default()),
-        application_autoscaling: Arc::new(services::application_autoscaling::ApplicationAutoscalingState::default()),
+        application_autoscaling: Arc::new(
+            services::application_autoscaling::ApplicationAutoscalingState::default(),
+        ),
         budgets: Arc::new(services::budgets::BudgetsState::default()),
         chatbot: Arc::new(services::chatbot::ChatbotState::default()),
         cloud9: Arc::new(services::cloud9::Cloud9State::default()),
@@ -352,7 +428,9 @@ fn build_router(_config: &Config, dashboard_state: DashboardState) -> Router {
         snowball: Arc::new(services::snowball::SnowballState::default()),
         support: Arc::new(services::support::SupportState::default()),
         swf: Arc::new(services::swf::SwfState::default()),
-        verifiedpermissions: Arc::new(services::verifiedpermissions::VerifiedPermissionsState::default()),
+        verifiedpermissions: Arc::new(
+            services::verifiedpermissions::VerifiedPermissionsState::default(),
+        ),
         workmail: Arc::new(services::workmail::WorkMailState::default()),
     };
 
@@ -512,7 +590,8 @@ async fn dispatch_handler(
         } else if target.starts_with("AWSCognitoIdentityProviderService") {
             return services::cognito::handle_request(&ds.cognito, target, &payload).await;
         } else if target.starts_with("CloudFormation_20100515") {
-            return services::cloudformation::handle_request(&ds.cloudformation, target, &payload).await;
+            return services::cloudformation::handle_request(&ds.cloudformation, target, &payload)
+                .await;
         } else if target.starts_with("AmazonEC2ContainerRegistry") {
             return services::ecr::handle_request(&ds.ecr, target, &payload).await;
         } else if target.starts_with("ElasticLoadBalancingV2") {
@@ -528,13 +607,16 @@ async fn dispatch_handler(
         } else if target.starts_with("CodeBuild_20161006") {
             return services::codebuild::handle_request(&ds.codebuild, target, &payload).await;
         } else if target.starts_with("CodePipeline_20150709") {
-            return services::codepipeline::handle_request(&ds.codepipeline, target, &payload).await;
+            return services::codepipeline::handle_request(&ds.codepipeline, target, &payload)
+                .await;
         } else if target.starts_with("AWSWAF_20190729") {
             return services::waf::handle_request(&ds.waf, target, &payload).await;
         } else if target.starts_with("StarlingDoveService") {
-            return services::config_service::handle_request(&ds.config_service, target, &payload).await;
+            return services::config_service::handle_request(&ds.config_service, target, &payload)
+                .await;
         } else if target.starts_with("AWSOrganizationsV20161128") {
-            return services::organizations::handle_request(&ds.organizations, target, &payload).await;
+            return services::organizations::handle_request(&ds.organizations, target, &payload)
+                .await;
         } else if target.starts_with("Kafka") {
             return services::msk::handle_request(&ds.msk, target, &payload).await;
         } else if target.starts_with("Textract") {
@@ -547,7 +629,9 @@ async fn dispatch_handler(
             return services::rekognition::handle_request(&ds.rekognition, target, &payload).await;
         } else if target.starts_with("SageMaker") {
             return services::sagemaker::handle_request(&ds.sagemaker, target, &payload).await;
-        } else if target.starts_with("CloudTrail_20131101") || target.contains("CloudTrail_20131101") {
+        } else if target.starts_with("CloudTrail_20131101")
+            || target.contains("CloudTrail_20131101")
+        {
             return services::cloudtrail::handle_request(&ds.cloudtrail, target, &payload).await;
         } else if target.starts_with("CodeCommit_20150413") {
             return services::codecommit::handle_request(&ds.codecommit, target, &payload).await;
@@ -564,7 +648,12 @@ async fn dispatch_handler(
         } else if target.starts_with("AmazonNeptuneV20171115") {
             return services::neptune::handle_request(&ds.neptune, target, &payload).await;
         } else if target.starts_with("AWS242ServiceCatalogService") {
-            return services::service_catalog::handle_request(&ds.service_catalog, target, &payload).await;
+            return services::service_catalog::handle_request(
+                &ds.service_catalog,
+                target,
+                &payload,
+            )
+            .await;
         } else if target.starts_with("AWSShield_20160616") {
             return services::shield::handle_request(&ds.shield, target, &payload).await;
         } else if target.starts_with("Timestream_20181101") {
@@ -584,7 +673,8 @@ async fn dispatch_handler(
         } else if target.starts_with("AWSKendraFrontendService") {
             return services::kendra::handle_request(&ds.kendra, target, &payload).await;
         } else if target.starts_with("AWSLakeFormation") {
-            return services::lakeformation::handle_request(&ds.lakeformation, target, &payload).await;
+            return services::lakeformation::handle_request(&ds.lakeformation, target, &payload)
+                .await;
         } else if target.starts_with("AmazonMemoryDB") {
             return services::memorydb::handle_request(&ds.memorydb, target, &payload).await;
         } else if target.starts_with("Route53AutoNaming_v20170314") {
@@ -600,10 +690,16 @@ async fn dispatch_handler(
         } else if target.starts_with("AmazonResourceSharing") {
             return services::ram::handle_request(&ds.ram, target, &payload).await;
         } else if target.starts_with("StorageGateway_20130630") {
-            return services::storage_gateway::handle_request(&ds.storage_gateway, target, &payload).await;
+            return services::storage_gateway::handle_request(
+                &ds.storage_gateway,
+                target,
+                &payload,
+            )
+            .await;
         // Batch 6-10 JSON services
         } else if target.starts_with("AccessAnalyzer") {
-            return services::accessanalyzer::handle_request(&ds.accessanalyzer, target, &payload).await;
+            return services::accessanalyzer::handle_request(&ds.accessanalyzer, target, &payload)
+                .await;
         } else if target.starts_with("ACMPrivateCA") {
             return services::acm_pca::handle_request(&ds.acm_pca, target, &payload).await;
         } else if target.starts_with("SandstoneConfigurationServiceLambda") {
@@ -611,7 +707,12 @@ async fn dispatch_handler(
         } else if target.starts_with("PhotonAdminProxyService") {
             return services::appstream::handle_request(&ds.appstream, target, &payload).await;
         } else if target.starts_with("AnyScaleFrontendService") {
-            return services::application_autoscaling::handle_request(&ds.application_autoscaling, target, &payload).await;
+            return services::application_autoscaling::handle_request(
+                &ds.application_autoscaling,
+                target,
+                &payload,
+            )
+            .await;
         } else if target.starts_with("AWSBudgetServiceGateway") {
             return services::budgets::handle_request(&ds.budgets, target, &payload).await;
         } else if target.starts_with("WheatleyOrchestration_20171011") {
@@ -619,63 +720,109 @@ async fn dispatch_handler(
         } else if target.starts_with("AWSCloud9WorkspaceManagementService") {
             return services::cloud9::handle_request(&ds.cloud9, target, &payload).await;
         } else if target.starts_with("CloudApiService") {
-            return services::cloudcontrol::handle_request(&ds.cloudcontrol, target, &payload).await;
+            return services::cloudcontrol::handle_request(&ds.cloudcontrol, target, &payload)
+                .await;
         } else if target.starts_with("BaldrApiService") {
             return services::cloudhsm::handle_request(&ds.cloudhsm, target, &payload).await;
         } else if target.starts_with("CodeGuruProfilerService") {
             return services::codeguru::handle_request(&ds.codeguru, target, &payload).await;
         } else if target.starts_with("ComputeOptimizerService") {
-            return services::compute_optimizer::handle_request(&ds.compute_optimizer, target, &payload).await;
+            return services::compute_optimizer::handle_request(
+                &ds.compute_optimizer,
+                target,
+                &payload,
+            )
+            .await;
         } else if target.starts_with("ControltowerService") {
-            return services::controltower::handle_request(&ds.controltower, target, &payload).await;
+            return services::controltower::handle_request(&ds.controltower, target, &payload)
+                .await;
         } else if target.starts_with("AWSInsightsIndexService") {
-            return services::costexplorer::handle_request(&ds.costexplorer, target, &payload).await;
+            return services::costexplorer::handle_request(&ds.costexplorer, target, &payload)
+                .await;
         } else if target.starts_with("AWSOrigamiServiceGatewayService") {
             return services::cur::handle_request(&ds.cur, target, &payload).await;
         } else if target.starts_with("DataPipeline") {
-            return services::datapipeline::handle_request(&ds.datapipeline, target, &payload).await;
+            return services::datapipeline::handle_request(&ds.datapipeline, target, &payload)
+                .await;
         } else if target.starts_with("FmrsService") {
             return services::datasync::handle_request(&ds.datasync, target, &payload).await;
         } else if target.starts_with("DeviceFarm_20150623") {
             return services::devicefarm::handle_request(&ds.devicefarm, target, &payload).await;
         } else if target.starts_with("OvertureService") {
-            return services::directconnect::handle_request(&ds.directconnect, target, &payload).await;
+            return services::directconnect::handle_request(&ds.directconnect, target, &payload)
+                .await;
         } else if target.starts_with("DirectoryService_20150416") {
-            return services::directory_service::handle_request(&ds.directory_service, target, &payload).await;
+            return services::directory_service::handle_request(
+                &ds.directory_service,
+                target,
+                &payload,
+            )
+            .await;
         } else if target.starts_with("AWSFMS_20180101") {
-            return services::firewall_manager::handle_request(&ds.firewall_manager, target, &payload).await;
+            return services::firewall_manager::handle_request(
+                &ds.firewall_manager,
+                target,
+                &payload,
+            )
+            .await;
         } else if target.starts_with("AWSHawksNestServiceFacade") {
-            return services::frauddetector::handle_request(&ds.frauddetector, target, &payload).await;
+            return services::frauddetector::handle_request(&ds.frauddetector, target, &payload)
+                .await;
         } else if target.starts_with("GameLift") {
             return services::gamelift::handle_request(&ds.gamelift, target, &payload).await;
         } else if target.starts_with("GlobalAccelerator_V20180706") {
-            return services::globalaccelerator::handle_request(&ds.globalaccelerator, target, &payload).await;
+            return services::globalaccelerator::handle_request(
+                &ds.globalaccelerator,
+                target,
+                &payload,
+            )
+            .await;
         } else if target.starts_with("AWSHealth_20160804") {
             return services::health::handle_request(&ds.health, target, &payload).await;
         } else if target.starts_with("HealthLake") {
             return services::healthlake::handle_request(&ds.healthlake, target, &payload).await;
         } else if target.starts_with("AWSIdentityStore") {
-            return services::identitystore::handle_request(&ds.identitystore, target, &payload).await;
+            return services::identitystore::handle_request(&ds.identitystore, target, &payload)
+                .await;
         } else if target.starts_with("AmazonInteractiveVideoService") {
             return services::ivs::handle_request(&ds.ivs, target, &payload).await;
         } else if target.starts_with("AWSLicenseManager") {
-            return services::license_manager::handle_request(&ds.license_manager, target, &payload).await;
+            return services::license_manager::handle_request(
+                &ds.license_manager,
+                target,
+                &payload,
+            )
+            .await;
         } else if target.starts_with("MediaStore_20170901") {
             return services::mediastore::handle_request(&ds.mediastore, target, &payload).await;
         } else if target.starts_with("NetworkFirewall_20201112") {
-            return services::network_firewall::handle_request(&ds.network_firewall, target, &payload).await;
+            return services::network_firewall::handle_request(
+                &ds.network_firewall,
+                target,
+                &payload,
+            )
+            .await;
         } else if target.starts_with("AWSPriceListService") {
             return services::pricing::handle_request(&ds.pricing, target, &payload).await;
         } else if target.starts_with("AwsResilienceHub") {
-            return services::resiliencehub::handle_request(&ds.resiliencehub, target, &payload).await;
+            return services::resiliencehub::handle_request(&ds.resiliencehub, target, &payload)
+                .await;
         } else if target.starts_with("Route53Domains_v20140515") {
-            return services::route53domains::handle_request(&ds.route53domains, target, &payload).await;
+            return services::route53domains::handle_request(&ds.route53domains, target, &payload)
+                .await;
         } else if target.starts_with("Route53Resolver") {
-            return services::route53resolver::handle_request(&ds.route53resolver, target, &payload).await;
+            return services::route53resolver::handle_request(
+                &ds.route53resolver,
+                target,
+                &payload,
+            )
+            .await;
         } else if target.starts_with("AWSSavingsPlan") {
-            return services::savingsplans::handle_request(&ds.savingsplans, target, &payload).await;
+            return services::savingsplans::handle_request(&ds.savingsplans, target, &payload)
+                .await;
         } else if target.starts_with("ServiceQuotasV20190624") {
-            return services::service_quotas::handle_request(&ds.service_quotas, target, &payload).await;
+            return services::service_quotas::handle_request(&ds.service_quotas, target, &payload)
+                .await;
         } else if target.starts_with("AWSIESnowballJobManagementService") {
             return services::snowball::handle_request(&ds.snowball, target, &payload).await;
         } else if target.starts_with("AWSSupport_20130415") {
@@ -683,7 +830,12 @@ async fn dispatch_handler(
         } else if target.starts_with("SimpleWorkflowService") {
             return services::swf::handle_request(&ds.swf, target, &payload).await;
         } else if target.starts_with("VerifiedPermissions") {
-            return services::verifiedpermissions::handle_request(&ds.verifiedpermissions, target, &payload).await;
+            return services::verifiedpermissions::handle_request(
+                &ds.verifiedpermissions,
+                target,
+                &payload,
+            )
+            .await;
         } else if target.starts_with("WorkMailService") {
             return services::workmail::handle_request(&ds.workmail, target, &payload).await;
         }
@@ -699,68 +851,136 @@ async fn dispatch_handler(
         .map(|a| a.to_string());
     if let Some(action) = extract_action(&body, &uri).or(target_action) {
         let sqs_actions = [
-            "CreateQueue", "DeleteQueue", "ListQueues", "SendMessage",
-            "ReceiveMessage", "DeleteMessage", "GetQueueUrl", "PurgeQueue",
+            "CreateQueue",
+            "DeleteQueue",
+            "ListQueues",
+            "SendMessage",
+            "ReceiveMessage",
+            "DeleteMessage",
+            "GetQueueUrl",
+            "PurgeQueue",
         ];
         let sns_actions = [
-            "CreateTopic", "DeleteTopic", "ListTopics", "Subscribe",
-            "Unsubscribe", "ListSubscriptions", "Publish",
+            "CreateTopic",
+            "DeleteTopic",
+            "ListTopics",
+            "Subscribe",
+            "Unsubscribe",
+            "ListSubscriptions",
+            "Publish",
         ];
         let iam_actions = [
-            "CreateUser", "DeleteUser", "ListUsers", "GetUser",
-            "CreateRole", "DeleteRole", "GetRole", "ListRoles",
+            "CreateUser",
+            "DeleteUser",
+            "ListUsers",
+            "GetUser",
+            "CreateRole",
+            "DeleteRole",
+            "GetRole",
+            "ListRoles",
             "ListAttachedRolePolicies",
-            "CreatePolicy", "DeletePolicy", "ListPolicies",
-            "AttachRolePolicy", "DetachRolePolicy",
-            "ListAttachedUserPolicies", "ListGroupsForUser",
-            "ListAccessKeys", "ListGroups", "GetGroup",
+            "CreatePolicy",
+            "DeletePolicy",
+            "ListPolicies",
+            "AttachRolePolicy",
+            "DetachRolePolicy",
+            "ListAttachedUserPolicies",
+            "ListGroupsForUser",
+            "ListAccessKeys",
+            "ListGroups",
+            "GetGroup",
         ];
         let sts_actions = ["GetCallerIdentity", "AssumeRole"];
         let ec2_actions = [
-            "RunInstances", "DescribeInstances", "TerminateInstances",
-            "StartInstances", "StopInstances", "RebootInstances",
-            "DescribeSecurityGroups", "DescribeVpcs", "DescribeSubnets",
-            "DescribeImages", "DeregisterImage",
-            "DescribeVolumes", "DeleteVolume",
-            "DescribeSnapshots", "DeleteSnapshot",
+            "RunInstances",
+            "DescribeInstances",
+            "TerminateInstances",
+            "StartInstances",
+            "StopInstances",
+            "RebootInstances",
+            "DescribeSecurityGroups",
+            "DescribeVpcs",
+            "DescribeSubnets",
+            "DescribeImages",
+            "DeregisterImage",
+            "DescribeVolumes",
+            "DeleteVolume",
+            "DescribeSnapshots",
+            "DeleteSnapshot",
         ];
         let cw_metric_actions = [
-            "PutMetricData", "ListMetrics", "GetMetricData",
-            "PutMetricAlarm", "DescribeAlarms", "DeleteAlarms",
+            "PutMetricData",
+            "ListMetrics",
+            "GetMetricData",
+            "PutMetricAlarm",
+            "DescribeAlarms",
+            "DeleteAlarms",
         ];
         let autoscaling_actions = [
-            "CreateAutoScalingGroup", "DeleteAutoScalingGroup",
-            "DescribeAutoScalingGroups", "UpdateAutoScalingGroup",
-            "SetDesiredCapacity", "CreateLaunchConfiguration",
+            "CreateAutoScalingGroup",
+            "DeleteAutoScalingGroup",
+            "DescribeAutoScalingGroups",
+            "UpdateAutoScalingGroup",
+            "SetDesiredCapacity",
+            "CreateLaunchConfiguration",
             "DescribeLaunchConfigurations",
         ];
         let elasticbeanstalk_actions = [
-            "CreateApplication", "DeleteApplication", "DescribeApplications",
-            "CreateEnvironment", "TerminateEnvironment", "DescribeEnvironments",
+            "CreateApplication",
+            "DeleteApplication",
+            "DescribeApplications",
+            "CreateEnvironment",
+            "TerminateEnvironment",
+            "DescribeEnvironments",
         ];
         let cloudsearch_actions = [
-            "CreateDomain", "DeleteDomain", "DescribeDomains",
-            "ListDomainNames", "IndexDocuments",
+            "CreateDomain",
+            "DeleteDomain",
+            "DescribeDomains",
+            "ListDomainNames",
+            "IndexDocuments",
         ];
         let rds_actions = [
-            "CreateDBInstance", "DeleteDBInstance", "DescribeDBInstances",
-            "StartDBInstance", "StopDBInstance", "RebootDBInstance",
-            "DescribeDBSnapshots", "DeleteDBSnapshot",
+            "CreateDBInstance",
+            "DeleteDBInstance",
+            "DescribeDBInstances",
+            "StartDBInstance",
+            "StopDBInstance",
+            "RebootDBInstance",
+            "DescribeDBSnapshots",
+            "DeleteDBSnapshot",
         ];
         let elb_actions = [
-            "CreateLoadBalancer", "DeleteLoadBalancer", "DescribeLoadBalancers",
-            "CreateTargetGroup", "DeleteTargetGroup", "DescribeTargetGroups",
-            "RegisterTargets", "DeregisterTargets", "CreateListener",
-            "DescribeListeners", "DeleteListener", "DescribeRules",
-            "DeleteRule", "DescribeTargetHealth",
+            "CreateLoadBalancer",
+            "DeleteLoadBalancer",
+            "DescribeLoadBalancers",
+            "CreateTargetGroup",
+            "DeleteTargetGroup",
+            "DescribeTargetGroups",
+            "RegisterTargets",
+            "DeregisterTargets",
+            "CreateListener",
+            "DescribeListeners",
+            "DeleteListener",
+            "DescribeRules",
+            "DeleteRule",
+            "DescribeTargetHealth",
         ];
         let cloudformation_actions = [
-            "CreateStack", "DeleteStack", "DescribeStacks", "ListStacks",
-            "UpdateStack", "DescribeStackResources",
+            "CreateStack",
+            "DeleteStack",
+            "DescribeStacks",
+            "ListStacks",
+            "UpdateStack",
+            "DescribeStackResources",
         ];
         let elasticache_actions = [
-            "CreateCacheCluster", "DeleteCacheCluster", "DescribeCacheClusters",
-            "CreateReplicationGroup", "DeleteReplicationGroup", "DescribeReplicationGroups",
+            "CreateCacheCluster",
+            "DeleteCacheCluster",
+            "DescribeCacheClusters",
+            "CreateReplicationGroup",
+            "DeleteReplicationGroup",
+            "DescribeReplicationGroups",
         ];
 
         if sqs_actions.contains(&action.as_str()) {
@@ -778,7 +998,12 @@ async fn dispatch_handler(
         } else if autoscaling_actions.contains(&action.as_str()) {
             return services::autoscaling::handle_request(&ds.autoscaling, &headers, &body, &uri);
         } else if elasticbeanstalk_actions.contains(&action.as_str()) {
-            return services::elasticbeanstalk::handle_request(&ds.elasticbeanstalk, &headers, &body, &uri);
+            return services::elasticbeanstalk::handle_request(
+                &ds.elasticbeanstalk,
+                &headers,
+                &body,
+                &uri,
+            );
         } else if cloudsearch_actions.contains(&action.as_str()) {
             return services::cloudsearch::handle_request(&ds.cloudsearch, &headers, &body, &uri);
         } else if rds_actions.contains(&action.as_str()) {
@@ -786,13 +1011,27 @@ async fn dispatch_handler(
         } else if elb_actions.contains(&action.as_str()) {
             return services::elb::handle_query_request(&ds.elb, &headers, &body, &uri);
         } else if cloudformation_actions.contains(&action.as_str()) {
-            return services::cloudformation::handle_query_request(&ds.cloudformation, &headers, &body, &uri);
+            return services::cloudformation::handle_query_request(
+                &ds.cloudformation,
+                &headers,
+                &body,
+                &uri,
+            );
         } else if elasticache_actions.contains(&action.as_str()) {
-            return services::elasticache::handle_query_request(&ds.elasticache, &headers, &body, &uri);
+            return services::elasticache::handle_query_request(
+                &ds.elasticache,
+                &headers,
+                &body,
+                &uri,
+            );
         }
     }
 
-    (axum::http::StatusCode::NOT_FOUND, "Unknown service or action").into_response()
+    (
+        axum::http::StatusCode::NOT_FOUND,
+        "Unknown service or action",
+    )
+        .into_response()
 }
 
 fn extract_action(body: &[u8], uri: &axum::http::Uri) -> Option<String> {

@@ -43,7 +43,11 @@ impl Default for MskState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(state: &MskState, target: &str, payload: &serde_json::Value) -> Response {
+pub async fn handle_request(
+    state: &MskState,
+    target: &str,
+    payload: &serde_json::Value,
+) -> Response {
     let action = target.strip_prefix("Kafka.").unwrap_or(target);
 
     let result = match action {
@@ -52,7 +56,9 @@ pub async fn handle_request(state: &MskState, target: &str, payload: &serde_json
         "ListClusters" => list_clusters(state),
         "DescribeCluster" => describe_cluster(state, payload),
         "ListNodes" => list_nodes(state, payload),
-        other => Err(LawsError::InvalidRequest(format!("unknown action: {other}"))),
+        other => Err(LawsError::InvalidRequest(format!(
+            "unknown action: {other}"
+        ))),
     };
 
     match result {
@@ -66,7 +72,12 @@ pub async fn handle_request(state: &MskState, target: &str, payload: &serde_json
 // ---------------------------------------------------------------------------
 
 fn json_response(body: Value) -> Response {
-    (StatusCode::OK, [("Content-Type", "application/x-amz-json-1.1")], serde_json::to_string(&body).unwrap_or_default()).into_response()
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/x-amz-json-1.1")],
+        serde_json::to_string(&body).unwrap_or_default(),
+    )
+        .into_response()
 }
 
 fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
@@ -102,9 +113,7 @@ fn create_cluster(state: &MskState, body: &Value) -> Result<Response, LawsError>
     }
 
     let cluster_uuid = uuid::Uuid::new_v4();
-    let arn = format!(
-        "arn:aws:kafka:{REGION}:{ACCOUNT_ID}:cluster/{cluster_name}/{cluster_uuid}"
-    );
+    let arn = format!("arn:aws:kafka:{REGION}:{ACCOUNT_ID}:cluster/{cluster_name}/{cluster_uuid}");
     let created_at = chrono::Utc::now().to_rfc3339();
 
     let cluster = MskCluster {
@@ -129,7 +138,11 @@ fn create_cluster(state: &MskState, body: &Value) -> Result<Response, LawsError>
 
 fn delete_cluster(state: &MskState, body: &Value) -> Result<Response, LawsError> {
     let cluster_arn = require_str(body, "ClusterArn")?;
-    let found = state.clusters.iter().find(|e| e.value().arn == cluster_arn).map(|e| e.key().clone());
+    let found = state
+        .clusters
+        .iter()
+        .find(|e| e.value().arn == cluster_arn)
+        .map(|e| e.key().clone());
     match found {
         Some(name) => {
             state.clusters.remove(&name);
@@ -138,7 +151,9 @@ fn delete_cluster(state: &MskState, body: &Value) -> Result<Response, LawsError>
                 "State": "DELETING"
             })))
         }
-        None => Err(LawsError::NotFound(format!("cluster not found: {cluster_arn}"))),
+        None => Err(LawsError::NotFound(format!(
+            "cluster not found: {cluster_arn}"
+        ))),
     }
 }
 

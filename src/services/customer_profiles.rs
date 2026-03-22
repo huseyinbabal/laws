@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post, delete};
+use axum::routing::{delete, get, post};
 use axum::Json;
 use chrono::Utc;
 use dashmap::DashMap;
@@ -176,13 +176,19 @@ async fn put_profile_object(
         profile_id: profile_id.clone(),
         domain_name: domain_name.clone(),
         first_name: body["Object"].as_str().and_then(|s| {
-            serde_json::from_str::<Value>(s).ok().and_then(|v| v["FirstName"].as_str().map(String::from))
+            serde_json::from_str::<Value>(s)
+                .ok()
+                .and_then(|v| v["FirstName"].as_str().map(String::from))
         }),
         last_name: body["Object"].as_str().and_then(|s| {
-            serde_json::from_str::<Value>(s).ok().and_then(|v| v["LastName"].as_str().map(String::from))
+            serde_json::from_str::<Value>(s)
+                .ok()
+                .and_then(|v| v["LastName"].as_str().map(String::from))
         }),
         email_address: body["Object"].as_str().and_then(|s| {
-            serde_json::from_str::<Value>(s).ok().and_then(|v| v["EmailAddress"].as_str().map(String::from))
+            serde_json::from_str::<Value>(s)
+                .ok()
+                .and_then(|v| v["EmailAddress"].as_str().map(String::from))
         }),
     };
 

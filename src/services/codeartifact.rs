@@ -79,10 +79,7 @@ struct RepoQuery {
 
 pub fn router(state: Arc<CodeArtifactState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/v1/domain",
-            post(create_domain).delete(delete_domain),
-        )
+        .route("/v1/domain", post(create_domain).delete(delete_domain))
         .route("/v1/domains", get(list_domains))
         .route(
             "/v1/repository",
@@ -113,9 +110,7 @@ async fn create_domain(
             )));
         }
 
-        let arn = format!(
-            "arn:aws:codeartifact:{REGION}:{ACCOUNT_ID}:domain/{name}"
-        );
+        let arn = format!("arn:aws:codeartifact:{REGION}:{ACCOUNT_ID}:domain/{name}");
         let now = chrono::Utc::now().to_rfc3339();
 
         let domain = CodeArtifactDomain {
@@ -171,10 +166,9 @@ async fn delete_domain(
 
     match state.domains.remove(&name) {
         Some((_, domain)) => rest_json::ok(json!({ "domain": domain_to_json(&domain) })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Domain '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Domain '{}' not found", name)))
+        }
     }
 }
 
@@ -193,10 +187,7 @@ async fn create_repository(
             .ok_or_else(|| LawsError::InvalidRequest("domain is required".into()))?
             .to_string();
 
-        let description = payload["description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["description"].as_str().unwrap_or("").to_string();
 
         if !state.domains.contains_key(&domain_name) {
             return Err(LawsError::NotFound(format!(

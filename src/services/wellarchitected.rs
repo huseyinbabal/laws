@@ -111,9 +111,7 @@ async fn create_workload(
     Json(req): Json<CreateWorkloadRequest>,
 ) -> Response {
     let workload_id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:wellarchitected:{REGION}:{ACCOUNT_ID}:workload/{workload_id}"
-    );
+    let arn = format!("arn:aws:wellarchitected:{REGION}:{ACCOUNT_ID}:workload/{workload_id}");
     let now = Utc::now().to_rfc3339();
 
     let workload = Workload {
@@ -212,7 +210,11 @@ async fn create_lens_share(
                 status: "PENDING".to_string(),
             });
             // Also add a lens review stub if it doesn't exist
-            if !w.lens_reviews.iter().any(|r| r.lens_alias == req.lens_alias) {
+            if !w
+                .lens_reviews
+                .iter()
+                .any(|r| r.lens_alias == req.lens_alias)
+            {
                 let now = Utc::now().to_rfc3339();
                 w.lens_reviews.push(LensReview {
                     lens_alias: req.lens_alias.clone(),

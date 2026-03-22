@@ -131,14 +131,8 @@ fn resolve_key<'a>(state: &'a KmsState, key_id_input: &str) -> Result<KmsKey, La
 // Operations
 // ---------------------------------------------------------------------------
 
-async fn create_key(
-    state: &KmsState,
-    payload: &serde_json::Value,
-) -> Result<Response, LawsError> {
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+async fn create_key(state: &KmsState, payload: &serde_json::Value) -> Result<Response, LawsError> {
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
     let key_usage = payload["KeyUsage"]
         .as_str()
         .unwrap_or("ENCRYPT_DECRYPT")
@@ -224,10 +218,7 @@ async fn list_keys(state: &KmsState) -> Result<Response, LawsError> {
     })))
 }
 
-async fn enable_key(
-    state: &KmsState,
-    payload: &serde_json::Value,
-) -> Result<Response, LawsError> {
+async fn enable_key(state: &KmsState, payload: &serde_json::Value) -> Result<Response, LawsError> {
     let key_id_input = payload["KeyId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("KeyId is required".to_string()))?;
@@ -242,10 +233,7 @@ async fn enable_key(
     Ok(json_response(serde_json::json!({})))
 }
 
-async fn disable_key(
-    state: &KmsState,
-    payload: &serde_json::Value,
-) -> Result<Response, LawsError> {
+async fn disable_key(state: &KmsState, payload: &serde_json::Value) -> Result<Response, LawsError> {
     let key_id_input = payload["KeyId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("KeyId is required".to_string()))?;
@@ -268,9 +256,7 @@ async fn schedule_key_deletion(
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("KeyId is required".to_string()))?;
 
-    let pending_days = payload["PendingWindowInDays"]
-        .as_u64()
-        .unwrap_or(30);
+    let pending_days = payload["PendingWindowInDays"].as_u64().unwrap_or(30);
 
     let key = resolve_key(state, key_id_input)?;
 
@@ -279,8 +265,7 @@ async fn schedule_key_deletion(
         entry.enabled = false;
     }
 
-    let deletion_date = chrono::Utc::now().timestamp() as f64
-        + (pending_days as f64 * 86400.0);
+    let deletion_date = chrono::Utc::now().timestamp() as f64 + (pending_days as f64 * 86400.0);
 
     Ok(json_response(serde_json::json!({
         "KeyId": key.key_id,
@@ -289,10 +274,7 @@ async fn schedule_key_deletion(
     })))
 }
 
-async fn encrypt(
-    state: &KmsState,
-    payload: &serde_json::Value,
-) -> Result<Response, LawsError> {
+async fn encrypt(state: &KmsState, payload: &serde_json::Value) -> Result<Response, LawsError> {
     let key_id_input = payload["KeyId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("KeyId is required".to_string()))?;
@@ -303,8 +285,7 @@ async fn encrypt(
     let key = resolve_key(state, key_id_input)?;
 
     let combined = format!("ENCRYPTED:{}:{}", key.key_id, plaintext);
-    let ciphertext_blob =
-        base64::engine::general_purpose::STANDARD.encode(combined.as_bytes());
+    let ciphertext_blob = base64::engine::general_purpose::STANDARD.encode(combined.as_bytes());
 
     Ok(json_response(serde_json::json!({
         "CiphertextBlob": ciphertext_blob,
@@ -313,10 +294,7 @@ async fn encrypt(
     })))
 }
 
-async fn decrypt(
-    state: &KmsState,
-    payload: &serde_json::Value,
-) -> Result<Response, LawsError> {
+async fn decrypt(state: &KmsState, payload: &serde_json::Value) -> Result<Response, LawsError> {
     let ciphertext_blob = payload["CiphertextBlob"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("CiphertextBlob is required".to_string()))?;
@@ -356,9 +334,7 @@ async fn generate_data_key(
     let key_id_input = payload["KeyId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("KeyId is required".to_string()))?;
-    let key_spec = payload["KeySpec"]
-        .as_str()
-        .unwrap_or("AES_256");
+    let key_spec = payload["KeySpec"].as_str().unwrap_or("AES_256");
 
     let key = resolve_key(state, key_id_input)?;
 
@@ -373,17 +349,15 @@ async fn generate_data_key(
         }
     };
 
-    use rand::RngCore;
+    use rand::Rng;
     let mut plaintext_bytes = vec![0u8; num_bytes];
-    rand::thread_rng().fill_bytes(&mut plaintext_bytes);
+    rand::rng().fill_bytes(&mut plaintext_bytes);
 
-    let plaintext_b64 =
-        base64::engine::general_purpose::STANDARD.encode(&plaintext_bytes);
+    let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(&plaintext_bytes);
 
     // Mock ciphertext: just the encrypted version of the plaintext
     let combined = format!("ENCRYPTED:{}:{}", key.key_id, plaintext_b64);
-    let ciphertext_b64 =
-        base64::engine::general_purpose::STANDARD.encode(combined.as_bytes());
+    let ciphertext_b64 = base64::engine::general_purpose::STANDARD.encode(combined.as_bytes());
 
     Ok(json_response(serde_json::json!({
         "CiphertextBlob": ciphertext_b64,
@@ -406,10 +380,7 @@ async fn create_alias(
     // Verify target key exists
     let _key = resolve_key(state, target_key_id)?;
 
-    let alias_arn = format!(
-        "arn:aws:kms:us-east-1:000000000000:{}",
-        alias_name
-    );
+    let alias_arn = format!("arn:aws:kms:us-east-1:000000000000:{}", alias_name);
 
     let alias = KmsAlias {
         alias_name: alias_name.to_string(),

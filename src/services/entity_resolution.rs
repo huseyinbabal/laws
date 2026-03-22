@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post, delete};
+use axum::routing::{delete, get, post};
 use axum::Json;
 use chrono::Utc;
 use dashmap::DashMap;
@@ -68,12 +68,18 @@ impl Default for EntityResolutionState {
 
 pub fn router(state: Arc<EntityResolutionState>) -> axum::Router {
     axum::Router::new()
-        .route("/matchingworkflows", post(create_matching_workflow).get(list_matching_workflows))
+        .route(
+            "/matchingworkflows",
+            post(create_matching_workflow).get(list_matching_workflows),
+        )
         .route(
             "/matchingworkflows/{workflow_name}",
             get(get_matching_workflow).delete(delete_matching_workflow),
         )
-        .route("/schemamappings", post(create_schema_mapping).get(list_schema_mappings))
+        .route(
+            "/schemamappings",
+            post(create_schema_mapping).get(list_schema_mappings),
+        )
         .with_state(state)
 }
 
@@ -87,7 +93,11 @@ async fn create_matching_workflow(
 ) -> Response {
     let workflow_name = match body["workflowName"].as_str() {
         Some(n) => n.to_string(),
-        None => return rest_json::error_response(&LawsError::InvalidRequest("Missing workflowName".into())),
+        None => {
+            return rest_json::error_response(&LawsError::InvalidRequest(
+                "Missing workflowName".into(),
+            ))
+        }
     };
 
     if state.workflows.contains_key(&workflow_name) {
@@ -97,7 +107,8 @@ async fn create_matching_workflow(
     }
 
     let now = Utc::now().to_rfc3339();
-    let arn = format!("arn:aws:entityresolution:{REGION}:{ACCOUNT_ID}:matchingworkflow/{workflow_name}");
+    let arn =
+        format!("arn:aws:entityresolution:{REGION}:{ACCOUNT_ID}:matchingworkflow/{workflow_name}");
     let description = body["description"].as_str().unwrap_or("").to_string();
 
     let workflow = MatchingWorkflow {
@@ -120,9 +131,7 @@ async fn create_matching_workflow(
     rest_json::created(resp)
 }
 
-async fn list_matching_workflows(
-    State(state): State<Arc<EntityResolutionState>>,
-) -> Response {
+async fn list_matching_workflows(State(state): State<Arc<EntityResolutionState>>) -> Response {
     let items: Vec<Value> = state
         .workflows
         .iter()
@@ -178,7 +187,11 @@ async fn create_schema_mapping(
 ) -> Response {
     let schema_name = match body["schemaName"].as_str() {
         Some(n) => n.to_string(),
-        None => return rest_json::error_response(&LawsError::InvalidRequest("Missing schemaName".into())),
+        None => {
+            return rest_json::error_response(&LawsError::InvalidRequest(
+                "Missing schemaName".into(),
+            ))
+        }
     };
 
     if state.schema_mappings.contains_key(&schema_name) {
@@ -210,9 +223,7 @@ async fn create_schema_mapping(
     rest_json::created(resp)
 }
 
-async fn list_schema_mappings(
-    State(state): State<Arc<EntityResolutionState>>,
-) -> Response {
+async fn list_schema_mappings(State(state): State<Arc<EntityResolutionState>>) -> Response {
     let items: Vec<Value> = state
         .schema_mappings
         .iter()

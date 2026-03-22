@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post, delete, put};
+use axum::routing::{delete, get, post, put};
 use axum::Json;
 use chrono::Utc;
 use dashmap::DashMap;
@@ -55,10 +55,15 @@ impl Default for DlmState {
 
 pub fn router(state: Arc<DlmState>) -> axum::Router {
     axum::Router::new()
-        .route("/policies", post(create_lifecycle_policy).get(get_lifecycle_policies))
+        .route(
+            "/policies",
+            post(create_lifecycle_policy).get(get_lifecycle_policies),
+        )
         .route(
             "/policies/{policy_id}",
-            get(get_lifecycle_policy).delete(delete_lifecycle_policy).put(update_lifecycle_policy),
+            get(get_lifecycle_policy)
+                .delete(delete_lifecycle_policy)
+                .put(update_lifecycle_policy),
         )
         .with_state(state)
 }

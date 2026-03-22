@@ -130,9 +130,7 @@ async fn create_application(
     }))
 }
 
-async fn list_applications(
-    State(state): State<Arc<MainframeState>>,
-) -> Response {
+async fn list_applications(State(state): State<Arc<MainframeState>>) -> Response {
     let apps: Vec<Value> = state
         .applications
         .iter()
@@ -168,9 +166,9 @@ async fn get_application(
             "status": a.status,
             "creationTime": a.created_at
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Application not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Application not found: {id}")))
+        }
     }
 }
 
@@ -180,9 +178,9 @@ async fn delete_application(
 ) -> Response {
     match state.applications.remove(&id) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Application not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Application not found: {id}")))
+        }
     }
 }
 
@@ -229,9 +227,7 @@ async fn create_environment(
     }))
 }
 
-async fn list_environments(
-    State(state): State<Arc<MainframeState>>,
-) -> Response {
+async fn list_environments(State(state): State<Arc<MainframeState>>) -> Response {
     let envs: Vec<Value> = state
         .environments
         .iter()

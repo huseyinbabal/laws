@@ -115,10 +115,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_firewall(
-    state: &NetworkFirewallState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_firewall(state: &NetworkFirewallState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["FirewallName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing FirewallName".into()))?
@@ -144,9 +141,7 @@ fn create_firewall(
         .unwrap_or_default();
 
     let firewall_id = uuid::Uuid::new_v4().to_string();
-    let firewall_arn = format!(
-        "arn:aws:network-firewall:{REGION}:{ACCOUNT_ID}:firewall/{name}"
-    );
+    let firewall_arn = format!("arn:aws:network-firewall:{REGION}:{ACCOUNT_ID}:firewall/{name}");
 
     let firewall = Firewall {
         firewall_name: name.clone(),
@@ -177,10 +172,7 @@ fn create_firewall(
     })))
 }
 
-fn delete_firewall(
-    state: &NetworkFirewallState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_firewall(state: &NetworkFirewallState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["FirewallName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing FirewallName".into()))?;
@@ -202,10 +194,7 @@ fn delete_firewall(
     })))
 }
 
-fn describe_firewall(
-    state: &NetworkFirewallState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_firewall(state: &NetworkFirewallState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["FirewallName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing FirewallName".into()))?;
@@ -256,15 +245,11 @@ fn create_firewall_policy(
         .ok_or_else(|| LawsError::InvalidRequest("Missing FirewallPolicyName".into()))?
         .to_string();
 
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
 
     let policy_id = uuid::Uuid::new_v4().to_string();
-    let policy_arn = format!(
-        "arn:aws:network-firewall:{REGION}:{ACCOUNT_ID}:firewall-policy/{name}"
-    );
+    let policy_arn =
+        format!("arn:aws:network-firewall:{REGION}:{ACCOUNT_ID}:firewall-policy/{name}");
 
     let policy = FirewallPolicy {
         policy_name: name.clone(),
@@ -310,33 +295,21 @@ fn describe_firewall_policy(
     })))
 }
 
-fn create_rule_group(
-    state: &NetworkFirewallState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_rule_group(state: &NetworkFirewallState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["RuleGroupName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing RuleGroupName".into()))?
         .to_string();
 
-    let rule_group_type = payload["Type"]
-        .as_str()
-        .unwrap_or("STATELESS")
-        .to_string();
+    let rule_group_type = payload["Type"].as_str().unwrap_or("STATELESS").to_string();
 
-    let capacity = payload["Capacity"]
-        .as_i64()
-        .unwrap_or(100);
+    let capacity = payload["Capacity"].as_i64().unwrap_or(100);
 
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
 
     let rule_group_id = uuid::Uuid::new_v4().to_string();
-    let rule_group_arn = format!(
-        "arn:aws:network-firewall:{REGION}:{ACCOUNT_ID}:stateless-rulegroup/{name}"
-    );
+    let rule_group_arn =
+        format!("arn:aws:network-firewall:{REGION}:{ACCOUNT_ID}:stateless-rulegroup/{name}");
 
     let rg = RuleGroup {
         rule_group_name: name.clone(),

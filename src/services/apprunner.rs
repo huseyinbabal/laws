@@ -47,14 +47,8 @@ impl Default for AppRunnerState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &AppRunnerState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AppRunner.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &AppRunnerState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AppRunner.").unwrap_or(target);
 
     let result = match action {
         "CreateService" => create_service(state, payload),
@@ -96,10 +90,7 @@ fn now_epoch() -> f64 {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_service(
-    state: &AppRunnerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_service(state: &AppRunnerState, payload: &Value) -> Result<Response, LawsError> {
     let service_name = payload["ServiceName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("ServiceName is required".to_string()))?
@@ -107,13 +98,10 @@ fn create_service(
 
     let service_id = uuid::Uuid::new_v4().to_string()[..8].to_string();
 
-    let service_arn = format!(
-        "arn:aws:apprunner:{REGION}:{ACCOUNT_ID}:service/{service_name}/{service_id}"
-    );
+    let service_arn =
+        format!("arn:aws:apprunner:{REGION}:{ACCOUNT_ID}:service/{service_name}/{service_id}");
 
-    let service_url = format!(
-        "{service_id}.{REGION}.awsapprunner.com"
-    );
+    let service_url = format!("{service_id}.{REGION}.awsapprunner.com");
 
     let source_type = payload["SourceConfiguration"]["CodeRepository"]
         .as_object()
@@ -148,22 +136,15 @@ fn create_service(
     })))
 }
 
-fn delete_service(
-    state: &AppRunnerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_service(state: &AppRunnerState, payload: &Value) -> Result<Response, LawsError> {
     let service_arn = payload["ServiceArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ServiceArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ServiceArn is required".to_string()))?;
 
     let (_, service) = state
         .services
         .remove(service_arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Service '{}' not found", service_arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Service '{}' not found", service_arn)))?;
 
     Ok(json_response(json!({
         "Service": {
@@ -178,22 +159,15 @@ fn delete_service(
     })))
 }
 
-fn describe_service(
-    state: &AppRunnerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_service(state: &AppRunnerState, payload: &Value) -> Result<Response, LawsError> {
     let service_arn = payload["ServiceArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ServiceArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ServiceArn is required".to_string()))?;
 
     let service = state
         .services
         .get(service_arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Service '{}' not found", service_arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Service '{}' not found", service_arn)))?;
 
     Ok(json_response(json!({
         "Service": {
@@ -230,22 +204,15 @@ fn list_services(state: &AppRunnerState) -> Result<Response, LawsError> {
     })))
 }
 
-fn pause_service(
-    state: &AppRunnerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn pause_service(state: &AppRunnerState, payload: &Value) -> Result<Response, LawsError> {
     let service_arn = payload["ServiceArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ServiceArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ServiceArn is required".to_string()))?;
 
     let mut service = state
         .services
         .get_mut(service_arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Service '{}' not found", service_arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Service '{}' not found", service_arn)))?;
 
     service.status = "PAUSED".to_string();
 
@@ -262,22 +229,15 @@ fn pause_service(
     })))
 }
 
-fn resume_service(
-    state: &AppRunnerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn resume_service(state: &AppRunnerState, payload: &Value) -> Result<Response, LawsError> {
     let service_arn = payload["ServiceArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ServiceArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ServiceArn is required".to_string()))?;
 
     let mut service = state
         .services
         .get_mut(service_arn)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Service '{}' not found", service_arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Service '{}' not found", service_arn)))?;
 
     service.status = "RUNNING".to_string();
 

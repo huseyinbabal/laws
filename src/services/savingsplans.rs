@@ -51,14 +51,8 @@ impl Default for SavingsPlansState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &SavingsPlansState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AWSSavingsPlan.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &SavingsPlansState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AWSSavingsPlan.").unwrap_or(target);
 
     let result = match action {
         "CreateSavingsPlan" => create_savings_plan(state, payload),
@@ -94,19 +88,13 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_savings_plan(
-    state: &SavingsPlansState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_savings_plan(state: &SavingsPlansState, payload: &Value) -> Result<Response, LawsError> {
     let savings_plan_type = payload["savingsPlanOfferingId"]
         .as_str()
         .unwrap_or("Compute")
         .to_string();
 
-    let commitment = payload["commitment"]
-        .as_str()
-        .unwrap_or("1.0")
-        .to_string();
+    let commitment = payload["commitment"].as_str().unwrap_or("1.0").to_string();
 
     let payment_option = payload["paymentOption"]
         .as_str()
@@ -121,9 +109,7 @@ fn create_savings_plan(
     let tags = payload["tags"].clone();
 
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:savingsplans:{REGION}:{ACCOUNT_ID}:savingsplan/{id}"
-    );
+    let arn = format!("arn:aws:savingsplans:{REGION}:{ACCOUNT_ID}:savingsplan/{id}");
 
     let now = chrono::Utc::now();
     let start = now.to_rfc3339();
@@ -150,9 +136,7 @@ fn create_savings_plan(
     })))
 }
 
-fn describe_savings_plans(
-    state: &SavingsPlansState,
-) -> Result<Response, LawsError> {
+fn describe_savings_plans(state: &SavingsPlansState) -> Result<Response, LawsError> {
     let plans: Vec<Value> = state
         .plans
         .iter()

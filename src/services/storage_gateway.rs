@@ -53,7 +53,11 @@ impl Default for StorageGatewayState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(state: &StorageGatewayState, target: &str, payload: &Value) -> Response {
+pub async fn handle_request(
+    state: &StorageGatewayState,
+    target: &str,
+    payload: &Value,
+) -> Response {
     let action = target
         .strip_prefix("StorageGateway_20130630.")
         .unwrap_or(target);
@@ -66,7 +70,9 @@ pub async fn handle_request(state: &StorageGatewayState, target: &str, payload: 
         "CreateStorediSCSIVolume" => create_stored_iscsi_volume(state, payload),
         "ListVolumes" => list_volumes(state, payload),
         "DescribeStorediSCSIVolumes" => describe_stored_iscsi_volumes(state, payload),
-        other => Err(LawsError::InvalidRequest(format!("unknown action: {other}"))),
+        other => Err(LawsError::InvalidRequest(format!(
+            "unknown action: {other}"
+        ))),
     };
 
     match result {
@@ -80,7 +86,12 @@ pub async fn handle_request(state: &StorageGatewayState, target: &str, payload: 
 // ---------------------------------------------------------------------------
 
 fn json_response(body: Value) -> Response {
-    (StatusCode::OK, [("Content-Type", "application/x-amz-json-1.1")], serde_json::to_string(&body).unwrap_or_default()).into_response()
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/x-amz-json-1.1")],
+        serde_json::to_string(&body).unwrap_or_default(),
+    )
+        .into_response()
 }
 
 fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
@@ -95,8 +106,15 @@ fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
 
 fn activate_gateway(state: &StorageGatewayState, body: &Value) -> Result<Response, LawsError> {
     let gateway_name = require_str(body, "GatewayName")?.to_owned();
-    let gateway_type = body.get("GatewayType").and_then(|v| v.as_str()).unwrap_or("STORED").to_owned();
-    let gateway_id = format!("sgw-{}", uuid::Uuid::new_v4().to_string().replace('-', "")[..12].to_string());
+    let gateway_type = body
+        .get("GatewayType")
+        .and_then(|v| v.as_str())
+        .unwrap_or("STORED")
+        .to_owned();
+    let gateway_id = format!(
+        "sgw-{}",
+        uuid::Uuid::new_v4().to_string().replace('-', "")[..12].to_string()
+    );
     let gateway_arn = format!("arn:aws:storagegateway:{REGION}:{ACCOUNT_ID}:gateway/{gateway_id}");
 
     let gateway = Gateway {
@@ -115,26 +133,35 @@ fn activate_gateway(state: &StorageGatewayState, body: &Value) -> Result<Respons
 }
 
 fn list_gateways(state: &StorageGatewayState) -> Result<Response, LawsError> {
-    let gateways: Vec<Value> = state.gateways.iter().map(|entry| {
-        let g = entry.value();
-        json!({
-            "GatewayARN": g.gateway_arn,
-            "GatewayId": g.gateway_id,
-            "GatewayName": g.gateway_name,
-            "GatewayType": g.gateway_type,
-            "GatewayOperationalState": g.gateway_state
+    let gateways: Vec<Value> = state
+        .gateways
+        .iter()
+        .map(|entry| {
+            let g = entry.value();
+            json!({
+                "GatewayARN": g.gateway_arn,
+                "GatewayId": g.gateway_id,
+                "GatewayName": g.gateway_name,
+                "GatewayType": g.gateway_type,
+                "GatewayOperationalState": g.gateway_state
+            })
         })
-    }).collect();
+        .collect();
 
     Ok(json_response(json!({
         "Gateways": gateways
     })))
 }
 
-fn describe_gateway_information(state: &StorageGatewayState, body: &Value) -> Result<Response, LawsError> {
+fn describe_gateway_information(
+    state: &StorageGatewayState,
+    body: &Value,
+) -> Result<Response, LawsError> {
     let gateway_arn = require_str(body, "GatewayARN")?;
 
-    let g = state.gateways.get(gateway_arn)
+    let g = state
+        .gateways
+        .get(gateway_arn)
         .ok_or_else(|| LawsError::NotFound(format!("gateway not found: {gateway_arn}")))?;
 
     Ok(json_response(json!({
@@ -149,7 +176,9 @@ fn describe_gateway_information(state: &StorageGatewayState, body: &Value) -> Re
 
 fn delete_gateway(state: &StorageGatewayState, body: &Value) -> Result<Response, LawsError> {
     let gateway_arn = require_str(body, "GatewayARN")?;
-    state.gateways.remove(gateway_arn)
+    state
+        .gateways
+        .remove(gateway_arn)
         .ok_or_else(|| LawsError::NotFound(format!("gateway not found: {gateway_arn}")))?;
 
     state.volumes.retain(|_, v| v.gateway_arn != gateway_arn);
@@ -159,16 +188,35 @@ fn delete_gateway(state: &StorageGatewayState, body: &Value) -> Result<Response,
     })))
 }
 
-fn create_stored_iscsi_volume(state: &StorageGatewayState, body: &Value) -> Result<Response, LawsError> {
+fn create_stored_iscsi_volume(
+    state: &StorageGatewayState,
+    body: &Value,
+) -> Result<Response, LawsError> {
     let gateway_arn = require_str(body, "GatewayARN")?.to_owned();
-    let disk_id = body.get("DiskId").and_then(|v| v.as_str()).unwrap_or("disk-0").to_owned();
-    let preserve = body.get("PreserveExistingData").and_then(|v| v.as_bool()).unwrap_or(false);
+    let disk_id = body
+        .get("DiskId")
+        .and_then(|v| v.as_str())
+        .unwrap_or("disk-0")
+        .to_owned();
+    let preserve = body
+        .get("PreserveExistingData")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
     let target_name = require_str(body, "TargetName")?.to_owned();
     let network_interface = require_str(body, "NetworkInterfaceId")?.to_owned();
 
-    let volume_id = format!("vol-{}", uuid::Uuid::new_v4().to_string().replace('-', "")[..12].to_string());
-    let volume_arn = format!("arn:aws:storagegateway:{REGION}:{ACCOUNT_ID}:gateway/{}/volume/{volume_id}", gateway_arn.rsplit('/').next().unwrap_or(""));
-    let volume_size = body.get("SnapshotId").map(|_| 107374182400u64).unwrap_or(107374182400);
+    let volume_id = format!(
+        "vol-{}",
+        uuid::Uuid::new_v4().to_string().replace('-', "")[..12].to_string()
+    );
+    let volume_arn = format!(
+        "arn:aws:storagegateway:{REGION}:{ACCOUNT_ID}:gateway/{}/volume/{volume_id}",
+        gateway_arn.rsplit('/').next().unwrap_or("")
+    );
+    let volume_size = body
+        .get("SnapshotId")
+        .map(|_| 107374182400u64)
+        .unwrap_or(107374182400);
 
     let volume = Volume {
         volume_arn: volume_arn.clone(),
@@ -191,10 +239,10 @@ fn create_stored_iscsi_volume(state: &StorageGatewayState, body: &Value) -> Resu
 fn list_volumes(state: &StorageGatewayState, body: &Value) -> Result<Response, LawsError> {
     let gateway_arn = body.get("GatewayARN").and_then(|v| v.as_str());
 
-    let volumes: Vec<Value> = state.volumes.iter()
-        .filter(|entry| {
-            gateway_arn.map_or(true, |arn| entry.value().gateway_arn == arn)
-        })
+    let volumes: Vec<Value> = state
+        .volumes
+        .iter()
+        .filter(|entry| gateway_arn.map_or(true, |arn| entry.value().gateway_arn == arn))
         .map(|entry| {
             let v = entry.value();
             json!({
@@ -213,12 +261,17 @@ fn list_volumes(state: &StorageGatewayState, body: &Value) -> Result<Response, L
     })))
 }
 
-fn describe_stored_iscsi_volumes(state: &StorageGatewayState, body: &Value) -> Result<Response, LawsError> {
-    let volume_arns = body.get("VolumeARNs")
+fn describe_stored_iscsi_volumes(
+    state: &StorageGatewayState,
+    body: &Value,
+) -> Result<Response, LawsError> {
+    let volume_arns = body
+        .get("VolumeARNs")
         .and_then(|v| v.as_array())
         .ok_or_else(|| LawsError::InvalidRequest("missing required field: VolumeARNs".into()))?;
 
-    let volumes: Vec<Value> = volume_arns.iter()
+    let volumes: Vec<Value> = volume_arns
+        .iter()
         .filter_map(|arn| {
             let arn_str = arn.as_str()?;
             let v = state.volumes.get(arn_str)?;

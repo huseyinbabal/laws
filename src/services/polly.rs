@@ -56,10 +56,7 @@ impl Default for PollyState {
 
 pub fn router(state: Arc<PollyState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/v1/lexicons",
-            get(list_lexicons),
-        )
+        .route("/v1/lexicons", get(list_lexicons))
         .route(
             "/v1/lexicons/{name}",
             put(put_lexicon).get(get_lexicon).delete(delete_lexicon),
@@ -77,14 +74,9 @@ async fn put_lexicon(
     Path(name): Path<String>,
     Json(payload): Json<Value>,
 ) -> Response {
-    let arn = format!(
-        "arn:aws:polly:{REGION}:{ACCOUNT_ID}:lexicon/{name}"
-    );
+    let arn = format!("arn:aws:polly:{REGION}:{ACCOUNT_ID}:lexicon/{name}");
 
-    let content = payload["Content"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let content = payload["Content"].as_str().unwrap_or("").to_string();
 
     let now = chrono::Utc::now().to_rfc3339();
 
@@ -127,10 +119,7 @@ async fn list_lexicons(State(state): State<Arc<PollyState>>) -> Response {
     rest_json::ok(json!({ "Lexicons": lexicons }))
 }
 
-async fn get_lexicon(
-    State(state): State<Arc<PollyState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn get_lexicon(State(state): State<Arc<PollyState>>, Path(name): Path<String>) -> Response {
     match state.lexicons.get(&name) {
         Some(lexicon) => rest_json::ok(json!({
             "Lexicon": {

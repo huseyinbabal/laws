@@ -101,15 +101,15 @@ fn create_domain(
     }
 
     let domain_id = uuid::Uuid::new_v4().to_string()[..13].to_string();
-    let arn = format!(
-        "arn:aws:cloudsearch:{REGION}:{ACCOUNT_ID}:domain/{domain_name}"
-    );
+    let arn = format!("arn:aws:cloudsearch:{REGION}:{ACCOUNT_ID}:domain/{domain_name}");
 
     let domain = Domain {
         domain_name: domain_name.clone(),
         domain_id: domain_id.clone(),
         arn: arn.clone(),
-        search_endpoint: format!("search-{domain_name}-{domain_id}.{REGION}.cloudsearch.amazonaws.com"),
+        search_endpoint: format!(
+            "search-{domain_name}-{domain_id}.{REGION}.cloudsearch.amazonaws.com"
+        ),
         doc_endpoint: format!("doc-{domain_name}-{domain_id}.{REGION}.cloudsearch.amazonaws.com"),
         created: true,
         deleted: false,

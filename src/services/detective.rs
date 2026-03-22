@@ -85,9 +85,7 @@ async fn create_graph(
     Json(_payload): Json<Value>,
 ) -> Response {
     let graph_id = uuid::Uuid::new_v4().to_string();
-    let graph_arn = format!(
-        "arn:aws:detective:{REGION}:{ACCOUNT_ID}:graph:{graph_id}"
-    );
+    let graph_arn = format!("arn:aws:detective:{REGION}:{ACCOUNT_ID}:graph:{graph_id}");
     let created_time = now_epoch();
 
     let graph = DetectiveGraph {
@@ -133,9 +131,7 @@ async fn delete_graph(
         state
             .graphs
             .remove(graph_arn)
-            .ok_or_else(|| {
-                LawsError::NotFound(format!("Graph '{}' not found", graph_arn))
-            })?;
+            .ok_or_else(|| LawsError::NotFound(format!("Graph '{}' not found", graph_arn)))?;
 
         // Remove associated members
         state.members.retain(|_, m| m.graph_arn != graph_arn);
@@ -186,10 +182,7 @@ async fn create_members(
                 }
             };
 
-            let email = account["EmailAddress"]
-                .as_str()
-                .unwrap_or("")
-                .to_string();
+            let email = account["EmailAddress"].as_str().unwrap_or("").to_string();
 
             let member_key = format!("{}:{}", graph_arn, account_id);
 

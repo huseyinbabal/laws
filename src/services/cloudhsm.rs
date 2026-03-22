@@ -61,14 +61,8 @@ impl Default for CloudHsmState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &CloudHsmState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("BaldrApiService.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &CloudHsmState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("BaldrApiService.").unwrap_or(target);
 
     let result = match action {
         "CreateCluster" => create_cluster(state, payload),

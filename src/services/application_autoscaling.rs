@@ -144,14 +144,11 @@ fn register_scalable_target(
         max_capacity,
         role_arn,
         creation_time: now,
-        suspended_state: payload
-            .get("SuspendedState")
-            .cloned()
-            .unwrap_or(json!({
-                "DynamicScalingInSuspended": false,
-                "DynamicScalingOutSuspended": false,
-                "ScheduledScalingSuspended": false,
-            })),
+        suspended_state: payload.get("SuspendedState").cloned().unwrap_or(json!({
+            "DynamicScalingInSuspended": false,
+            "DynamicScalingOutSuspended": false,
+            "ScheduledScalingSuspended": false,
+        })),
     };
 
     state.targets.insert(key, t);
@@ -318,9 +315,7 @@ fn delete_scaling_policy(
     state
         .policies
         .remove(policy_name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("ScalingPolicy not found: {policy_name}"))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("ScalingPolicy not found: {policy_name}")))?;
 
     Ok(json_response(StatusCode::OK, json!({})))
 }

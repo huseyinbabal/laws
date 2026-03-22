@@ -62,11 +62,7 @@ impl Default for SnowballState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &SnowballState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &SnowballState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AWSIESnowballJobManagementService.")
         .unwrap_or(target);
@@ -112,39 +108,24 @@ fn random_id(prefix: &str) -> String {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_job(
-    state: &SnowballState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let job_type = payload["JobType"]
-        .as_str()
-        .unwrap_or("IMPORT")
-        .to_string();
+fn create_job(state: &SnowballState, payload: &Value) -> Result<Response, LawsError> {
+    let job_type = payload["JobType"].as_str().unwrap_or("IMPORT").to_string();
 
     let snowball_type = payload["SnowballType"]
         .as_str()
         .unwrap_or("STANDARD")
         .to_string();
 
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
 
-    let address_id = payload["AddressId"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let address_id = payload["AddressId"].as_str().unwrap_or("").to_string();
 
     let role_arn = payload["RoleARN"]
         .as_str()
         .unwrap_or(&format!("arn:aws:iam::{ACCOUNT_ID}:role/snowball-role"))
         .to_string();
 
-    let cluster_id = payload["ClusterId"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let cluster_id = payload["ClusterId"].as_str().unwrap_or("").to_string();
 
     let job_id = random_id("JID");
     let created_at = chrono::Utc::now().to_rfc3339();
@@ -168,10 +149,7 @@ fn create_job(
     })))
 }
 
-fn describe_job(
-    state: &SnowballState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_job(state: &SnowballState, payload: &Value) -> Result<Response, LawsError> {
     let job_id = payload["JobId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing JobId".into()))?;
@@ -222,10 +200,7 @@ fn list_jobs(state: &SnowballState) -> Result<Response, LawsError> {
     })))
 }
 
-fn cancel_job(
-    state: &SnowballState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn cancel_job(state: &SnowballState, payload: &Value) -> Result<Response, LawsError> {
     let job_id = payload["JobId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing JobId".into()))?;
@@ -240,10 +215,7 @@ fn cancel_job(
     Ok(json_response(json!({})))
 }
 
-fn update_job(
-    state: &SnowballState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn update_job(state: &SnowballState, payload: &Value) -> Result<Response, LawsError> {
     let job_id = payload["JobId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing JobId".into()))?;
@@ -266,19 +238,10 @@ fn update_job(
     Ok(json_response(json!({})))
 }
 
-fn create_cluster(
-    state: &SnowballState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+fn create_cluster(state: &SnowballState, payload: &Value) -> Result<Response, LawsError> {
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
 
-    let address_id = payload["AddressId"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let address_id = payload["AddressId"].as_str().unwrap_or("").to_string();
 
     let role_arn = payload["RoleARN"]
         .as_str()

@@ -63,7 +63,10 @@ impl Default for DevOpsGuruState {
 
 pub fn router(state: Arc<DevOpsGuruState>) -> axum::Router {
     axum::Router::new()
-        .route("/channels", post(add_notification_channel).get(list_notification_channels))
+        .route(
+            "/channels",
+            post(add_notification_channel).get(list_notification_channels),
+        )
         .route("/insights", post(list_insights))
         .route("/insights/{insight_id}", get(describe_insight))
         .route("/insights/search", post(search_insights))
@@ -80,12 +83,18 @@ async fn add_notification_channel(
 ) -> Response {
     let config = match body.get("Config") {
         Some(c) => c,
-        None => return rest_json::error_response(&LawsError::InvalidRequest("Missing Config".into())),
+        None => {
+            return rest_json::error_response(&LawsError::InvalidRequest("Missing Config".into()))
+        }
     };
 
     let sns_topic_arn = match config["Sns"]["TopicArn"].as_str() {
         Some(t) => t.to_string(),
-        None => return rest_json::error_response(&LawsError::InvalidRequest("Missing Sns.TopicArn".into())),
+        None => {
+            return rest_json::error_response(&LawsError::InvalidRequest(
+                "Missing Sns.TopicArn".into(),
+            ))
+        }
     };
 
     let id = uuid::Uuid::new_v4().to_string();
@@ -99,9 +108,7 @@ async fn add_notification_channel(
     rest_json::created(json!({ "Id": id }))
 }
 
-async fn list_notification_channels(
-    State(state): State<Arc<DevOpsGuruState>>,
-) -> Response {
+async fn list_notification_channels(State(state): State<Arc<DevOpsGuruState>>) -> Response {
     let items: Vec<Value> = state
         .channels
         .iter()
@@ -123,16 +130,12 @@ async fn list_insights(
     State(state): State<Arc<DevOpsGuruState>>,
     Json(body): Json<Value>,
 ) -> Response {
-    let status_filter = body["StatusFilter"]["Any"]["Status"]
-        .as_str()
-        .unwrap_or("");
+    let status_filter = body["StatusFilter"]["Any"]["Status"].as_str().unwrap_or("");
 
     let items: Vec<Value> = state
         .insights
         .iter()
-        .filter(|entry| {
-            status_filter.is_empty() || entry.value().status == status_filter
-        })
+        .filter(|entry| status_filter.is_empty() || entry.value().status == status_filter)
         .map(|entry| {
             let i = entry.value();
             json!({

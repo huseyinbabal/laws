@@ -102,9 +102,8 @@ fn create_policy_store(
     payload: &Value,
 ) -> Result<Response, LawsError> {
     let policy_store_id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:verifiedpermissions:{REGION}:{ACCOUNT_ID}:policy-store/{policy_store_id}"
-    );
+    let arn =
+        format!("arn:aws:verifiedpermissions:{REGION}:{ACCOUNT_ID}:policy-store/{policy_store_id}");
     let now = Utc::now().to_rfc3339();
     let validation_settings = payload["validationSettings"]["mode"]
         .as_str()
@@ -141,9 +140,7 @@ fn get_policy_store(
     let store = state
         .policy_stores
         .get(policy_store_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("PolicyStore not found: {policy_store_id}"))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("PolicyStore not found: {policy_store_id}")))?;
 
     Ok(json_response(
         StatusCode::OK,
@@ -187,17 +184,12 @@ fn delete_policy_store(
     state
         .policy_stores
         .remove(policy_store_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("PolicyStore not found: {policy_store_id}"))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("PolicyStore not found: {policy_store_id}")))?;
 
     Ok(json_response(StatusCode::OK, json!({})))
 }
 
-fn create_policy(
-    state: &VerifiedPermissionsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_policy(state: &VerifiedPermissionsState, payload: &Value) -> Result<Response, LawsError> {
     let policy_store_id = payload["policyStoreId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing policyStoreId".into()))?
@@ -239,10 +231,7 @@ fn create_policy(
     ))
 }
 
-fn list_policies(
-    state: &VerifiedPermissionsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn list_policies(state: &VerifiedPermissionsState, payload: &Value) -> Result<Response, LawsError> {
     let policy_store_id = payload["policyStoreId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing policyStoreId".into()))?;
@@ -268,10 +257,7 @@ fn list_policies(
     ))
 }
 
-fn is_authorized(
-    state: &VerifiedPermissionsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn is_authorized(state: &VerifiedPermissionsState, payload: &Value) -> Result<Response, LawsError> {
     let policy_store_id = payload["policyStoreId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing policyStoreId".into()))?;

@@ -82,18 +82,12 @@ impl Default for WorkDocsState {
 pub fn router(state: Arc<WorkDocsState>) -> axum::Router {
     axum::Router::new()
         .route("/api/v1/folders", post(create_folder))
-        .route(
-            "/api/v1/folders/{folder_id}",
-            delete(delete_folder),
-        )
+        .route("/api/v1/folders/{folder_id}", delete(delete_folder))
         .route(
             "/api/v1/folders/{folder_id}/contents",
             get(describe_folder_contents),
         )
-        .route(
-            "/api/v1/documents",
-            post(initiate_document_version_upload),
-        )
+        .route("/api/v1/documents", post(initiate_document_version_upload))
         .route("/api/v1/documents/{document_id}", get(get_document))
         .route("/api/v1/users", get(describe_users))
         .with_state(state)
@@ -225,9 +219,7 @@ async fn initiate_document_version_upload(
         latest_version_status: "ACTIVE".to_string(),
     };
 
-    let upload_url = format!(
-        "https://workdocs.{REGION}.amazonaws.com/upload/{document_id}"
-    );
+    let upload_url = format!("https://workdocs.{REGION}.amazonaws.com/upload/{document_id}");
     let version_id = uuid::Uuid::new_v4().to_string();
 
     let resp = json!({

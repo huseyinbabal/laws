@@ -118,10 +118,7 @@ async fn create_work_group(
         )));
     }
 
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
     let arn = format!(
         "arn:aws:athena:{}:{}:workgroup/{}",
         REGION, ACCOUNT_ID, name
@@ -243,9 +240,7 @@ async fn get_query_execution(
 ) -> Result<Response, LawsError> {
     let id = payload["QueryExecutionId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("QueryExecutionId is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("QueryExecutionId is required".to_string()))?;
 
     let exec = state
         .query_executions
@@ -275,9 +270,7 @@ async fn get_query_results(
 ) -> Result<Response, LawsError> {
     let id = payload["QueryExecutionId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("QueryExecutionId is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("QueryExecutionId is required".to_string()))?;
 
     if !state.query_executions.contains_key(id) {
         return Err(LawsError::NotFound(format!(
@@ -302,9 +295,7 @@ async fn stop_query_execution(
 ) -> Result<Response, LawsError> {
     let id = payload["QueryExecutionId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("QueryExecutionId is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("QueryExecutionId is required".to_string()))?;
 
     if let Some(mut exec) = state.query_executions.get_mut(id) {
         exec.status = "CANCELLED".to_string();

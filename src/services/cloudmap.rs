@@ -57,11 +57,7 @@ impl Default for CloudMapState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &CloudMapState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &CloudMapState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("Route53AutoNaming_v20170314.")
         .unwrap_or(target);
@@ -117,9 +113,7 @@ fn create_private_dns_namespace(
         .to_string();
 
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:servicediscovery:{REGION}:{ACCOUNT_ID}:namespace/{id}"
-    );
+    let arn = format!("arn:aws:servicediscovery:{REGION}:{ACCOUNT_ID}:namespace/{id}");
 
     let ns = CloudMapNamespace {
         id: id.clone(),
@@ -192,9 +186,7 @@ fn create_service(state: &CloudMapState, payload: &Value) -> Result<Response, La
     }
 
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:servicediscovery:{REGION}:{ACCOUNT_ID}:service/{id}"
-    );
+    let arn = format!("arn:aws:servicediscovery:{REGION}:{ACCOUNT_ID}:service/{id}");
 
     let svc = CloudMapService {
         id: id.clone(),
@@ -290,9 +282,7 @@ fn deregister_instance(state: &CloudMapState, payload: &Value) -> Result<Respons
 
     svc.instances
         .remove(instance_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Instance '{}' not found", instance_id))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Instance '{}' not found", instance_id)))?;
 
     let operation_id = uuid::Uuid::new_v4().to_string();
 

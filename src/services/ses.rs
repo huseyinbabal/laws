@@ -47,11 +47,7 @@ impl Default for SesState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &SesState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &SesState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("SimpleEmailServiceV2.")
         .unwrap_or(target);
@@ -113,9 +109,7 @@ fn create_email_identity(state: &SesState, payload: &Value) -> Result<Response, 
     let identity = payload
         .get("EmailIdentity")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("missing required field: EmailIdentity".into())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("missing required field: EmailIdentity".into()))?
         .to_owned();
 
     if state.identities.contains_key(&identity) {
@@ -148,9 +142,7 @@ fn delete_email_identity(state: &SesState, payload: &Value) -> Result<Response, 
     let identity = payload
         .get("EmailIdentity")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("missing required field: EmailIdentity".into())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("missing required field: EmailIdentity".into()))?;
 
     state
         .identities
@@ -183,9 +175,7 @@ fn get_email_identity(state: &SesState, payload: &Value) -> Result<Response, Law
     let identity = payload
         .get("EmailIdentity")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("missing required field: EmailIdentity".into())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("missing required field: EmailIdentity".into()))?;
 
     let id = state
         .identities

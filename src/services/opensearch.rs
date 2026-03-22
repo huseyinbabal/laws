@@ -84,21 +84,14 @@ async fn create_domain(
             .unwrap_or("OpenSearch_2.11")
             .to_string();
 
-        let cluster_config = payload
-            .get("ClusterConfig")
-            .cloned()
-            .unwrap_or(json!({
-                "InstanceType": "r6g.large.search",
-                "InstanceCount": 1,
-            }));
+        let cluster_config = payload.get("ClusterConfig").cloned().unwrap_or(json!({
+            "InstanceType": "r6g.large.search",
+            "InstanceCount": 1,
+        }));
 
         let domain_id = format!("{ACCOUNT_ID}/{domain_name}");
-        let arn = format!(
-            "arn:aws:es:{REGION}:{ACCOUNT_ID}:domain/{domain_name}"
-        );
-        let endpoint = format!(
-            "search-{domain_name}-abc123.{REGION}.es.amazonaws.com"
-        );
+        let arn = format!("arn:aws:es:{REGION}:{ACCOUNT_ID}:domain/{domain_name}");
+        let endpoint = format!("search-{domain_name}-abc123.{REGION}.es.amazonaws.com");
 
         let domain = OpenSearchDomain {
             domain_name: domain_name.clone(),
@@ -132,9 +125,7 @@ async fn create_domain(
     }
 }
 
-async fn list_domain_names(
-    State(state): State<Arc<OpenSearchState>>,
-) -> Response {
+async fn list_domain_names(State(state): State<Arc<OpenSearchState>>) -> Response {
     let domain_names: Vec<Value> = state
         .domains
         .iter()
@@ -167,10 +158,9 @@ async fn describe_domain(
                 "Processing": false,
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Domain '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Domain '{}' not found", name)))
+        }
     }
 }
 
@@ -188,9 +178,8 @@ async fn delete_domain(
                 "Deleted": true,
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Domain '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Domain '{}' not found", name)))
+        }
     }
 }

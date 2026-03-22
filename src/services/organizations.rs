@@ -1,7 +1,7 @@
 use axum::response::{IntoResponse, Response};
 use dashmap::DashMap;
 use http::StatusCode;
-use rand::Rng;
+use rand::RngExt;
 use serde_json::{json, Value};
 
 use crate::error::LawsError;
@@ -58,11 +58,7 @@ impl Default for OrganizationsState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &OrganizationsState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &OrganizationsState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AWSOrganizationsV20161128.")
         .unwrap_or(target);
@@ -102,8 +98,8 @@ fn json_response(body: Value) -> Response {
 }
 
 fn random_org_id() -> String {
-    let suffix: String = rand::thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
+    let suffix: String = rand::rng()
+        .sample_iter(&rand::distr::Alphanumeric)
         .take(10)
         .map(|c| char::from(c).to_ascii_lowercase())
         .collect();
@@ -111,8 +107,8 @@ fn random_org_id() -> String {
 }
 
 fn random_ou_id() -> String {
-    let suffix: String = rand::thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
+    let suffix: String = rand::rng()
+        .sample_iter(&rand::distr::Alphanumeric)
         .take(10)
         .map(|c| char::from(c).to_ascii_lowercase())
         .collect();
@@ -120,8 +116,9 @@ fn random_ou_id() -> String {
 }
 
 fn random_account_id() -> String {
-    let mut rng = rand::thread_rng();
-    format!("{:012}", rng.gen_range(100000000000u64..999999999999u64))
+    use rand::RngExt;
+    let mut rng = rand::rng();
+    format!("{:012}", rng.random_range(100000000000u64..999999999999u64))
 }
 
 fn account_to_json(a: &OrgAccount) -> Value {
@@ -147,20 +144,14 @@ fn ou_to_json(ou: &OrganizationalUnit) -> Value {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_organization(
-    state: &OrganizationsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_organization(state: &OrganizationsState, payload: &Value) -> Result<Response, LawsError> {
     if state.organization.contains_key("default") {
         return Err(LawsError::AlreadyExists(
             "Organization already exists".into(),
         ));
     }
 
-    let feature_set = payload["FeatureSet"]
-        .as_str()
-        .unwrap_or("ALL")
-        .to_string();
+    let feature_set = payload["FeatureSet"].as_str().unwrap_or("ALL").to_string();
 
     let org_id = random_org_id();
     let arn = format!("arn:aws:organizations::{ACCOUNT_ID}:organization/{org_id}");
@@ -174,7 +165,9 @@ fn create_organization(
         "FeatureSet": feature_set,
     });
 
-    state.organization.insert("default".to_string(), org.clone());
+    state
+        .organization
+        .insert("default".to_string(), org.clone());
 
     Ok(json_response(json!({ "Organization": org })))
 }
@@ -185,7 +178,9 @@ fn describe_organization(state: &OrganizationsState) -> Result<Response, LawsErr
         .get("default")
         .ok_or_else(|| LawsError::NotFound("Organization not found".into()))?;
 
-    Ok(json_response(json!({ "Organization": org.value().clone() })))
+    Ok(json_response(
+        json!({ "Organization": org.value().clone() }),
+    ))
 }
 
 fn list_accounts(state: &OrganizationsState) -> Result<Response, LawsError> {
@@ -198,10 +193,7 @@ fn list_accounts(state: &OrganizationsState) -> Result<Response, LawsError> {
     Ok(json_response(json!({ "Accounts": accounts })))
 }
 
-fn create_account(
-    state: &OrganizationsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_account(state: &OrganizationsState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["AccountName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing AccountName".into()))?
@@ -238,10 +230,7 @@ fn create_account(
     Ok(json_response(resp))
 }
 
-fn describe_account(
-    state: &OrganizationsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_account(state: &OrganizationsState, payload: &Value) -> Result<Response, LawsError> {
     let account_id = payload["AccountId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing AccountId".into()))?;
@@ -265,9 +254,7 @@ fn create_organizational_unit(
         .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
         .to_string();
 
-    let _parent_id = payload["ParentId"]
-        .as_str()
-        .unwrap_or("r-root");
+    let _parent_id = payload["ParentId"].as_str().unwrap_or("r-root");
 
     let ou_id = random_ou_id();
     let arn = format!("arn:aws:organizations::{ACCOUNT_ID}:ou/{ou_id}");
@@ -284,9 +271,7 @@ fn create_organizational_unit(
     Ok(json_response(json!({ "OrganizationalUnit": resp })))
 }
 
-fn list_organizational_units_for_parent(
-    state: &OrganizationsState,
-) -> Result<Response, LawsError> {
+fn list_organizational_units_for_parent(state: &OrganizationsState) -> Result<Response, LawsError> {
     let ous: Vec<Value> = state
         .organizational_units
         .iter()

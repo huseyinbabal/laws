@@ -186,7 +186,13 @@ fn describe_auto_scaling_groups(
     <Status>{}</Status>
   </member>
 "#,
-            g.name, g.arn, g.launch_config_name, g.min_size, g.max_size, g.desired_capacity, g.status
+            g.name,
+            g.arn,
+            g.launch_config_name,
+            g.min_size,
+            g.max_size,
+            g.desired_capacity,
+            g.status
         ));
     }
 

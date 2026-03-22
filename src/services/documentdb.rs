@@ -61,14 +61,8 @@ impl Default for DocumentDbState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &DocumentDbState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AmazonRDSv19_DocDB.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &DocumentDbState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AmazonRDSv19_DocDB.").unwrap_or(target);
 
     let result = match action {
         "CreateDBCluster" => create_db_cluster(state, payload),
@@ -137,9 +131,7 @@ fn instance_to_json(i: &DbInstance) -> Value {
 fn create_db_cluster(state: &DocumentDbState, payload: &Value) -> Result<Response, LawsError> {
     let id = payload["DBClusterIdentifier"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("DBClusterIdentifier is required".to_string())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("DBClusterIdentifier is required".to_string()))?
         .to_string();
 
     if state.clusters.contains_key(&id) {
@@ -179,16 +171,17 @@ fn create_db_cluster(state: &DocumentDbState, payload: &Value) -> Result<Respons
 fn delete_db_cluster(state: &DocumentDbState, payload: &Value) -> Result<Response, LawsError> {
     let id = payload["DBClusterIdentifier"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("DBClusterIdentifier is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("DBClusterIdentifier is required".to_string()))?;
 
     let (_, cluster) = state
         .clusters
         .remove(id)
         .ok_or_else(|| LawsError::NotFound(format!("DB cluster '{}' not found", id)))?;
 
-    Ok(json_response(StatusCode::OK, json!({ "DBCluster": cluster_to_json(&cluster) })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "DBCluster": cluster_to_json(&cluster) }),
+    ))
 }
 
 fn describe_db_clusters(state: &DocumentDbState) -> Result<Response, LawsError> {
@@ -198,15 +191,16 @@ fn describe_db_clusters(state: &DocumentDbState) -> Result<Response, LawsError> 
         .map(|entry| cluster_to_json(entry.value()))
         .collect();
 
-    Ok(json_response(StatusCode::OK, json!({ "DBClusters": clusters })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "DBClusters": clusters }),
+    ))
 }
 
 fn create_db_instance(state: &DocumentDbState, payload: &Value) -> Result<Response, LawsError> {
     let id = payload["DBInstanceIdentifier"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("DBInstanceIdentifier is required".to_string())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("DBInstanceIdentifier is required".to_string()))?
         .to_string();
 
     if state.instances.contains_key(&id) {
@@ -247,16 +241,17 @@ fn create_db_instance(state: &DocumentDbState, payload: &Value) -> Result<Respon
 fn delete_db_instance(state: &DocumentDbState, payload: &Value) -> Result<Response, LawsError> {
     let id = payload["DBInstanceIdentifier"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("DBInstanceIdentifier is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("DBInstanceIdentifier is required".to_string()))?;
 
     let (_, instance) = state
         .instances
         .remove(id)
         .ok_or_else(|| LawsError::NotFound(format!("DB instance '{}' not found", id)))?;
 
-    Ok(json_response(StatusCode::OK, json!({ "DBInstance": instance_to_json(&instance) })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "DBInstance": instance_to_json(&instance) }),
+    ))
 }
 
 fn describe_db_instances(state: &DocumentDbState) -> Result<Response, LawsError> {
@@ -266,5 +261,8 @@ fn describe_db_instances(state: &DocumentDbState) -> Result<Response, LawsError>
         .map(|entry| instance_to_json(entry.value()))
         .collect();
 
-    Ok(json_response(StatusCode::OK, json!({ "DBInstances": instances })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "DBInstances": instances }),
+    ))
 }

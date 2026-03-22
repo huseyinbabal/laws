@@ -66,7 +66,11 @@ impl Default for SageMakerState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(state: &SageMakerState, target: &str, payload: &serde_json::Value) -> Response {
+pub async fn handle_request(
+    state: &SageMakerState,
+    target: &str,
+    payload: &serde_json::Value,
+) -> Response {
     let action = target.strip_prefix("SageMaker.").unwrap_or(target);
 
     let result = match action {
@@ -83,7 +87,9 @@ pub async fn handle_request(state: &SageMakerState, target: &str, payload: &serd
         "DeleteEndpoint" => delete_endpoint(state, payload),
         "DescribeEndpoint" => describe_endpoint(state, payload),
         "ListEndpoints" => list_endpoints(state),
-        other => Err(LawsError::InvalidRequest(format!("unknown action: {other}"))),
+        other => Err(LawsError::InvalidRequest(format!(
+            "unknown action: {other}"
+        ))),
     };
 
     match result {
@@ -97,7 +103,12 @@ pub async fn handle_request(state: &SageMakerState, target: &str, payload: &serd
 // ---------------------------------------------------------------------------
 
 fn json_response(body: Value) -> Response {
-    (StatusCode::OK, [("Content-Type", "application/x-amz-json-1.1")], serde_json::to_string(&body).unwrap_or_default()).into_response()
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/x-amz-json-1.1")],
+        serde_json::to_string(&body).unwrap_or_default(),
+    )
+        .into_response()
 }
 
 fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
@@ -129,9 +140,7 @@ fn create_notebook_instance(state: &SageMakerState, body: &Value) -> Result<Resp
         )));
     }
 
-    let arn = format!(
-        "arn:aws:sagemaker:{REGION}:{ACCOUNT_ID}:notebook-instance/{name}"
-    );
+    let arn = format!("arn:aws:sagemaker:{REGION}:{ACCOUNT_ID}:notebook-instance/{name}");
     let created = chrono::Utc::now().to_rfc3339();
 
     let instance = NotebookInstance {
@@ -243,9 +252,7 @@ fn create_training_job(state: &SageMakerState, body: &Value) -> Result<Response,
         )));
     }
 
-    let arn = format!(
-        "arn:aws:sagemaker:{REGION}:{ACCOUNT_ID}:training-job/{name}"
-    );
+    let arn = format!("arn:aws:sagemaker:{REGION}:{ACCOUNT_ID}:training-job/{name}");
     let created = chrono::Utc::now().to_rfc3339();
 
     let job = TrainingJob {
@@ -322,9 +329,7 @@ fn create_endpoint(state: &SageMakerState, body: &Value) -> Result<Response, Law
         )));
     }
 
-    let arn = format!(
-        "arn:aws:sagemaker:{REGION}:{ACCOUNT_ID}:endpoint/{name}"
-    );
+    let arn = format!("arn:aws:sagemaker:{REGION}:{ACCOUNT_ID}:endpoint/{name}");
     let created = chrono::Utc::now().to_rfc3339();
 
     let endpoint = SageMakerEndpoint {

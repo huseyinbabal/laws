@@ -67,9 +67,7 @@ pub async fn handle_request(
     target: &str,
     payload: &Value,
 ) -> Response {
-    let action = target
-        .strip_prefix("Route53Resolver.")
-        .unwrap_or(target);
+    let action = target.strip_prefix("Route53Resolver.").unwrap_or(target);
 
     let result = match action {
         "CreateResolverEndpoint" => create_resolver_endpoint(state, payload),
@@ -137,9 +135,7 @@ fn create_resolver_endpoint(
         .unwrap_or(2);
 
     let id = random_id("rslvr-in");
-    let arn = format!(
-        "arn:aws:route53resolver:{REGION}:{ACCOUNT_ID}:resolver-endpoint/{id}"
-    );
+    let arn = format!("arn:aws:route53resolver:{REGION}:{ACCOUNT_ID}:resolver-endpoint/{id}");
     let created_at = chrono::Utc::now().to_rfc3339();
 
     let endpoint = ResolverEndpoint {
@@ -193,9 +189,7 @@ fn delete_resolver_endpoint(
     })))
 }
 
-fn list_resolver_endpoints(
-    state: &Route53ResolverState,
-) -> Result<Response, LawsError> {
+fn list_resolver_endpoints(state: &Route53ResolverState) -> Result<Response, LawsError> {
     let endpoints: Vec<Value> = state
         .endpoints
         .iter()
@@ -272,9 +266,7 @@ fn create_resolver_rule(
         .to_string();
 
     let id = random_id("rslvr-rr");
-    let arn = format!(
-        "arn:aws:route53resolver:{REGION}:{ACCOUNT_ID}:resolver-rule/{id}"
-    );
+    let arn = format!("arn:aws:route53resolver:{REGION}:{ACCOUNT_ID}:resolver-rule/{id}");
     let created_at = chrono::Utc::now().to_rfc3339();
 
     let rule = ResolverRule {
@@ -304,9 +296,7 @@ fn create_resolver_rule(
     })))
 }
 
-fn list_resolver_rules(
-    state: &Route53ResolverState,
-) -> Result<Response, LawsError> {
+fn list_resolver_rules(state: &Route53ResolverState) -> Result<Response, LawsError> {
     let rules: Vec<Value> = state
         .rules
         .iter()

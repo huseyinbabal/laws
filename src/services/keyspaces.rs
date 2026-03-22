@@ -52,14 +52,8 @@ impl Default for KeyspacesState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &KeyspacesState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("KeyspacesService.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &KeyspacesState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("KeyspacesService.").unwrap_or(target);
 
     let result = match action {
         "CreateKeyspace" => create_keyspace(state, payload),
@@ -99,10 +93,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_keyspace(
-    state: &KeyspacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_keyspace(state: &KeyspacesState, payload: &Value) -> Result<Response, LawsError> {
     let keyspace_name = payload["keyspaceName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("keyspaceName is required".to_string()))?
@@ -115,9 +106,7 @@ fn create_keyspace(
         )));
     }
 
-    let resource_arn = format!(
-        "arn:aws:cassandra:{REGION}:{ACCOUNT_ID}:/keyspace/{keyspace_name}"
-    );
+    let resource_arn = format!("arn:aws:cassandra:{REGION}:{ACCOUNT_ID}:/keyspace/{keyspace_name}");
 
     let keyspace = Keyspace {
         keyspace_name: keyspace_name.clone(),
@@ -131,22 +120,15 @@ fn create_keyspace(
     })))
 }
 
-fn delete_keyspace(
-    state: &KeyspacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_keyspace(state: &KeyspacesState, payload: &Value) -> Result<Response, LawsError> {
     let keyspace_name = payload["keyspaceName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("keyspaceName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("keyspaceName is required".to_string()))?;
 
     state
         .keyspaces
         .remove(keyspace_name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Keyspace '{}' not found", keyspace_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Keyspace '{}' not found", keyspace_name)))?;
 
     // Remove associated tables
     state.tables.retain(|_, t| t.keyspace_name != keyspace_name);
@@ -154,22 +136,15 @@ fn delete_keyspace(
     Ok(json_response(json!({})))
 }
 
-fn get_keyspace(
-    state: &KeyspacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn get_keyspace(state: &KeyspacesState, payload: &Value) -> Result<Response, LawsError> {
     let keyspace_name = payload["keyspaceName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("keyspaceName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("keyspaceName is required".to_string()))?;
 
     let keyspace = state
         .keyspaces
         .get(keyspace_name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Keyspace '{}' not found", keyspace_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Keyspace '{}' not found", keyspace_name)))?;
 
     Ok(json_response(json!({
         "keyspaceName": keyspace.keyspace_name,
@@ -193,10 +168,7 @@ fn list_keyspaces(state: &KeyspacesState) -> Result<Response, LawsError> {
     Ok(json_response(json!({ "keyspaces": keyspaces })))
 }
 
-fn create_table(
-    state: &KeyspacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_table(state: &KeyspacesState, payload: &Value) -> Result<Response, LawsError> {
     let keyspace_name = payload["keyspaceName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("keyspaceName is required".to_string()))?
@@ -240,56 +212,38 @@ fn create_table(
     })))
 }
 
-fn delete_table(
-    state: &KeyspacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_table(state: &KeyspacesState, payload: &Value) -> Result<Response, LawsError> {
     let keyspace_name = payload["keyspaceName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("keyspaceName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("keyspaceName is required".to_string()))?;
 
     let table_name = payload["tableName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("tableName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("tableName is required".to_string()))?;
 
     let table_key = format!("{}:{}", keyspace_name, table_name);
     state
         .tables
         .remove(&table_key)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Table '{}' not found", table_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Table '{}' not found", table_name)))?;
 
     Ok(json_response(json!({})))
 }
 
-fn get_table(
-    state: &KeyspacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn get_table(state: &KeyspacesState, payload: &Value) -> Result<Response, LawsError> {
     let keyspace_name = payload["keyspaceName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("keyspaceName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("keyspaceName is required".to_string()))?;
 
     let table_name = payload["tableName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("tableName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("tableName is required".to_string()))?;
 
     let table_key = format!("{}:{}", keyspace_name, table_name);
     let table = state
         .tables
         .get(&table_key)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Table '{}' not found", table_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Table '{}' not found", table_name)))?;
 
     Ok(json_response(json!({
         "keyspaceName": table.keyspace_name,
@@ -299,15 +253,10 @@ fn get_table(
     })))
 }
 
-fn list_tables(
-    state: &KeyspacesState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn list_tables(state: &KeyspacesState, payload: &Value) -> Result<Response, LawsError> {
     let keyspace_name = payload["keyspaceName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("keyspaceName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("keyspaceName is required".to_string()))?;
 
     if !state.keyspaces.contains_key(keyspace_name) {
         return Err(LawsError::NotFound(format!(

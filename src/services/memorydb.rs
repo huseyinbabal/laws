@@ -57,14 +57,8 @@ impl Default for MemoryDbState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &MemoryDbState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AmazonMemoryDB.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &MemoryDbState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AmazonMemoryDB.").unwrap_or(target);
 
     let result = match action {
         "CreateCluster" => create_cluster(state, payload),
@@ -131,22 +125,16 @@ fn create_cluster(state: &MemoryDbState, payload: &Value) -> Result<Response, La
         .unwrap_or("db.r6g.large")
         .to_string();
 
-    let num_shards = payload["NumShards"]
-        .as_u64()
-        .unwrap_or(1);
+    let num_shards = payload["NumShards"].as_u64().unwrap_or(1);
 
-    let num_replicas_per_shard = payload["NumReplicasPerShard"]
-        .as_u64()
-        .unwrap_or(1);
+    let num_replicas_per_shard = payload["NumReplicasPerShard"].as_u64().unwrap_or(1);
 
     let engine_version = payload["EngineVersion"]
         .as_str()
         .unwrap_or("7.0")
         .to_string();
 
-    let arn = format!(
-        "arn:aws:memorydb:{REGION}:{ACCOUNT_ID}:cluster/{name}"
-    );
+    let arn = format!("arn:aws:memorydb:{REGION}:{ACCOUNT_ID}:cluster/{name}");
 
     let cluster = MemoryDbCluster {
         name: name.clone(),
@@ -174,7 +162,9 @@ fn delete_cluster(state: &MemoryDbState, payload: &Value) -> Result<Response, La
         .remove(name)
         .ok_or_else(|| LawsError::NotFound(format!("Cluster '{}' not found", name)))?;
 
-    Ok(json_response(json!({ "Cluster": cluster_to_json(&cluster) })))
+    Ok(json_response(
+        json!({ "Cluster": cluster_to_json(&cluster) }),
+    ))
 }
 
 fn describe_clusters(state: &MemoryDbState, payload: &Value) -> Result<Response, LawsError> {
@@ -183,11 +173,7 @@ fn describe_clusters(state: &MemoryDbState, payload: &Value) -> Result<Response,
     let clusters: Vec<Value> = state
         .clusters
         .iter()
-        .filter(|entry| {
-            cluster_name
-                .map(|n| entry.key() == n)
-                .unwrap_or(true)
-        })
+        .filter(|entry| cluster_name.map(|n| entry.key() == n).unwrap_or(true))
         .map(|entry| cluster_to_json(entry.value()))
         .collect();
 
@@ -212,7 +198,9 @@ fn update_cluster(state: &MemoryDbState, payload: &Value) -> Result<Response, La
         cluster.engine_version = engine_version.to_string();
     }
 
-    Ok(json_response(json!({ "Cluster": cluster_to_json(&cluster) })))
+    Ok(json_response(
+        json!({ "Cluster": cluster_to_json(&cluster) }),
+    ))
 }
 
 fn create_snapshot(state: &MemoryDbState, payload: &Value) -> Result<Response, LawsError> {
@@ -233,9 +221,7 @@ fn create_snapshot(state: &MemoryDbState, payload: &Value) -> Result<Response, L
         )));
     }
 
-    let arn = format!(
-        "arn:aws:memorydb:{REGION}:{ACCOUNT_ID}:snapshot/{snapshot_name}"
-    );
+    let arn = format!("arn:aws:memorydb:{REGION}:{ACCOUNT_ID}:snapshot/{snapshot_name}");
 
     let snapshot = MemoryDbSnapshot {
         name: snapshot_name.clone(),
@@ -262,11 +248,7 @@ fn describe_snapshots(state: &MemoryDbState, payload: &Value) -> Result<Response
     let snapshots: Vec<Value> = state
         .snapshots
         .iter()
-        .filter(|entry| {
-            snapshot_name
-                .map(|n| entry.key() == n)
-                .unwrap_or(true)
-        })
+        .filter(|entry| snapshot_name.map(|n| entry.key() == n).unwrap_or(true))
         .map(|entry| {
             let s = entry.value();
             json!({

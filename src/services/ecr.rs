@@ -1,8 +1,7 @@
 use axum::response::{IntoResponse, Response};
+use base64::Engine;
 use dashmap::DashMap;
 use http::StatusCode;
-use base64::Engine;
-use rand::Rng;
 use serde_json::{json, Value};
 
 use crate::error::LawsError;
@@ -99,11 +98,12 @@ fn json_response(body: Value) -> Response {
 }
 
 fn generate_image_digest() -> String {
+    use rand::RngExt;
     let hex_chars: Vec<char> = "0123456789abcdef".chars().collect();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let hash: String = (0..64)
         .map(|_| {
-            let idx = rng.gen_range(0..hex_chars.len());
+            let idx = rng.random_range(0..hex_chars.len());
             hex_chars[idx]
         })
         .collect();
@@ -179,7 +179,9 @@ fn delete_repository(state: &EcrState, payload: &Value) -> Result<Response, Laws
 
     state.images.remove(name);
 
-    Ok(json_response(json!({ "repository": repository_to_json(&repo) })))
+    Ok(json_response(
+        json!({ "repository": repository_to_json(&repo) }),
+    ))
 }
 
 fn describe_repositories(state: &EcrState, payload: &Value) -> Result<Response, LawsError> {
@@ -276,10 +278,7 @@ fn batch_get_image(state: &EcrState, payload: &Value) -> Result<Response, LawsEr
         )));
     }
 
-    let requested_ids = payload["imageIds"]
-        .as_array()
-        .cloned()
-        .unwrap_or_default();
+    let requested_ids = payload["imageIds"].as_array().cloned().unwrap_or_default();
 
     let mut images = Vec::new();
     let mut failures = Vec::new();
@@ -321,7 +320,8 @@ fn batch_get_image(state: &EcrState, payload: &Value) -> Result<Response, LawsEr
 }
 
 fn get_authorization_token(_state: &EcrState, _payload: &Value) -> Result<Response, LawsError> {
-    let token = base64::engine::general_purpose::STANDARD.encode(format!("AWS:{}", "mock-password"));
+    let token =
+        base64::engine::general_purpose::STANDARD.encode(format!("AWS:{}", "mock-password"));
     let endpoint = format!("https://{ACCOUNT_ID}.dkr.ecr.{REGION}.amazonaws.com");
 
     Ok(json_response(json!({

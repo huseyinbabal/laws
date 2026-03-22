@@ -67,10 +67,7 @@ impl Default for ApiGatewayV2State {
 pub fn router(state: Arc<ApiGatewayV2State>) -> axum::Router {
     axum::Router::new()
         .route("/v2/apis", post(create_api).get(get_apis))
-        .route(
-            "/v2/apis/{api_id}",
-            get(get_api).delete(delete_api),
-        )
+        .route("/v2/apis/{api_id}", get(get_api).delete(delete_api))
         .route(
             "/v2/apis/{api_id}/routes",
             post(create_route).get(get_routes),
@@ -155,9 +152,7 @@ async fn get_api(
 ) -> Response {
     match state.apis.get(&api_id) {
         Some(api) => rest_json::ok(api_to_json(api.value())),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "API not found: {api_id}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("API not found: {api_id}"))),
     }
 }
 
@@ -170,9 +165,7 @@ async fn delete_api(
             state.routes.retain(|_, r| r.api_id != api_id);
             rest_json::no_content()
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "API not found: {api_id}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("API not found: {api_id}"))),
     }
 }
 
@@ -192,9 +185,7 @@ async fn create_route(
     Json(req): Json<CreateRouteRequest>,
 ) -> Response {
     if !state.apis.contains_key(&api_id) {
-        return rest_json::error_response(&LawsError::NotFound(format!(
-            "API not found: {api_id}"
-        )));
+        return rest_json::error_response(&LawsError::NotFound(format!("API not found: {api_id}")));
     }
 
     let route_id = uuid::Uuid::new_v4().to_string()[..10].to_string();
@@ -218,9 +209,7 @@ async fn get_routes(
     Path(api_id): Path<String>,
 ) -> Response {
     if !state.apis.contains_key(&api_id) {
-        return rest_json::error_response(&LawsError::NotFound(format!(
-            "API not found: {api_id}"
-        )));
+        return rest_json::error_response(&LawsError::NotFound(format!("API not found: {api_id}")));
     }
 
     let items: Vec<Value> = state

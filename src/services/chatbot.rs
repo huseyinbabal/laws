@@ -63,11 +63,7 @@ impl Default for ChatbotState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &ChatbotState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &ChatbotState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("WheatleyOrchestration_20171011.")
         .unwrap_or(target);
@@ -121,9 +117,7 @@ fn create_slack_channel_configuration(
         .to_string();
     let iam_role_arn = payload["IamRoleArn"]
         .as_str()
-        .unwrap_or(&format!(
-            "arn:aws:iam::{ACCOUNT_ID}:role/chatbot-role"
-        ))
+        .unwrap_or(&format!("arn:aws:iam::{ACCOUNT_ID}:role/chatbot-role"))
         .to_string();
     let sns_topic_arns: Vec<String> = payload["SnsTopicArns"]
         .as_array()
@@ -139,9 +133,8 @@ fn create_slack_channel_configuration(
         .to_string();
 
     let config_id = uuid::Uuid::new_v4().to_string();
-    let chat_configuration_arn = format!(
-        "arn:aws:chatbot::{ACCOUNT_ID}:chat-configuration/slack-channel/{config_id}"
-    );
+    let chat_configuration_arn =
+        format!("arn:aws:chatbot::{ACCOUNT_ID}:chat-configuration/slack-channel/{config_id}");
     let now = Utc::now().to_rfc3339();
 
     let config = SlackChannelConfiguration {
@@ -191,9 +184,7 @@ fn delete_slack_channel_configuration(
     Ok(json_response(StatusCode::OK, json!({})))
 }
 
-fn describe_slack_channel_configurations(
-    state: &ChatbotState,
-) -> Result<Response, LawsError> {
+fn describe_slack_channel_configurations(state: &ChatbotState) -> Result<Response, LawsError> {
     let configs: Vec<Value> = state
         .slack_configs
         .iter()

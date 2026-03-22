@@ -49,11 +49,7 @@ impl Default for Cloud9State {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &Cloud9State,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &Cloud9State, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AWSCloud9WorkspaceManagementService.")
         .unwrap_or(target);
@@ -107,10 +103,7 @@ fn environment_to_json(env: &Environment) -> Value {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_environment_ec2(
-    state: &Cloud9State,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_environment_ec2(state: &Cloud9State, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["name"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("name is required".to_string()))?
@@ -121,10 +114,7 @@ fn create_environment_ec2(
         .unwrap_or("t2.micro")
         .to_string();
 
-    let description = payload["description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["description"].as_str().unwrap_or("").to_string();
 
     let owner_arn = payload["ownerArn"]
         .as_str()

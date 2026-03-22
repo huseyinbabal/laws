@@ -74,8 +74,7 @@ pub fn router(state: Arc<SecurityLakeState>) -> axum::Router {
         )
         .route(
             "/v1/datalake/subscribers",
-            axum::routing::post(create_subscriber)
-                .get(list_subscribers),
+            axum::routing::post(create_subscriber).get(list_subscribers),
         )
         .route(
             "/v1/datalake/subscribers/{id}",
@@ -131,10 +130,7 @@ async fn create_data_lake(
         let mut data_lakes = Vec::new();
 
         for config in &configurations {
-            let region = config["region"]
-                .as_str()
-                .unwrap_or(REGION)
-                .to_string();
+            let region = config["region"].as_str().unwrap_or(REGION).to_string();
 
             let encryption_key = config["encryptionConfiguration"]["kmsKeyId"]
                 .as_str()
@@ -143,9 +139,8 @@ async fn create_data_lake(
 
             let lifecycle = config["lifecycleConfiguration"].clone();
 
-            let data_lake_arn = format!(
-                "arn:aws:securitylake:{region}:{ACCOUNT_ID}:data-lake/default"
-            );
+            let data_lake_arn =
+                format!("arn:aws:securitylake:{region}:{ACCOUNT_ID}:data-lake/default");
             let created_at = chrono::Utc::now().to_rfc3339();
 
             let dl = DataLake {
@@ -166,9 +161,8 @@ async fn create_data_lake(
         }
 
         if data_lakes.is_empty() {
-            let data_lake_arn = format!(
-                "arn:aws:securitylake:{REGION}:{ACCOUNT_ID}:data-lake/default"
-            );
+            let data_lake_arn =
+                format!("arn:aws:securitylake:{REGION}:{ACCOUNT_ID}:data-lake/default");
             let created_at = chrono::Utc::now().to_rfc3339();
 
             let dl = DataLake {
@@ -195,9 +189,7 @@ async fn create_data_lake(
     }
 }
 
-async fn get_data_lake(
-    State(state): State<Arc<SecurityLakeState>>,
-) -> Response {
+async fn get_data_lake(State(state): State<Arc<SecurityLakeState>>) -> Response {
     let data_lakes: Vec<Value> = state
         .data_lakes
         .iter()
@@ -255,15 +247,11 @@ async fn create_subscriber(
             })
             .unwrap_or_else(|| vec!["S3".to_string()]);
 
-        let sources: Vec<Value> = payload["sources"]
-            .as_array()
-            .cloned()
-            .unwrap_or_default();
+        let sources: Vec<Value> = payload["sources"].as_array().cloned().unwrap_or_default();
 
         let subscriber_id = uuid::Uuid::new_v4().to_string();
-        let subscriber_arn = format!(
-            "arn:aws:securitylake:{REGION}:{ACCOUNT_ID}:subscriber/{subscriber_id}"
-        );
+        let subscriber_arn =
+            format!("arn:aws:securitylake:{REGION}:{ACCOUNT_ID}:subscriber/{subscriber_id}");
         let created_at = chrono::Utc::now().to_rfc3339();
 
         let subscriber = Subscriber {
@@ -289,9 +277,7 @@ async fn create_subscriber(
     }
 }
 
-async fn list_subscribers(
-    State(state): State<Arc<SecurityLakeState>>,
-) -> Response {
+async fn list_subscribers(State(state): State<Arc<SecurityLakeState>>) -> Response {
     let subscribers: Vec<Value> = state
         .subscribers
         .iter()

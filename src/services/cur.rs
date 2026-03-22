@@ -47,11 +47,7 @@ impl Default for CurState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &CurState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &CurState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AWSOrigamiServiceGatewayService.")
         .unwrap_or(target);
@@ -103,7 +99,8 @@ fn report_to_json(r: &ReportDefinition) -> Value {
 // ---------------------------------------------------------------------------
 
 fn put_report_definition(state: &CurState, payload: &Value) -> Result<Response, LawsError> {
-    let def = payload.get("ReportDefinition")
+    let def = payload
+        .get("ReportDefinition")
         .ok_or_else(|| LawsError::InvalidRequest("Missing ReportDefinition".into()))?;
 
     let report_name = def["ReportName"]
@@ -136,12 +133,13 @@ fn delete_report_definition(state: &CurState, payload: &Value) -> Result<Respons
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ReportName".into()))?;
 
-    state
-        .reports
-        .remove(report_name)
-        .ok_or_else(|| LawsError::NotFound(format!("Report definition not found: {report_name}")))?;
+    state.reports.remove(report_name).ok_or_else(|| {
+        LawsError::NotFound(format!("Report definition not found: {report_name}"))
+    })?;
 
-    Ok(json_response(json!({ "ResponseMessage": "Report definition deleted" })))
+    Ok(json_response(
+        json!({ "ResponseMessage": "Report definition deleted" }),
+    ))
 }
 
 fn describe_report_definitions(state: &CurState) -> Result<Response, LawsError> {
@@ -159,10 +157,9 @@ fn modify_report_definition(state: &CurState, payload: &Value) -> Result<Respons
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ReportName".into()))?;
 
-    let mut report = state
-        .reports
-        .get_mut(report_name)
-        .ok_or_else(|| LawsError::NotFound(format!("Report definition not found: {report_name}")))?;
+    let mut report = state.reports.get_mut(report_name).ok_or_else(|| {
+        LawsError::NotFound(format!("Report definition not found: {report_name}"))
+    })?;
 
     if let Some(def) = payload.get("ReportDefinition") {
         if let Some(v) = def["TimeUnit"].as_str() {

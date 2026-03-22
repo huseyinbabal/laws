@@ -70,9 +70,7 @@ impl Default for EventBridgeSchedulerState {
             "default".to_string(),
             ScheduleGroup {
                 name: "default".to_string(),
-                arn: format!(
-                    "arn:aws:scheduler:{REGION}:{ACCOUNT_ID}:schedule-group/default"
-                ),
+                arn: format!("arn:aws:scheduler:{REGION}:{ACCOUNT_ID}:schedule-group/default"),
                 state: "ACTIVE".to_string(),
                 created_at: now.clone(),
                 last_modified_at: now,
@@ -100,14 +98,8 @@ pub fn router(state: Arc<EventBridgeSchedulerState>) -> axum::Router {
                 .put(update_schedule)
                 .delete(delete_schedule),
         )
-        .route(
-            "/schedule-groups",
-            get(list_schedule_groups),
-        )
-        .route(
-            "/schedule-groups/{name}",
-            post(create_schedule_group),
-        )
+        .route("/schedule-groups", get(list_schedule_groups))
+        .route("/schedule-groups/{name}", post(create_schedule_group))
         .with_state(state)
 }
 
@@ -145,9 +137,7 @@ async fn create_schedule(
     Json(req): Json<CreateScheduleRequest>,
 ) -> Response {
     let group_name = req.group_name.unwrap_or_else(|| "default".into());
-    let arn = format!(
-        "arn:aws:scheduler:{REGION}:{ACCOUNT_ID}:schedule/{group_name}/{name}"
-    );
+    let arn = format!("arn:aws:scheduler:{REGION}:{ACCOUNT_ID}:schedule/{group_name}/{name}");
     let now = Utc::now().to_rfc3339();
 
     let schedule = Schedule {
@@ -158,14 +148,13 @@ async fn create_schedule(
         state: req.state.unwrap_or_else(|| "ENABLED".into()),
         target: ScheduleTarget {
             arn: req.target.arn,
-            role_arn: req.target.role_arn.unwrap_or_else(|| {
-                format!("arn:aws:iam::{ACCOUNT_ID}:role/scheduler-role")
-            }),
+            role_arn: req
+                .target
+                .role_arn
+                .unwrap_or_else(|| format!("arn:aws:iam::{ACCOUNT_ID}:role/scheduler-role")),
             input: req.target.input.unwrap_or_default(),
         },
-        flexible_time_window: req
-            .flexible_time_window
-            .unwrap_or(json!({ "Mode": "OFF" })),
+        flexible_time_window: req.flexible_time_window.unwrap_or(json!({ "Mode": "OFF" })),
         created_at: now.clone(),
         last_modified_at: now,
     };
@@ -181,9 +170,9 @@ async fn get_schedule(
 ) -> Response {
     match state.schedules.get(&name) {
         Some(s) => rest_json::ok(schedule_to_json(&s)),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Schedule not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Schedule not found: {name}")))
+        }
     }
 }
 
@@ -213,9 +202,9 @@ async fn delete_schedule(
 ) -> Response {
     match state.schedules.remove(&name) {
         Some(_) => rest_json::ok(json!({})),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Schedule not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Schedule not found: {name}")))
+        }
     }
 }
 
@@ -229,7 +218,10 @@ async fn update_schedule(
             s.schedule_expression = req.schedule_expression;
             s.target = ScheduleTarget {
                 arn: req.target.arn,
-                role_arn: req.target.role_arn.unwrap_or_else(|| s.target.role_arn.clone()),
+                role_arn: req
+                    .target
+                    .role_arn
+                    .unwrap_or_else(|| s.target.role_arn.clone()),
                 input: req.target.input.unwrap_or_else(|| s.target.input.clone()),
             };
             if let Some(state_val) = req.state {
@@ -245,9 +237,9 @@ async fn update_schedule(
 
             rest_json::ok(json!({ "ScheduleArn": s.arn }))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Schedule not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Schedule not found: {name}")))
+        }
     }
 }
 
@@ -268,9 +260,7 @@ async fn create_schedule_group(
         )));
     }
 
-    let arn = format!(
-        "arn:aws:scheduler:{REGION}:{ACCOUNT_ID}:schedule-group/{name}"
-    );
+    let arn = format!("arn:aws:scheduler:{REGION}:{ACCOUNT_ID}:schedule-group/{name}");
     let now = Utc::now().to_rfc3339();
 
     let group = ScheduleGroup {
@@ -286,9 +276,7 @@ async fn create_schedule_group(
     rest_json::ok(json!({ "ScheduleGroupArn": arn }))
 }
 
-async fn list_schedule_groups(
-    State(state): State<Arc<EventBridgeSchedulerState>>,
-) -> Response {
+async fn list_schedule_groups(State(state): State<Arc<EventBridgeSchedulerState>>) -> Response {
     let groups: Vec<Value> = state
         .schedule_groups
         .iter()

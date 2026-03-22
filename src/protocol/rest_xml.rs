@@ -16,12 +16,7 @@ pub fn xml_response(status: StatusCode, body: &str) -> Response {
 
     let xml = format!(r#"<?xml version="1.0" encoding="UTF-8"?>{body}"#);
 
-    (
-        status,
-        [("content-type", "application/xml")],
-        xml,
-    )
-        .into_response()
+    (status, [("content-type", "application/xml")], xml).into_response()
 }
 
 /// Shorthand for a 200 OK XML response.

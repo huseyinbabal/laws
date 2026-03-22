@@ -64,9 +64,7 @@ pub async fn handle_request(
     target: &str,
     payload: &Value,
 ) -> Response {
-    let action = target
-        .strip_prefix("AWSLicenseManager.")
-        .unwrap_or(target);
+    let action = target.strip_prefix("AWSLicenseManager.").unwrap_or(target);
 
     let result = match action {
         "CreateLicense" => create_license(state, payload),
@@ -104,10 +102,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_license(
-    state: &LicenseManagerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_license(state: &LicenseManagerState, payload: &Value) -> Result<Response, LawsError> {
     let license_name = payload["LicenseName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing LicenseName".into()))?
@@ -146,10 +141,7 @@ fn create_license(
     })))
 }
 
-fn get_license(
-    state: &LicenseManagerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn get_license(state: &LicenseManagerState, payload: &Value) -> Result<Response, LawsError> {
     let arn = payload["LicenseArn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing LicenseArn".into()))?;
@@ -174,9 +166,7 @@ fn get_license(
     })))
 }
 
-fn list_received_licenses(
-    state: &LicenseManagerState,
-) -> Result<Response, LawsError> {
+fn list_received_licenses(state: &LicenseManagerState) -> Result<Response, LawsError> {
     let licenses: Vec<Value> = state
         .licenses
         .iter()
@@ -197,10 +187,7 @@ fn list_received_licenses(
     })))
 }
 
-fn delete_license(
-    state: &LicenseManagerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_license(state: &LicenseManagerState, payload: &Value) -> Result<Response, LawsError> {
     let arn = payload["LicenseArn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing LicenseArn".into()))?;
@@ -230,14 +217,10 @@ fn create_license_configuration(
         .unwrap_or("vCPU")
         .to_string();
 
-    let license_count = payload["LicenseCount"]
-        .as_u64()
-        .unwrap_or(10);
+    let license_count = payload["LicenseCount"].as_u64().unwrap_or(10);
 
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:license-manager:{REGION}:{ACCOUNT_ID}:license-configuration/{id}"
-    );
+    let arn = format!("arn:aws:license-manager:{REGION}:{ACCOUNT_ID}:license-configuration/{id}");
 
     let config = LicenseConfiguration {
         license_configuration_arn: arn.clone(),
@@ -255,9 +238,7 @@ fn create_license_configuration(
     })))
 }
 
-fn list_license_configurations(
-    state: &LicenseManagerState,
-) -> Result<Response, LawsError> {
+fn list_license_configurations(state: &LicenseManagerState) -> Result<Response, LawsError> {
     let configs: Vec<Value> = state
         .configurations
         .iter()

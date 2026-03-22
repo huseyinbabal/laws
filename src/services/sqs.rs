@@ -64,9 +64,7 @@ impl SqsState {
 // ---------------------------------------------------------------------------
 
 pub fn router(state: Arc<SqsState>) -> Router {
-    Router::new()
-        .route("/", post(handle_sqs))
-        .with_state(state)
+    Router::new().route("/", post(handle_sqs)).with_state(state)
 }
 
 // ---------------------------------------------------------------------------
@@ -91,12 +89,7 @@ fn queue_name_from_url(url: &str) -> Option<String> {
 // Dispatch handler
 // ---------------------------------------------------------------------------
 
-pub fn handle_request(
-    state: &SqsState,
-    headers: &HeaderMap,
-    body: &Bytes,
-    uri: &Uri,
-) -> Response {
+pub fn handle_request(state: &SqsState, headers: &HeaderMap, body: &Bytes, uri: &Uri) -> Response {
     let req = match parse_query_request(uri, headers, body) {
         Ok(r) => r,
         Err(e) => return xml_error_response(&e),
@@ -219,9 +212,8 @@ fn send_message(
         .ok_or_else(|| LawsError::NotFound(format!("Queue {name} not found")))?;
     queue.messages.push_back(msg);
 
-    let inner = format!(
-        "<MessageId>{message_id}</MessageId>\n<MD5OfMessageBody>{md5}</MD5OfMessageBody>"
-    );
+    let inner =
+        format!("<MessageId>{message_id}</MessageId>\n<MD5OfMessageBody>{md5}</MD5OfMessageBody>");
     Ok(xml_response("SendMessage", &inner))
 }
 

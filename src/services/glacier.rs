@@ -58,10 +58,7 @@ pub fn router(state: Arc<GlacierState>) -> axum::Router {
                 .get(describe_vault)
                 .delete(delete_vault),
         )
-        .route(
-            "/{accountId}/vaults",
-            axum::routing::get(list_vaults),
-        )
+        .route("/{accountId}/vaults", axum::routing::get(list_vaults))
         .route(
             "/{accountId}/vaults/{name}/archives",
             axum::routing::post(upload_archive),
@@ -99,16 +96,20 @@ async fn list_vaults(
     State(state): State<Arc<GlacierState>>,
     Path(_account_id): Path<String>,
 ) -> Response {
-    let vault_list: Vec<Value> = state.vaults.iter().map(|entry| {
-        let v = entry.value();
-        json!({
-            "VaultName": v.vault_name,
-            "VaultARN": v.vault_arn,
-            "CreationDate": v.creation_date,
-            "NumberOfArchives": v.number_of_archives,
-            "SizeInBytes": v.size_in_bytes
+    let vault_list: Vec<Value> = state
+        .vaults
+        .iter()
+        .map(|entry| {
+            let v = entry.value();
+            json!({
+                "VaultName": v.vault_name,
+                "VaultARN": v.vault_arn,
+                "CreationDate": v.creation_date,
+                "NumberOfArchives": v.number_of_archives,
+                "SizeInBytes": v.size_in_bytes
+            })
         })
-    }).collect();
+        .collect();
 
     rest_json::ok(json!({
         "VaultList": vault_list
@@ -127,9 +128,7 @@ async fn describe_vault(
             "NumberOfArchives": v.number_of_archives,
             "SizeInBytes": v.size_in_bytes
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "vault not found: {name}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("vault not found: {name}"))),
     }
 }
 
@@ -139,9 +138,7 @@ async fn delete_vault(
 ) -> Response {
     match state.vaults.remove(&name) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "vault not found: {name}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("vault not found: {name}"))),
     }
 }
 
@@ -160,8 +157,6 @@ async fn upload_archive(
                 "x-amz-sha256-tree-hash": "0000000000000000000000000000000000000000000000000000000000000000"
             }))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "vault not found: {name}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("vault not found: {name}"))),
     }
 }

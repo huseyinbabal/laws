@@ -39,7 +39,11 @@ impl Default for TextractState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(state: &TextractState, target: &str, payload: &serde_json::Value) -> Response {
+pub async fn handle_request(
+    state: &TextractState,
+    target: &str,
+    payload: &serde_json::Value,
+) -> Response {
     let action = target.strip_prefix("Textract.").unwrap_or(target);
 
     let result = match action {
@@ -49,7 +53,9 @@ pub async fn handle_request(state: &TextractState, target: &str, payload: &serde
         "GetDocumentTextDetection" => get_document_text_detection(state, payload),
         "StartDocumentAnalysis" => start_document_analysis(state, payload),
         "GetDocumentAnalysis" => get_document_analysis(state, payload),
-        other => Err(LawsError::InvalidRequest(format!("unknown action: {other}"))),
+        other => Err(LawsError::InvalidRequest(format!(
+            "unknown action: {other}"
+        ))),
     };
 
     match result {
@@ -63,7 +69,12 @@ pub async fn handle_request(state: &TextractState, target: &str, payload: &serde
 // ---------------------------------------------------------------------------
 
 fn json_response(body: Value) -> Response {
-    (StatusCode::OK, [("Content-Type", "application/x-amz-json-1.1")], serde_json::to_string(&body).unwrap_or_default()).into_response()
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/x-amz-json-1.1")],
+        serde_json::to_string(&body).unwrap_or_default(),
+    )
+        .into_response()
 }
 
 fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
@@ -106,9 +117,15 @@ fn analyze_document() -> Result<Response, LawsError> {
     })))
 }
 
-fn start_document_text_detection(state: &TextractState, body: &Value) -> Result<Response, LawsError> {
+fn start_document_text_detection(
+    state: &TextractState,
+    body: &Value,
+) -> Result<Response, LawsError> {
     let job_id = uuid::Uuid::new_v4().to_string();
-    let job_tag = body.get("JobTag").and_then(|v| v.as_str()).map(|s| s.to_owned());
+    let job_tag = body
+        .get("JobTag")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_owned());
 
     let job = TextractJob {
         job_id: job_id.clone(),
@@ -138,7 +155,10 @@ fn get_document_text_detection(state: &TextractState, body: &Value) -> Result<Re
 
 fn start_document_analysis(state: &TextractState, body: &Value) -> Result<Response, LawsError> {
     let job_id = uuid::Uuid::new_v4().to_string();
-    let job_tag = body.get("JobTag").and_then(|v| v.as_str()).map(|s| s.to_owned());
+    let job_tag = body
+        .get("JobTag")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_owned());
 
     let job = TextractJob {
         job_id: job_id.clone(),

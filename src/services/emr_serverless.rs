@@ -71,7 +71,10 @@ impl Default for EmrServerlessState {
 
 pub fn router(state: Arc<EmrServerlessState>) -> axum::Router {
     axum::Router::new()
-        .route("/applications", post(create_application).get(list_applications))
+        .route(
+            "/applications",
+            post(create_application).get(list_applications),
+        )
         .route(
             "/applications/{application_id}",
             get(get_application).delete(delete_application),
@@ -105,9 +108,8 @@ async fn create_application(
     Json(req): Json<CreateApplicationRequest>,
 ) -> Response {
     let application_id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:emr-serverless:{REGION}:{ACCOUNT_ID}:/applications/{application_id}"
-    );
+    let arn =
+        format!("arn:aws:emr-serverless:{REGION}:{ACCOUNT_ID}:/applications/{application_id}");
     let now = Utc::now().to_rfc3339();
 
     let app = Application {

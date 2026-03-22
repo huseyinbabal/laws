@@ -65,14 +65,8 @@ impl Default for AmplifyState {
 
 pub fn router(state: Arc<AmplifyState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/apps",
-            axum::routing::post(create_app).get(list_apps),
-        )
-        .route(
-            "/apps/{id}",
-            axum::routing::get(get_app).delete(delete_app),
-        )
+        .route("/apps", axum::routing::post(create_app).get(list_apps))
+        .route("/apps/{id}", axum::routing::get(get_app).delete(delete_app))
         .route(
             "/apps/{id}/branches",
             axum::routing::post(create_branch).get(list_branches),
@@ -124,25 +118,14 @@ async fn create_app(
             .ok_or_else(|| LawsError::InvalidRequest("Missing name".into()))?
             .to_string();
 
-        let description = payload["description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["description"].as_str().unwrap_or("").to_string();
 
-        let repository = payload["repository"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let repository = payload["repository"].as_str().unwrap_or("").to_string();
 
-        let platform = payload["platform"]
-            .as_str()
-            .unwrap_or("WEB")
-            .to_string();
+        let platform = payload["platform"].as_str().unwrap_or("WEB").to_string();
 
         let app_id = random_id();
-        let app_arn = format!(
-            "arn:aws:amplify:{REGION}:{ACCOUNT_ID}:apps/{app_id}"
-        );
+        let app_arn = format!("arn:aws:amplify:{REGION}:{ACCOUNT_ID}:apps/{app_id}");
         let created_at = chrono::Utc::now().to_rfc3339();
 
         let app = AmplifyApp {
@@ -167,9 +150,7 @@ async fn create_app(
     }
 }
 
-async fn list_apps(
-    State(state): State<Arc<AmplifyState>>,
-) -> Response {
+async fn list_apps(State(state): State<Arc<AmplifyState>>) -> Response {
     let apps: Vec<Value> = state
         .apps
         .iter()
@@ -179,33 +160,21 @@ async fn list_apps(
     rest_json::ok(json!({ "apps": apps }))
 }
 
-async fn get_app(
-    State(state): State<Arc<AmplifyState>>,
-    Path(id): Path<String>,
-) -> Response {
+async fn get_app(State(state): State<Arc<AmplifyState>>, Path(id): Path<String>) -> Response {
     match state.apps.get(&id) {
         Some(app) => rest_json::ok(json!({ "app": app_to_json(app.value()) })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "App '{}' not found",
-            id
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("App '{}' not found", id))),
     }
 }
 
-async fn delete_app(
-    State(state): State<Arc<AmplifyState>>,
-    Path(id): Path<String>,
-) -> Response {
+async fn delete_app(State(state): State<Arc<AmplifyState>>, Path(id): Path<String>) -> Response {
     match state.apps.remove(&id) {
         Some((_, app)) => {
             // Clean up associated branches
             state.branches.retain(|_, b| b.app_id != id);
             rest_json::ok(json!({ "app": app_to_json(&app) }))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "App '{}' not found",
-            id
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("App '{}' not found", id))),
     }
 }
 
@@ -216,10 +185,7 @@ async fn create_branch(
 ) -> Response {
     let result = (|| -> Result<Response, LawsError> {
         if !state.apps.contains_key(&app_id) {
-            return Err(LawsError::NotFound(format!(
-                "App '{}' not found",
-                app_id
-            )));
+            return Err(LawsError::NotFound(format!("App '{}' not found", app_id)));
         }
 
         let branch_name = payload["branchName"]
@@ -227,24 +193,17 @@ async fn create_branch(
             .ok_or_else(|| LawsError::InvalidRequest("Missing branchName".into()))?
             .to_string();
 
-        let description = payload["description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["description"].as_str().unwrap_or("").to_string();
 
-        let stage = payload["stage"]
-            .as_str()
-            .unwrap_or("NONE")
-            .to_string();
+        let stage = payload["stage"].as_str().unwrap_or("NONE").to_string();
 
         let display_name = payload["displayName"]
             .as_str()
             .unwrap_or(&branch_name)
             .to_string();
 
-        let branch_arn = format!(
-            "arn:aws:amplify:{REGION}:{ACCOUNT_ID}:apps/{app_id}/branches/{branch_name}"
-        );
+        let branch_arn =
+            format!("arn:aws:amplify:{REGION}:{ACCOUNT_ID}:apps/{app_id}/branches/{branch_name}");
 
         let branch_key = format!("{}:{}", app_id, branch_name);
         if state.branches.contains_key(&branch_key) {

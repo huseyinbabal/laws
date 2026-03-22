@@ -59,18 +59,12 @@ impl Default for IotState {
 
 pub fn router(state: Arc<IotState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/things",
-            get(list_things),
-        )
+        .route("/things", get(list_things))
         .route(
             "/things/{name}",
             post(create_thing).get(describe_thing).delete(delete_thing),
         )
-        .route(
-            "/policies",
-            get(list_policies),
-        )
+        .route("/policies", get(list_policies))
         .route(
             "/policies/{name}",
             post(create_policy).delete(delete_policy),
@@ -87,9 +81,7 @@ async fn create_thing(
     Path(name): Path<String>,
     Json(payload): Json<Value>,
 ) -> Response {
-    let thing_arn = format!(
-        "arn:aws:iot:{REGION}:{ACCOUNT_ID}:thing/{name}"
-    );
+    let thing_arn = format!("arn:aws:iot:{REGION}:{ACCOUNT_ID}:thing/{name}");
 
     let attributes = payload.get("attributes").cloned().unwrap_or(json!({}));
 
@@ -125,33 +117,25 @@ async fn list_things(State(state): State<Arc<IotState>>) -> Response {
     rest_json::ok(json!({ "things": things }))
 }
 
-async fn describe_thing(
-    State(state): State<Arc<IotState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn describe_thing(State(state): State<Arc<IotState>>, Path(name): Path<String>) -> Response {
     match state.things.get(&name) {
         Some(thing) => rest_json::ok(json!({
             "thingName": thing.thing_name,
             "thingArn": thing.thing_arn,
             "attributes": thing.attributes,
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Thing '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Thing '{}' not found", name)))
+        }
     }
 }
 
-async fn delete_thing(
-    State(state): State<Arc<IotState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn delete_thing(State(state): State<Arc<IotState>>, Path(name): Path<String>) -> Response {
     match state.things.remove(&name) {
         Some(_) => rest_json::ok(json!({})),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Thing '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Thing '{}' not found", name)))
+        }
     }
 }
 
@@ -160,9 +144,7 @@ async fn create_policy(
     Path(name): Path<String>,
     Json(payload): Json<Value>,
 ) -> Response {
-    let policy_arn = format!(
-        "arn:aws:iot:{REGION}:{ACCOUNT_ID}:policy/{name}"
-    );
+    let policy_arn = format!("arn:aws:iot:{REGION}:{ACCOUNT_ID}:policy/{name}");
 
     let policy_document = payload["policyDocument"]
         .as_str()
@@ -200,15 +182,11 @@ async fn list_policies(State(state): State<Arc<IotState>>) -> Response {
     rest_json::ok(json!({ "policies": policies }))
 }
 
-async fn delete_policy(
-    State(state): State<Arc<IotState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn delete_policy(State(state): State<Arc<IotState>>, Path(name): Path<String>) -> Response {
     match state.policies.remove(&name) {
         Some(_) => rest_json::ok(json!({})),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Policy '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Policy '{}' not found", name)))
+        }
     }
 }

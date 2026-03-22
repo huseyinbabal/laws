@@ -91,9 +91,7 @@ async fn create_workspace(
     Json(req): Json<CreateWorkspaceRequest>,
 ) -> Response {
     let workspace_id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:aps:{REGION}:{ACCOUNT_ID}:workspace/{workspace_id}"
-    );
+    let arn = format!("arn:aws:aps:{REGION}:{ACCOUNT_ID}:workspace/{workspace_id}");
     let now = Utc::now().to_rfc3339();
 
     let workspace = Workspace {

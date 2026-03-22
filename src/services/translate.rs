@@ -41,7 +41,11 @@ impl Default for TranslateState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(state: &TranslateState, target: &str, payload: &serde_json::Value) -> Response {
+pub async fn handle_request(
+    state: &TranslateState,
+    target: &str,
+    payload: &serde_json::Value,
+) -> Response {
     let action = target
         .strip_prefix("AWSShineFrontendService_20170701.")
         .unwrap_or(target);
@@ -52,7 +56,9 @@ pub async fn handle_request(state: &TranslateState, target: &str, payload: &serd
         "ImportTerminology" => import_terminology(state, payload),
         "DeleteTerminology" => delete_terminology(state, payload),
         "ListLanguages" => list_languages(),
-        other => Err(LawsError::InvalidRequest(format!("unknown action: {other}"))),
+        other => Err(LawsError::InvalidRequest(format!(
+            "unknown action: {other}"
+        ))),
     };
 
     match result {
@@ -66,7 +72,12 @@ pub async fn handle_request(state: &TranslateState, target: &str, payload: &serd
 // ---------------------------------------------------------------------------
 
 fn json_response(body: Value) -> Response {
-    (StatusCode::OK, [("Content-Type", "application/x-amz-json-1.1")], serde_json::to_string(&body).unwrap_or_default()).into_response()
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/x-amz-json-1.1")],
+        serde_json::to_string(&body).unwrap_or_default(),
+    )
+        .into_response()
 }
 
 fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
@@ -129,9 +140,7 @@ fn import_terminology(state: &TranslateState, body: &Value) -> Result<Response, 
         })
         .unwrap_or_default();
 
-    let arn = format!(
-        "arn:aws:translate:{REGION}:{ACCOUNT_ID}:terminology/{name}"
-    );
+    let arn = format!("arn:aws:translate:{REGION}:{ACCOUNT_ID}:terminology/{name}");
     let created_at = chrono::Utc::now().to_rfc3339();
 
     let terminology = Terminology {

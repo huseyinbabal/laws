@@ -149,9 +149,7 @@ fn create_event_bus(state: &EventBridgeState, body: &Value) -> Result<Value, Law
         )));
     }
 
-    let arn = format!(
-        "arn:aws:events:us-east-1:000000000000:event-bus/{name}"
-    );
+    let arn = format!("arn:aws:events:us-east-1:000000000000:event-bus/{name}");
 
     let bus = EventBus {
         name: name.clone(),
@@ -240,9 +238,7 @@ fn put_rule(state: &EventBridgeState, body: &Value) -> Result<Value, LawsError> 
         .unwrap_or("ENABLED")
         .to_owned();
 
-    let arn = format!(
-        "arn:aws:events:us-east-1:000000000000:rule/{event_bus_name}/{name}"
-    );
+    let arn = format!("arn:aws:events:us-east-1:000000000000:rule/{event_bus_name}/{name}");
 
     let key = rule_key(&event_bus_name, &name);
 

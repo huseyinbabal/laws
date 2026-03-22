@@ -74,14 +74,8 @@ impl Default for DmsState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &DmsState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AmazonDMSv20160101.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &DmsState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AmazonDMSv20160101.").unwrap_or(target);
 
     let result = match action {
         "CreateReplicationInstance" => create_replication_instance(state, payload),
@@ -158,16 +152,11 @@ fn task_to_json(t: &ReplicationTask) -> Value {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_replication_instance(
-    state: &DmsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_replication_instance(state: &DmsState, payload: &Value) -> Result<Response, LawsError> {
     let id = payload["ReplicationInstanceIdentifier"]
         .as_str()
         .ok_or_else(|| {
-            LawsError::InvalidRequest(
-                "ReplicationInstanceIdentifier is required".to_string(),
-            )
+            LawsError::InvalidRequest("ReplicationInstanceIdentifier is required".to_string())
         })?
         .to_string();
 
@@ -183,9 +172,7 @@ fn create_replication_instance(
         .as_str()
         .unwrap_or("dms.t3.medium")
         .to_string();
-    let allocated_storage = payload["AllocatedStorage"]
-        .as_u64()
-        .unwrap_or(50) as u32;
+    let allocated_storage = payload["AllocatedStorage"].as_u64().unwrap_or(50) as u32;
 
     let ri = ReplicationInstance {
         identifier: id.clone(),
@@ -199,18 +186,16 @@ fn create_replication_instance(
     let resp = replication_instance_to_json(&ri);
     state.replication_instances.insert(id, ri);
 
-    Ok(json_response(StatusCode::OK, json!({ "ReplicationInstance": resp })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "ReplicationInstance": resp }),
+    ))
 }
 
-fn delete_replication_instance(
-    state: &DmsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let arn = payload["ReplicationInstanceArn"]
-        .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ReplicationInstanceArn is required".to_string())
-        })?;
+fn delete_replication_instance(state: &DmsState, payload: &Value) -> Result<Response, LawsError> {
+    let arn = payload["ReplicationInstanceArn"].as_str().ok_or_else(|| {
+        LawsError::InvalidRequest("ReplicationInstanceArn is required".to_string())
+    })?;
 
     // Find by ARN
     let key = state
@@ -218,9 +203,7 @@ fn delete_replication_instance(
         .iter()
         .find(|entry| entry.value().arn == arn)
         .map(|entry| entry.key().clone())
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Replication instance not found: {}", arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Replication instance not found: {}", arn)))?;
 
     let (_, ri) = state.replication_instances.remove(&key).unwrap();
 
@@ -246,9 +229,7 @@ fn describe_replication_instances(state: &DmsState) -> Result<Response, LawsErro
 fn create_endpoint(state: &DmsState, payload: &Value) -> Result<Response, LawsError> {
     let id = payload["EndpointIdentifier"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("EndpointIdentifier is required".to_string())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("EndpointIdentifier is required".to_string()))?
         .to_string();
 
     if state.endpoints.contains_key(&id) {
@@ -272,10 +253,7 @@ fn create_endpoint(state: &DmsState, payload: &Value) -> Result<Response, LawsEr
         .unwrap_or("localhost")
         .to_string();
     let port = payload["Port"].as_u64().unwrap_or(3306) as u16;
-    let database_name = payload["DatabaseName"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let database_name = payload["DatabaseName"].as_str().unwrap_or("").to_string();
 
     let endpoint = Endpoint {
         identifier: id.clone(),
@@ -297,9 +275,7 @@ fn create_endpoint(state: &DmsState, payload: &Value) -> Result<Response, LawsEr
 fn delete_endpoint(state: &DmsState, payload: &Value) -> Result<Response, LawsError> {
     let arn = payload["EndpointArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("EndpointArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("EndpointArn is required".to_string()))?;
 
     let key = state
         .endpoints
@@ -333,9 +309,7 @@ fn create_replication_task(state: &DmsState, payload: &Value) -> Result<Response
     let id = payload["ReplicationTaskIdentifier"]
         .as_str()
         .ok_or_else(|| {
-            LawsError::InvalidRequest(
-                "ReplicationTaskIdentifier is required".to_string(),
-            )
+            LawsError::InvalidRequest("ReplicationTaskIdentifier is required".to_string())
         })?
         .to_string();
 
@@ -382,28 +356,30 @@ fn create_replication_task(state: &DmsState, payload: &Value) -> Result<Response
     let resp = task_to_json(&task);
     state.tasks.insert(id, task);
 
-    Ok(json_response(StatusCode::OK, json!({ "ReplicationTask": resp })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "ReplicationTask": resp }),
+    ))
 }
 
 fn start_replication_task(state: &DmsState, payload: &Value) -> Result<Response, LawsError> {
     let arn = payload["ReplicationTaskArn"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ReplicationTaskArn is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ReplicationTaskArn is required".to_string()))?;
 
     let key = state
         .tasks
         .iter()
         .find(|entry| entry.value().arn == arn)
         .map(|entry| entry.key().clone())
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Replication task not found: {}", arn))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Replication task not found: {}", arn)))?;
 
     let mut task = state.tasks.get_mut(&key).unwrap();
     task.status = "running".to_string();
     let resp = task_to_json(&task);
 
-    Ok(json_response(StatusCode::OK, json!({ "ReplicationTask": resp })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "ReplicationTask": resp }),
+    ))
 }

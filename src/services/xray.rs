@@ -101,23 +101,16 @@ async fn batch_get_traces(
     }))
 }
 
-async fn create_group(
-    State(state): State<Arc<XRayState>>,
-    Json(payload): Json<Value>,
-) -> Response {
+async fn create_group(State(state): State<Arc<XRayState>>, Json(payload): Json<Value>) -> Response {
     let result = (|| -> Result<Response, LawsError> {
         let group_name = payload["GroupName"]
             .as_str()
             .ok_or_else(|| LawsError::InvalidRequest("Missing GroupName".into()))?
             .to_string();
 
-        let filter_expression = payload["FilterExpression"]
-            .as_str()
-            .map(|s| s.to_string());
+        let filter_expression = payload["FilterExpression"].as_str().map(|s| s.to_string());
 
-        let group_arn = format!(
-            "arn:aws:xray:{REGION}:{ACCOUNT_ID}:group/{group_name}"
-        );
+        let group_arn = format!("arn:aws:xray:{REGION}:{ACCOUNT_ID}:group/{group_name}");
 
         let group = XRayGroup {
             group_name: group_name.clone(),
@@ -142,10 +135,7 @@ async fn create_group(
     }
 }
 
-async fn get_groups(
-    State(state): State<Arc<XRayState>>,
-    Json(_payload): Json<Value>,
-) -> Response {
+async fn get_groups(State(state): State<Arc<XRayState>>, Json(_payload): Json<Value>) -> Response {
     let groups: Vec<Value> = state
         .groups
         .iter()

@@ -57,11 +57,7 @@ impl Default for IvsState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &IvsState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &IvsState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AmazonInteractiveVideoService.")
         .unwrap_or(target);
@@ -102,31 +98,21 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_channel(
-    state: &IvsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let name = payload["name"]
-        .as_str()
-        .unwrap_or("unnamed")
-        .to_string();
+fn create_channel(state: &IvsState, payload: &Value) -> Result<Response, LawsError> {
+    let name = payload["name"].as_str().unwrap_or("unnamed").to_string();
 
-    let latency_mode = payload["latencyMode"]
-        .as_str()
-        .unwrap_or("LOW")
-        .to_string();
+    let latency_mode = payload["latencyMode"].as_str().unwrap_or("LOW").to_string();
 
-    let channel_type = payload["type"]
-        .as_str()
-        .unwrap_or("STANDARD")
-        .to_string();
+    let channel_type = payload["type"].as_str().unwrap_or("STANDARD").to_string();
 
     let authorized = payload["authorized"].as_bool().unwrap_or(false);
 
     let id = uuid::Uuid::new_v4().to_string();
     let arn = format!("arn:aws:ivs:{REGION}:{ACCOUNT_ID}:channel/{id}");
     let ingest_endpoint = format!("{id}.global-contribute.live-video.net");
-    let playback_url = format!("https://{id}.{REGION}.playback.live-video.net/api/video/v1/{ACCOUNT_ID}.channel.{id}.m3u8");
+    let playback_url = format!(
+        "https://{id}.{REGION}.playback.live-video.net/api/video/v1/{ACCOUNT_ID}.channel.{id}.m3u8"
+    );
 
     let channel = Channel {
         arn: arn.clone(),
@@ -142,7 +128,11 @@ fn create_channel(
     // Also create a default stream key
     let sk_id = uuid::Uuid::new_v4().to_string();
     let sk_arn = format!("arn:aws:ivs:{REGION}:{ACCOUNT_ID}:stream-key/{sk_id}");
-    let sk_value = format!("sk_{}_{}", REGION, uuid::Uuid::new_v4().to_string().replace('-', ""));
+    let sk_value = format!(
+        "sk_{}_{}",
+        REGION,
+        uuid::Uuid::new_v4().to_string().replace('-', "")
+    );
 
     let stream_key = StreamKey {
         arn: sk_arn.clone(),
@@ -171,10 +161,7 @@ fn create_channel(
     })))
 }
 
-fn delete_channel(
-    state: &IvsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_channel(state: &IvsState, payload: &Value) -> Result<Response, LawsError> {
     let arn = payload["arn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing arn".into()))?;
@@ -198,10 +185,7 @@ fn delete_channel(
     Ok(json_response(json!({})))
 }
 
-fn get_channel(
-    state: &IvsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn get_channel(state: &IvsState, payload: &Value) -> Result<Response, LawsError> {
     let arn = payload["arn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing arn".into()))?;
@@ -244,22 +228,26 @@ fn list_channels(state: &IvsState) -> Result<Response, LawsError> {
     })))
 }
 
-fn create_stream_key(
-    state: &IvsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_stream_key(state: &IvsState, payload: &Value) -> Result<Response, LawsError> {
     let channel_arn = payload["channelArn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing channelArn".into()))?
         .to_string();
 
     if !state.channels.contains_key(&channel_arn) {
-        return Err(LawsError::NotFound(format!("Channel '{}' not found", channel_arn)));
+        return Err(LawsError::NotFound(format!(
+            "Channel '{}' not found",
+            channel_arn
+        )));
     }
 
     let id = uuid::Uuid::new_v4().to_string();
     let arn = format!("arn:aws:ivs:{REGION}:{ACCOUNT_ID}:stream-key/{id}");
-    let value = format!("sk_{}_{}", REGION, uuid::Uuid::new_v4().to_string().replace('-', ""));
+    let value = format!(
+        "sk_{}_{}",
+        REGION,
+        uuid::Uuid::new_v4().to_string().replace('-', "")
+    );
 
     let stream_key = StreamKey {
         arn: arn.clone(),
@@ -278,13 +266,8 @@ fn create_stream_key(
     })))
 }
 
-fn list_stream_keys(
-    state: &IvsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let channel_arn = payload["channelArn"]
-        .as_str()
-        .unwrap_or("");
+fn list_stream_keys(state: &IvsState, payload: &Value) -> Result<Response, LawsError> {
+    let channel_arn = payload["channelArn"].as_str().unwrap_or("");
 
     let keys: Vec<Value> = state
         .stream_keys

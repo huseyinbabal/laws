@@ -65,22 +65,10 @@ impl Default for MediaConvertState {
 
 pub fn router(state: Arc<MediaConvertState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/2017-08-29/queues",
-            post(create_queue).get(list_queues),
-        )
-        .route(
-            "/2017-08-29/queues/{name}",
-            delete(delete_queue),
-        )
-        .route(
-            "/2017-08-29/jobs",
-            post(create_job).get(list_jobs),
-        )
-        .route(
-            "/2017-08-29/jobs/{id}",
-            get(get_job),
-        )
+        .route("/2017-08-29/queues", post(create_queue).get(list_queues))
+        .route("/2017-08-29/queues/{name}", delete(delete_queue))
+        .route("/2017-08-29/jobs", post(create_job).get(list_jobs))
+        .route("/2017-08-29/jobs/{id}", get(get_job))
         .with_state(state)
 }
 
@@ -103,9 +91,7 @@ async fn create_queue(
             .unwrap_or("ON_DEMAND")
             .to_string();
 
-        let arn = format!(
-            "arn:aws:mediaconvert:{REGION}:{ACCOUNT_ID}:queues/{name}"
-        );
+        let arn = format!("arn:aws:mediaconvert:{REGION}:{ACCOUNT_ID}:queues/{name}");
         let now = chrono::Utc::now().to_rfc3339();
 
         let queue = MediaConvertQueue {
@@ -135,9 +121,7 @@ async fn create_queue(
     }
 }
 
-async fn list_queues(
-    State(state): State<Arc<MediaConvertState>>,
-) -> Response {
+async fn list_queues(State(state): State<Arc<MediaConvertState>>) -> Response {
     let queues: Vec<Value> = state
         .queues
         .iter()
@@ -162,10 +146,9 @@ async fn delete_queue(
 ) -> Response {
     match state.queues.remove(&name) {
         Some(_) => rest_json::ok(json!({})),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Queue '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Queue '{}' not found", name)))
+        }
     }
 }
 
@@ -174,25 +157,14 @@ async fn create_job(
     Json(payload): Json<Value>,
 ) -> Response {
     let result = (|| -> Result<Response, LawsError> {
-        let role = payload["Role"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let role = payload["Role"].as_str().unwrap_or("").to_string();
 
-        let queue = payload["Queue"]
-            .as_str()
-            .unwrap_or("Default")
-            .to_string();
+        let queue = payload["Queue"].as_str().unwrap_or("Default").to_string();
 
-        let settings = payload
-            .get("Settings")
-            .cloned()
-            .unwrap_or(json!({}));
+        let settings = payload.get("Settings").cloned().unwrap_or(json!({}));
 
         let id = uuid::Uuid::new_v4().to_string();
-        let arn = format!(
-            "arn:aws:mediaconvert:{REGION}:{ACCOUNT_ID}:jobs/{id}"
-        );
+        let arn = format!("arn:aws:mediaconvert:{REGION}:{ACCOUNT_ID}:jobs/{id}");
         let now = chrono::Utc::now().to_rfc3339();
 
         let job = MediaConvertJob {
@@ -226,9 +198,7 @@ async fn create_job(
     }
 }
 
-async fn list_jobs(
-    State(state): State<Arc<MediaConvertState>>,
-) -> Response {
+async fn list_jobs(State(state): State<Arc<MediaConvertState>>) -> Response {
     let jobs: Vec<Value> = state
         .jobs
         .iter()
@@ -248,10 +218,7 @@ async fn list_jobs(
     rest_json::ok(json!({ "Jobs": jobs }))
 }
 
-async fn get_job(
-    State(state): State<Arc<MediaConvertState>>,
-    Path(id): Path<String>,
-) -> Response {
+async fn get_job(State(state): State<Arc<MediaConvertState>>, Path(id): Path<String>) -> Response {
     match state.jobs.get(&id) {
         Some(job) => rest_json::ok(json!({
             "Job": {
@@ -264,9 +231,6 @@ async fn get_job(
                 "CreatedAt": job.created_at,
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Job '{}' not found",
-            id
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("Job '{}' not found", id))),
     }
 }

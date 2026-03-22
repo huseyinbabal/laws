@@ -107,35 +107,24 @@ fn default_contact() -> Value {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn register_domain(
-    state: &Route53DomainsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn register_domain(state: &Route53DomainsState, payload: &Value) -> Result<Response, LawsError> {
     let domain_name = payload["DomainName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DomainName".into()))?
         .to_string();
 
-    let auto_renew = payload["AutoRenew"]
-        .as_bool()
-        .unwrap_or(true);
+    let auto_renew = payload["AutoRenew"].as_bool().unwrap_or(true);
 
-    let duration_years = payload["DurationInYears"]
-        .as_i64()
-        .unwrap_or(1);
+    let duration_years = payload["DurationInYears"].as_i64().unwrap_or(1);
 
-    let registrant_contact = payload["RegistrantContact"]
-        .clone();
-    let admin_contact = payload["AdminContact"]
-        .clone();
-    let tech_contact = payload["TechContact"]
-        .clone();
+    let registrant_contact = payload["RegistrantContact"].clone();
+    let admin_contact = payload["AdminContact"].clone();
+    let tech_contact = payload["TechContact"].clone();
 
     let operation_id = uuid::Uuid::new_v4().to_string();
     let now = chrono::Utc::now();
     let created_at = now.to_rfc3339();
-    let expiry = (now + chrono::Duration::days(365 * duration_years))
-        .to_rfc3339();
+    let expiry = (now + chrono::Duration::days(365 * duration_years)).to_rfc3339();
 
     let domain = Domain {
         domain_name: domain_name.clone(),
@@ -168,10 +157,7 @@ fn register_domain(
     })))
 }
 
-fn get_domain_detail(
-    state: &Route53DomainsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn get_domain_detail(state: &Route53DomainsState, payload: &Value) -> Result<Response, LawsError> {
     let domain_name = payload["DomainName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DomainName".into()))?;
@@ -232,10 +218,7 @@ fn check_domain_availability(
     })))
 }
 
-fn transfer_domain(
-    state: &Route53DomainsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn transfer_domain(state: &Route53DomainsState, payload: &Value) -> Result<Response, LawsError> {
     let domain_name = payload["DomainName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DomainName".into()))?
@@ -265,25 +248,20 @@ fn transfer_domain(
     })))
 }
 
-fn renew_domain(
-    state: &Route53DomainsState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn renew_domain(state: &Route53DomainsState, payload: &Value) -> Result<Response, LawsError> {
     let domain_name = payload["DomainName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DomainName".into()))?;
 
-    let duration_years = payload["DurationInYears"]
-        .as_i64()
-        .unwrap_or(1);
+    let duration_years = payload["DurationInYears"].as_i64().unwrap_or(1);
 
     let mut domain = state
         .domains
         .get_mut(domain_name)
         .ok_or_else(|| LawsError::NotFound(format!("Domain '{}' not found", domain_name)))?;
 
-    let new_expiry = (chrono::Utc::now() + chrono::Duration::days(365 * duration_years))
-        .to_rfc3339();
+    let new_expiry =
+        (chrono::Utc::now() + chrono::Duration::days(365 * duration_years)).to_rfc3339();
     domain.expiry = new_expiry;
 
     let operation_id = uuid::Uuid::new_v4().to_string();

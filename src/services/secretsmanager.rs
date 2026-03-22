@@ -82,12 +82,9 @@ async fn handle_action(
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
 
-    let action = target
-        .strip_prefix("secretsmanager.")
-        .unwrap_or(target);
+    let action = target.strip_prefix("secretsmanager.").unwrap_or(target);
 
-    let payload: serde_json::Value =
-        serde_json::from_str(&body).unwrap_or(serde_json::Value::Null);
+    let payload: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::Value::Null);
 
     match action {
         "CreateSecret" => create_secret(&state, &payload).await,
@@ -151,10 +148,7 @@ async fn create_secret(
     let name = payload["Name"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Name is required".to_string()))?;
-    let secret_string = payload["SecretString"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let secret_string = payload["SecretString"].as_str().unwrap_or("").to_string();
 
     if state.secrets.contains(name) {
         return Err(LawsError::AlreadyExists(format!(

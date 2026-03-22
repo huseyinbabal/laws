@@ -93,10 +93,7 @@ async fn create_file_system(
     State(state): State<Arc<EfsState>>,
     Json(payload): Json<Value>,
 ) -> Response {
-    let creation_token = payload["CreationToken"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let creation_token = payload["CreationToken"].as_str().unwrap_or("").to_string();
 
     // Check for duplicate creation token
     for entry in state.file_systems.iter() {
@@ -109,9 +106,7 @@ async fn create_file_system(
     }
 
     let fs_id = format!("fs-{}", &uuid::Uuid::new_v4().to_string()[..12]);
-    let arn = format!(
-        "arn:aws:elasticfilesystem:{REGION}:{ACCOUNT_ID}:file-system/{fs_id}"
-    );
+    let arn = format!("arn:aws:elasticfilesystem:{REGION}:{ACCOUNT_ID}:file-system/{fs_id}");
     let performance_mode = payload["PerformanceMode"]
         .as_str()
         .unwrap_or("generalPurpose")
@@ -155,9 +150,9 @@ async fn describe_file_system(
 ) -> Response {
     match state.file_systems.get(&id) {
         Some(fs) => rest_json::ok(file_system_to_json(&fs)),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "File system not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("File system not found: {id}")))
+        }
     }
 }
 
@@ -167,8 +162,8 @@ async fn delete_file_system(
 ) -> Response {
     match state.file_systems.remove(&id) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "File system not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("File system not found: {id}")))
+        }
     }
 }

@@ -125,13 +125,8 @@ fn create_cluster(state: &RedshiftState, payload: &Value) -> Result<Response, La
         .as_str()
         .unwrap_or("dc2.large")
         .to_string();
-    let number_of_nodes = payload["NumberOfNodes"]
-        .as_u64()
-        .unwrap_or(1) as u32;
-    let db_name = payload["DBName"]
-        .as_str()
-        .unwrap_or("dev")
-        .to_string();
+    let number_of_nodes = payload["NumberOfNodes"].as_u64().unwrap_or(1) as u32;
+    let db_name = payload["DBName"].as_str().unwrap_or("dev").to_string();
     let master_username = payload["MasterUsername"]
         .as_str()
         .unwrap_or("admin")
@@ -167,7 +162,9 @@ fn delete_cluster(state: &RedshiftState, payload: &Value) -> Result<Response, La
         .remove(id)
         .ok_or_else(|| LawsError::NotFound(format!("Redshift cluster '{}' not found", id)))?;
 
-    Ok(json_response(json!({ "Cluster": cluster_to_json(&cluster) })))
+    Ok(json_response(
+        json!({ "Cluster": cluster_to_json(&cluster) }),
+    ))
 }
 
 fn describe_clusters(state: &RedshiftState, payload: &Value) -> Result<Response, LawsError> {
@@ -176,11 +173,7 @@ fn describe_clusters(state: &RedshiftState, payload: &Value) -> Result<Response,
     let clusters: Vec<Value> = state
         .clusters
         .iter()
-        .filter(|entry| {
-            filter_id
-                .map(|fid| entry.key() == fid)
-                .unwrap_or(true)
-        })
+        .filter(|entry| filter_id.map(|fid| entry.key() == fid).unwrap_or(true))
         .map(|entry| cluster_to_json(entry.value()))
         .collect();
 

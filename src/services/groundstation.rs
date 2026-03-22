@@ -61,14 +61,8 @@ impl Default for GroundStationState {
 
 pub fn router(state: Arc<GroundStationState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/satellite",
-            axum::routing::get(list_satellites),
-        )
-        .route(
-            "/satellite/{id}",
-            axum::routing::get(get_satellite),
-        )
+        .route("/satellite", axum::routing::get(list_satellites))
+        .route("/satellite/{id}", axum::routing::get(get_satellite))
         .route(
             "/config",
             axum::routing::post(create_config).get(list_configs),
@@ -84,9 +78,7 @@ pub fn router(state: Arc<GroundStationState>) -> axum::Router {
 // Handlers
 // ---------------------------------------------------------------------------
 
-async fn list_satellites(
-    State(state): State<Arc<GroundStationState>>,
-) -> Response {
+async fn list_satellites(State(state): State<Arc<GroundStationState>>) -> Response {
     let satellites: Vec<Value> = state
         .satellites
         .iter()
@@ -117,9 +109,9 @@ async fn get_satellite(
             "noradSatelliteID": s.norad_satellite_id,
             "groundStations": s.ground_stations
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Satellite not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Satellite not found: {id}")))
+        }
     }
 }
 
@@ -139,15 +131,10 @@ async fn create_config(
         .unwrap_or("tracking-config")
         .to_owned();
 
-    let config_data = payload
-        .get("configData")
-        .cloned()
-        .unwrap_or(json!({}));
+    let config_data = payload.get("configData").cloned().unwrap_or(json!({}));
 
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:groundstation:{REGION}:{ACCOUNT_ID}:config/{config_type}/{id}"
-    );
+    let arn = format!("arn:aws:groundstation:{REGION}:{ACCOUNT_ID}:config/{config_type}/{id}");
 
     let config = Config {
         config_id: id.clone(),
@@ -167,9 +154,7 @@ async fn create_config(
     }))
 }
 
-async fn list_configs(
-    State(state): State<Arc<GroundStationState>>,
-) -> Response {
+async fn list_configs(State(state): State<Arc<GroundStationState>>) -> Response {
     let configs: Vec<Value> = state
         .configs
         .iter()
@@ -201,9 +186,7 @@ async fn get_config(
             "name": c.name,
             "configData": c.config_data
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Config not found: {id}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("Config not found: {id}"))),
     }
 }
 
@@ -213,8 +196,6 @@ async fn delete_config(
 ) -> Response {
     match state.configs.remove(&id) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Config not found: {id}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("Config not found: {id}"))),
     }
 }

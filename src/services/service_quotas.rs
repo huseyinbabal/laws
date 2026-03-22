@@ -102,11 +102,7 @@ impl Default for ServiceQuotasState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &ServiceQuotasState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &ServiceQuotasState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("ServiceQuotasV20190624.")
         .unwrap_or(target);
@@ -175,10 +171,7 @@ fn list_services() -> Result<Response, LawsError> {
     })))
 }
 
-fn list_service_quotas(
-    state: &ServiceQuotasState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn list_service_quotas(state: &ServiceQuotasState, payload: &Value) -> Result<Response, LawsError> {
     let service_code = payload["ServiceCode"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ServiceCode".into()))?;
@@ -211,10 +204,7 @@ fn list_service_quotas(
     })))
 }
 
-fn get_service_quota(
-    state: &ServiceQuotasState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn get_service_quota(state: &ServiceQuotasState, payload: &Value) -> Result<Response, LawsError> {
     let service_code = payload["ServiceCode"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ServiceCode".into()))?;
@@ -225,13 +215,12 @@ fn get_service_quota(
 
     let key = format!("{}:{}", service_code, quota_code);
 
-    let quota = state
-        .quotas
-        .get(&key)
-        .ok_or_else(|| LawsError::NotFound(format!(
+    let quota = state.quotas.get(&key).ok_or_else(|| {
+        LawsError::NotFound(format!(
             "Quota '{}' not found for service '{}'",
             quota_code, service_code
-        )))?;
+        ))
+    })?;
 
     Ok(json_response(json!({
         "Quota": {
@@ -295,9 +284,7 @@ fn request_quota_increase(
     })))
 }
 
-fn list_change_history(
-    state: &ServiceQuotasState,
-) -> Result<Response, LawsError> {
+fn list_change_history(state: &ServiceQuotasState) -> Result<Response, LawsError> {
     let history: Vec<Value> = state
         .requests
         .iter()

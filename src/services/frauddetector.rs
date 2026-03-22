@@ -55,11 +55,7 @@ impl Default for FraudDetectorState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &FraudDetectorState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &FraudDetectorState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AWSHawksNestServiceFacade.")
         .unwrap_or(target);
@@ -120,7 +116,10 @@ fn model_to_json(m: &Model) -> Value {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_detector_version(state: &FraudDetectorState, payload: &Value) -> Result<Response, LawsError> {
+fn create_detector_version(
+    state: &FraudDetectorState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let detector_id = payload["detectorId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing detectorId".into()))?
@@ -234,14 +233,15 @@ fn get_rules(state: &FraudDetectorState, payload: &Value) -> Result<Response, La
     Ok(json_response(json!({ "ruleDetails": [] })))
 }
 
-fn get_event_prediction(_state: &FraudDetectorState, payload: &Value) -> Result<Response, LawsError> {
+fn get_event_prediction(
+    _state: &FraudDetectorState,
+    payload: &Value,
+) -> Result<Response, LawsError> {
     let detector_id = payload["detectorId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing detectorId".into()))?;
 
-    let event_id = payload["eventId"]
-        .as_str()
-        .unwrap_or("unknown");
+    let event_id = payload["eventId"].as_str().unwrap_or("unknown");
 
     Ok(json_response(json!({
         "modelScores": [],

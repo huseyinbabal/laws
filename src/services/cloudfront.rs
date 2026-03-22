@@ -70,9 +70,9 @@ pub fn router(state: Arc<CloudFrontState>) -> axum::Router {
 // ---------------------------------------------------------------------------
 
 fn random_id() -> String {
-    use rand::Rng;
-    use rand::distributions::Alphanumeric;
-    rand::thread_rng()
+    use rand::distr::Alphanumeric;
+    use rand::RngExt;
+    rand::rng()
         .sample_iter(&Alphanumeric)
         .take(14)
         .map(|c| char::from(c).to_ascii_uppercase())
@@ -104,20 +104,14 @@ fn distribution_to_xml(d: &Distribution) -> String {
 // Handlers
 // ---------------------------------------------------------------------------
 
-async fn create_distribution(
-    State(state): State<Arc<CloudFrontState>>,
-    body: Bytes,
-) -> Response {
+async fn create_distribution(State(state): State<Arc<CloudFrontState>>, body: Bytes) -> Response {
     match do_create_distribution(&state, &body) {
         Ok(resp) => resp,
         Err(e) => rest_xml::error_response(&e),
     }
 }
 
-fn do_create_distribution(
-    state: &CloudFrontState,
-    body: &[u8],
-) -> Result<Response, LawsError> {
+fn do_create_distribution(state: &CloudFrontState, body: &[u8]) -> Result<Response, LawsError> {
     let id = random_id();
     let arn = format!("arn:aws:cloudfront::{ACCOUNT_ID}:distribution/{id}");
     let domain_name = format!("{id}.cloudfront.net");

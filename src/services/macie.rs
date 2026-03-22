@@ -69,25 +69,17 @@ async fn create_classification_job(
     Json(payload): Json<Value>,
 ) -> Response {
     let result = (|| -> Result<Response, LawsError> {
-        let name = payload["name"]
-            .as_str()
-            .unwrap_or("unnamed")
-            .to_string();
+        let name = payload["name"].as_str().unwrap_or("unnamed").to_string();
 
         let job_type = payload["jobType"]
             .as_str()
             .unwrap_or("ONE_TIME")
             .to_string();
 
-        let s3_job_definition = payload
-            .get("s3JobDefinition")
-            .cloned()
-            .unwrap_or(json!({}));
+        let s3_job_definition = payload.get("s3JobDefinition").cloned().unwrap_or(json!({}));
 
         let job_id = uuid::Uuid::new_v4().to_string();
-        let arn = format!(
-            "arn:aws:macie2:{REGION}:{ACCOUNT_ID}:classification-job/{job_id}"
-        );
+        let arn = format!("arn:aws:macie2:{REGION}:{ACCOUNT_ID}:classification-job/{job_id}");
         let now = chrono::Utc::now().to_rfc3339();
 
         let job = ClassificationJob {
@@ -114,9 +106,7 @@ async fn create_classification_job(
     }
 }
 
-async fn list_classification_jobs(
-    State(state): State<Arc<MacieState>>,
-) -> Response {
+async fn list_classification_jobs(State(state): State<Arc<MacieState>>) -> Response {
     let items: Vec<Value> = state
         .classification_jobs
         .iter()

@@ -75,18 +75,12 @@ impl Default for VpcLatticeState {
 pub fn router(state: Arc<VpcLatticeState>) -> axum::Router {
     axum::Router::new()
         .route("/services", post(create_service).get(list_services))
-        .route(
-            "/services/{id}",
-            get(get_service).delete(delete_service),
-        )
+        .route("/services/{id}", get(get_service).delete(delete_service))
         .route(
             "/targetgroups",
             post(create_target_group).get(list_target_groups),
         )
-        .route(
-            "/targetgroups/{id}/registertargets",
-            post(register_targets),
-        )
+        .route("/targetgroups/{id}/registertargets", post(register_targets))
         .with_state(state)
 }
 
@@ -161,9 +155,7 @@ async fn get_service(
             "createdAt": s.created_at,
             "dnsEntry": { "domainName": s.dns_entry },
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Service not found: {id}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("Service not found: {id}"))),
     }
 }
 
@@ -173,9 +165,7 @@ async fn delete_service(
 ) -> Response {
     match state.services.remove(&id) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Service not found: {id}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("Service not found: {id}"))),
     }
 }
 
@@ -270,8 +260,8 @@ async fn register_targets(
                 "unsuccessful": [],
             }))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "TargetGroup not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("TargetGroup not found: {id}")))
+        }
     }
 }

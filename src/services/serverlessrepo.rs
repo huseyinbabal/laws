@@ -102,10 +102,7 @@ async fn create_application(
             .ok_or_else(|| LawsError::InvalidRequest("Missing name".into()))?
             .to_string();
 
-        let description = payload["description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["description"].as_str().unwrap_or("").to_string();
 
         let author = payload["author"]
             .as_str()
@@ -123,9 +120,8 @@ async fn create_application(
             .to_string();
 
         let application_id = uuid::Uuid::new_v4().to_string();
-        let arn = format!(
-            "arn:aws:serverlessrepo:{REGION}:{ACCOUNT_ID}:applications/{application_id}"
-        );
+        let arn =
+            format!("arn:aws:serverlessrepo:{REGION}:{ACCOUNT_ID}:applications/{application_id}");
         let created_at = chrono::Utc::now().to_rfc3339();
 
         let app = Application {
@@ -151,9 +147,7 @@ async fn create_application(
     }
 }
 
-async fn list_applications(
-    State(state): State<Arc<ServerlessRepoState>>,
-) -> Response {
+async fn list_applications(State(state): State<Arc<ServerlessRepoState>>) -> Response {
     let apps: Vec<Value> = state
         .applications
         .iter()

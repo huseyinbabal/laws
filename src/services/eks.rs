@@ -68,10 +68,7 @@ pub fn router(state: Arc<EksState>) -> axum::Router {
 // Handlers
 // ---------------------------------------------------------------------------
 
-async fn create_cluster(
-    State(state): State<Arc<EksState>>,
-    Json(body): Json<Value>,
-) -> Response {
+async fn create_cluster(State(state): State<Arc<EksState>>, Json(body): Json<Value>) -> Response {
     match do_create_cluster(&state, &body) {
         Ok(resp) => resp,
         Err(e) => rest_json::error_response(&e),
@@ -133,21 +130,18 @@ async fn describe_cluster(
 ) -> Response {
     match state.clusters.get(&name) {
         Some(cluster) => rest_json::ok(json!({ "cluster": cluster_to_json(&cluster) })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "cluster not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("cluster not found: {name}")))
+        }
     }
 }
 
-async fn delete_cluster(
-    State(state): State<Arc<EksState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn delete_cluster(State(state): State<Arc<EksState>>, Path(name): Path<String>) -> Response {
     match state.clusters.remove(&name) {
         Some((_, cluster)) => rest_json::ok(json!({ "cluster": cluster_to_json(&cluster) })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "cluster not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("cluster not found: {name}")))
+        }
     }
 }
 

@@ -7,7 +7,6 @@ use axum::routing::{get, put};
 use axum::Json;
 use chrono::Utc;
 use dashmap::DashMap;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -86,7 +85,10 @@ impl Default for ApiGatewayState {
 
 pub fn router(state: Arc<ApiGatewayState>) -> axum::Router {
     axum::Router::new()
-        .route("/restapis", axum::routing::post(create_rest_api).get(get_rest_apis))
+        .route(
+            "/restapis",
+            axum::routing::post(create_rest_api).get(get_rest_apis),
+        )
         .route(
             "/restapis/{api_id}",
             get(get_rest_api).delete(delete_rest_api),
@@ -115,8 +117,9 @@ pub fn router(state: Arc<ApiGatewayState>) -> axum::Router {
 // ---------------------------------------------------------------------------
 
 fn random_id(len: usize) -> String {
-    rand::thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
+    use rand::RngExt;
+    rand::rng()
+        .sample_iter(&rand::distr::Alphanumeric)
         .take(len)
         .map(char::from)
         .collect::<String>()
@@ -281,7 +284,10 @@ async fn create_resource(
         }
     } else {
         // Find root resource for this API.
-        let root = state.resources.iter().find(|r| r.api_id == api_id && r.path == "/");
+        let root = state
+            .resources
+            .iter()
+            .find(|r| r.api_id == api_id && r.path == "/");
         match root {
             Some(r) => r.path.clone(),
             None => "/".to_string(),

@@ -48,14 +48,8 @@ impl Default for DaxState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &DaxState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AmazonDAXV3.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &DaxState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AmazonDAXV3.").unwrap_or(target);
 
     let result = match action {
         "CreateCluster" => create_cluster(state, payload),
@@ -108,10 +102,7 @@ fn cluster_to_json(cluster: &DaxCluster) -> Value {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_cluster(
-    state: &DaxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_cluster(state: &DaxState, payload: &Value) -> Result<Response, LawsError> {
     let cluster_name = payload["ClusterName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("ClusterName is required".to_string()))?
@@ -129,17 +120,11 @@ fn create_cluster(
         .unwrap_or("dax.r5.large")
         .to_string();
 
-    let replication_factor = payload["ReplicationFactor"]
-        .as_u64()
-        .unwrap_or(1);
+    let replication_factor = payload["ReplicationFactor"].as_u64().unwrap_or(1);
 
-    let cluster_arn = format!(
-        "arn:aws:dax:{REGION}:{ACCOUNT_ID}:cache/{cluster_name}"
-    );
+    let cluster_arn = format!("arn:aws:dax:{REGION}:{ACCOUNT_ID}:cache/{cluster_name}");
 
-    let endpoint = format!(
-        "{cluster_name}.{REGION}.dax-clusters.amazonaws.com"
-    );
+    let endpoint = format!("{cluster_name}.{REGION}.dax-clusters.amazonaws.com");
 
     let cluster = DaxCluster {
         cluster_name: cluster_name.clone(),
@@ -160,43 +145,32 @@ fn create_cluster(
     })))
 }
 
-fn delete_cluster(
-    state: &DaxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_cluster(state: &DaxState, payload: &Value) -> Result<Response, LawsError> {
     let cluster_name = payload["ClusterName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ClusterName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ClusterName is required".to_string()))?;
 
     let (_, cluster) = state
         .clusters
         .remove(cluster_name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Cluster '{}' not found", cluster_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Cluster '{}' not found", cluster_name)))?;
 
     Ok(json_response(json!({
         "Cluster": cluster_to_json(&cluster),
     })))
 }
 
-fn describe_clusters(
-    state: &DaxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let cluster_names = payload["ClusterNames"]
-        .as_array();
+fn describe_clusters(state: &DaxState, payload: &Value) -> Result<Response, LawsError> {
+    let cluster_names = payload["ClusterNames"].as_array();
 
     let clusters: Vec<Value> = state
         .clusters
         .iter()
-        .filter(|entry| {
-            match cluster_names {
-                Some(names) => names.iter().any(|n| n.as_str() == Some(entry.key().as_str())),
-                None => true,
-            }
+        .filter(|entry| match cluster_names {
+            Some(names) => names
+                .iter()
+                .any(|n| n.as_str() == Some(entry.key().as_str())),
+            None => true,
         })
         .map(|entry| cluster_to_json(entry.value()))
         .collect();
@@ -204,28 +178,19 @@ fn describe_clusters(
     Ok(json_response(json!({ "Clusters": clusters })))
 }
 
-fn increase_replication_factor(
-    state: &DaxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn increase_replication_factor(state: &DaxState, payload: &Value) -> Result<Response, LawsError> {
     let cluster_name = payload["ClusterName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ClusterName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ClusterName is required".to_string()))?;
 
     let new_replication_factor = payload["NewReplicationFactor"]
         .as_u64()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("NewReplicationFactor is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("NewReplicationFactor is required".to_string()))?;
 
     let mut cluster = state
         .clusters
         .get_mut(cluster_name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Cluster '{}' not found", cluster_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Cluster '{}' not found", cluster_name)))?;
 
     if new_replication_factor <= cluster.replication_factor {
         return Err(LawsError::InvalidRequest(
@@ -242,28 +207,19 @@ fn increase_replication_factor(
     })))
 }
 
-fn decrease_replication_factor(
-    state: &DaxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn decrease_replication_factor(state: &DaxState, payload: &Value) -> Result<Response, LawsError> {
     let cluster_name = payload["ClusterName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ClusterName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ClusterName is required".to_string()))?;
 
     let new_replication_factor = payload["NewReplicationFactor"]
         .as_u64()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("NewReplicationFactor is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("NewReplicationFactor is required".to_string()))?;
 
     let mut cluster = state
         .clusters
         .get_mut(cluster_name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Cluster '{}' not found", cluster_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Cluster '{}' not found", cluster_name)))?;
 
     if new_replication_factor >= cluster.replication_factor {
         return Err(LawsError::InvalidRequest(

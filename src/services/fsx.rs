@@ -59,11 +59,7 @@ impl Default for FsxState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &FsxState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &FsxState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("AWSSimbaAPIService_v20180301.")
         .unwrap_or(target);
@@ -133,29 +129,22 @@ fn backup_to_json(backup: &FsxBackup) -> Value {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_file_system(
-    state: &FsxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_file_system(state: &FsxState, payload: &Value) -> Result<Response, LawsError> {
     let file_system_type = payload["FileSystemType"]
         .as_str()
         .unwrap_or("LUSTRE")
         .to_string();
 
-    let storage_capacity = payload["StorageCapacity"]
-        .as_u64()
-        .unwrap_or(1200);
+    let storage_capacity = payload["StorageCapacity"].as_u64().unwrap_or(1200);
 
-    let storage_type = payload["StorageType"]
-        .as_str()
-        .unwrap_or("SSD")
-        .to_string();
+    let storage_type = payload["StorageType"].as_str().unwrap_or("SSD").to_string();
 
-    let file_system_id = format!("fs-{}", &uuid::Uuid::new_v4().to_string().replace("-", "")[..17]);
-
-    let arn = format!(
-        "arn:aws:fsx:{REGION}:{ACCOUNT_ID}:file-system/{file_system_id}"
+    let file_system_id = format!(
+        "fs-{}",
+        &uuid::Uuid::new_v4().to_string().replace("-", "")[..17]
     );
+
+    let arn = format!("arn:aws:fsx:{REGION}:{ACCOUNT_ID}:file-system/{file_system_id}");
 
     let created_at = now_epoch();
 
@@ -177,25 +166,19 @@ fn create_file_system(
     })))
 }
 
-fn delete_file_system(
-    state: &FsxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_file_system(state: &FsxState, payload: &Value) -> Result<Response, LawsError> {
     let file_system_id = payload["FileSystemId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("FileSystemId is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("FileSystemId is required".to_string()))?;
 
-    let (_, fs) = state
-        .file_systems
-        .remove(file_system_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("File system '{}' not found", file_system_id))
-        })?;
+    let (_, fs) = state.file_systems.remove(file_system_id).ok_or_else(|| {
+        LawsError::NotFound(format!("File system '{}' not found", file_system_id))
+    })?;
 
     // Remove associated backups
-    state.backups.retain(|_, b| b.file_system_id != file_system_id);
+    state
+        .backups
+        .retain(|_, b| b.file_system_id != file_system_id);
 
     Ok(json_response(json!({
         "FileSystemId": fs.file_system_id,
@@ -203,21 +186,17 @@ fn delete_file_system(
     })))
 }
 
-fn describe_file_systems(
-    state: &FsxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let file_system_ids = payload["FileSystemIds"]
-        .as_array();
+fn describe_file_systems(state: &FsxState, payload: &Value) -> Result<Response, LawsError> {
+    let file_system_ids = payload["FileSystemIds"].as_array();
 
     let file_systems: Vec<Value> = state
         .file_systems
         .iter()
-        .filter(|entry| {
-            match file_system_ids {
-                Some(ids) => ids.iter().any(|id| id.as_str() == Some(entry.key().as_str())),
-                None => true,
-            }
+        .filter(|entry| match file_system_ids {
+            Some(ids) => ids
+                .iter()
+                .any(|id| id.as_str() == Some(entry.key().as_str())),
+            None => true,
         })
         .map(|entry| file_system_to_json(entry.value()))
         .collect();
@@ -225,22 +204,14 @@ fn describe_file_systems(
     Ok(json_response(json!({ "FileSystems": file_systems })))
 }
 
-fn update_file_system(
-    state: &FsxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn update_file_system(state: &FsxState, payload: &Value) -> Result<Response, LawsError> {
     let file_system_id = payload["FileSystemId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("FileSystemId is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("FileSystemId is required".to_string()))?;
 
-    let mut fs = state
-        .file_systems
-        .get_mut(file_system_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("File system '{}' not found", file_system_id))
-        })?;
+    let mut fs = state.file_systems.get_mut(file_system_id).ok_or_else(|| {
+        LawsError::NotFound(format!("File system '{}' not found", file_system_id))
+    })?;
 
     if let Some(capacity) = payload["StorageCapacity"].as_u64() {
         fs.storage_capacity = capacity;
@@ -251,15 +222,10 @@ fn update_file_system(
     })))
 }
 
-fn create_backup(
-    state: &FsxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_backup(state: &FsxState, payload: &Value) -> Result<Response, LawsError> {
     let file_system_id = payload["FileSystemId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("FileSystemId is required".to_string())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("FileSystemId is required".to_string()))?
         .to_string();
 
     if !state.file_systems.contains_key(&file_system_id) {
@@ -269,11 +235,12 @@ fn create_backup(
         )));
     }
 
-    let backup_id = format!("backup-{}", &uuid::Uuid::new_v4().to_string().replace("-", "")[..17]);
-
-    let arn = format!(
-        "arn:aws:fsx:{REGION}:{ACCOUNT_ID}:backup/{backup_id}"
+    let backup_id = format!(
+        "backup-{}",
+        &uuid::Uuid::new_v4().to_string().replace("-", "")[..17]
     );
+
+    let arn = format!("arn:aws:fsx:{REGION}:{ACCOUNT_ID}:backup/{backup_id}");
 
     let created_at = now_epoch();
 
@@ -294,22 +261,15 @@ fn create_backup(
     })))
 }
 
-fn delete_backup(
-    state: &FsxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_backup(state: &FsxState, payload: &Value) -> Result<Response, LawsError> {
     let backup_id = payload["BackupId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("BackupId is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("BackupId is required".to_string()))?;
 
     state
         .backups
         .remove(backup_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Backup '{}' not found", backup_id))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Backup '{}' not found", backup_id)))?;
 
     Ok(json_response(json!({
         "BackupId": backup_id,
@@ -317,21 +277,17 @@ fn delete_backup(
     })))
 }
 
-fn describe_backups(
-    state: &FsxState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let backup_ids = payload["BackupIds"]
-        .as_array();
+fn describe_backups(state: &FsxState, payload: &Value) -> Result<Response, LawsError> {
+    let backup_ids = payload["BackupIds"].as_array();
 
     let backups: Vec<Value> = state
         .backups
         .iter()
-        .filter(|entry| {
-            match backup_ids {
-                Some(ids) => ids.iter().any(|id| id.as_str() == Some(entry.key().as_str())),
-                None => true,
-            }
+        .filter(|entry| match backup_ids {
+            Some(ids) => ids
+                .iter()
+                .any(|id| id.as_str() == Some(entry.key().as_str())),
+            None => true,
         })
         .map(|entry| backup_to_json(entry.value()))
         .collect();

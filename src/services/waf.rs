@@ -139,10 +139,7 @@ async fn create_web_acl(
         "BLOCK"
     };
 
-    let rules = payload["Rules"]
-        .as_array()
-        .cloned()
-        .unwrap_or_default();
+    let rules = payload["Rules"].as_array().cloned().unwrap_or_default();
 
     let capacity = payload["Capacity"].as_u64().unwrap_or(100) as u32;
 
@@ -182,10 +179,7 @@ async fn delete_web_acl(
     Ok(json_response(json!({})))
 }
 
-async fn get_web_acl(
-    state: &WafState,
-    payload: &serde_json::Value,
-) -> Result<Response, LawsError> {
+async fn get_web_acl(state: &WafState, payload: &serde_json::Value) -> Result<Response, LawsError> {
     let id = payload["Id"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Id is required".to_string()))?;
@@ -244,10 +238,7 @@ async fn create_rule_group(
         REGION, ACCOUNT_ID, name, id
     );
     let capacity = payload["Capacity"].as_u64().unwrap_or(100) as u32;
-    let rules = payload["Rules"]
-        .as_array()
-        .cloned()
-        .unwrap_or_default();
+    let rules = payload["Rules"].as_array().cloned().unwrap_or_default();
 
     let rule_group = WafRuleGroup {
         name: name.clone(),

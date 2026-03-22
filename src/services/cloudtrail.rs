@@ -55,15 +55,8 @@ impl Default for CloudTrailState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &CloudTrailState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .rsplit('.')
-        .next()
-        .unwrap_or(target);
+pub async fn handle_request(state: &CloudTrailState, target: &str, payload: &Value) -> Response {
+    let action = target.rsplit('.').next().unwrap_or(target);
 
     let result = match action {
         "CreateTrail" => create_trail(state, payload),
@@ -169,7 +162,10 @@ fn describe_trails(state: &CloudTrailState, _payload: &Value) -> Result<Response
         .map(|entry| trail_to_json(entry.value()))
         .collect();
 
-    Ok(json_response(StatusCode::OK, json!({ "trailList": trail_list })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({ "trailList": trail_list }),
+    ))
 }
 
 fn get_trail_status(state: &CloudTrailState, payload: &Value) -> Result<Response, LawsError> {
@@ -182,11 +178,14 @@ fn get_trail_status(state: &CloudTrailState, payload: &Value) -> Result<Response
         .get(name)
         .ok_or_else(|| LawsError::NotFound(format!("Trail '{}' not found", name)))?;
 
-    Ok(json_response(StatusCode::OK, json!({
-        "IsLogging": trail.is_logging,
-        "LatestDeliveryAttemptTime": "",
-        "LatestNotificationAttemptTime": "",
-    })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({
+            "IsLogging": trail.is_logging,
+            "LatestDeliveryAttemptTime": "",
+            "LatestNotificationAttemptTime": "",
+        }),
+    ))
 }
 
 fn start_logging(state: &CloudTrailState, payload: &Value) -> Result<Response, LawsError> {
@@ -222,8 +221,11 @@ fn stop_logging(state: &CloudTrailState, payload: &Value) -> Result<Response, La
 fn lookup_events(state: &CloudTrailState, _payload: &Value) -> Result<Response, LawsError> {
     // Return empty events list (no real events in mock)
     let _ = state;
-    Ok(json_response(StatusCode::OK, json!({
-        "Events": [],
-        "NextToken": null,
-    })))
+    Ok(json_response(
+        StatusCode::OK,
+        json!({
+            "Events": [],
+            "NextToken": null,
+        }),
+    ))
 }

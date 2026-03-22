@@ -63,10 +63,7 @@ impl Default for PinpointState {
 pub fn router(state: Arc<PinpointState>) -> axum::Router {
     axum::Router::new()
         .route("/v1/apps", post(create_app).get(get_apps))
-        .route(
-            "/v1/apps/{id}",
-            get(get_app).delete(delete_app),
-        )
+        .route("/v1/apps/{id}", get(get_app).delete(delete_app))
         .route(
             "/v1/apps/{id}/campaigns",
             post(create_campaign).get(get_campaigns),
@@ -89,9 +86,7 @@ async fn create_app(
             .to_string();
 
         let id = uuid::Uuid::new_v4().to_string();
-        let arn = format!(
-            "arn:aws:mobiletargeting:{REGION}:{ACCOUNT_ID}:apps/{id}"
-        );
+        let arn = format!("arn:aws:mobiletargeting:{REGION}:{ACCOUNT_ID}:apps/{id}");
         let now = chrono::Utc::now().to_rfc3339();
 
         let app = PinpointApp {
@@ -140,10 +135,7 @@ async fn get_apps(State(state): State<Arc<PinpointState>>) -> Response {
     }))
 }
 
-async fn get_app(
-    State(state): State<Arc<PinpointState>>,
-    Path(id): Path<String>,
-) -> Response {
+async fn get_app(State(state): State<Arc<PinpointState>>, Path(id): Path<String>) -> Response {
     match state.apps.get(&id) {
         Some(app) => rest_json::ok(json!({
             "ApplicationResponse": {
@@ -152,17 +144,11 @@ async fn get_app(
                 "Arn": app.arn,
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "App '{}' not found",
-            id
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("App '{}' not found", id))),
     }
 }
 
-async fn delete_app(
-    State(state): State<Arc<PinpointState>>,
-    Path(id): Path<String>,
-) -> Response {
+async fn delete_app(State(state): State<Arc<PinpointState>>, Path(id): Path<String>) -> Response {
     match state.apps.remove(&id) {
         Some((_, app)) => rest_json::ok(json!({
             "ApplicationResponse": {
@@ -171,10 +157,7 @@ async fn delete_app(
                 "Arn": app.arn,
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "App '{}' not found",
-            id
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("App '{}' not found", id))),
     }
 }
 
@@ -255,9 +238,8 @@ async fn get_campaigns(
                 }
             }))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "App '{}' not found",
-            app_id
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("App '{}' not found", app_id)))
+        }
     }
 }

@@ -59,14 +59,8 @@ impl Default for HealthLakeState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &HealthLakeState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("HealthLake.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &HealthLakeState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("HealthLake.").unwrap_or(target);
 
     let result = match action {
         "CreateFHIRDatastore" => create_fhir_datastore(state, payload),
@@ -104,10 +98,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_fhir_datastore(
-    state: &HealthLakeState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_fhir_datastore(state: &HealthLakeState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["DatastoreName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DatastoreName".into()))?
@@ -120,9 +111,7 @@ fn create_fhir_datastore(
 
     let id = uuid::Uuid::new_v4().to_string();
     let arn = format!("arn:aws:healthlake:{REGION}:{ACCOUNT_ID}:datastore/fhir/{id}");
-    let endpoint = format!(
-        "https://healthlake.{REGION}.amazonaws.com/datastore/{id}/r4/"
-    );
+    let endpoint = format!("https://healthlake.{REGION}.amazonaws.com/datastore/{id}/r4/");
     let now = chrono::Utc::now().to_rfc3339();
 
     let datastore = FhirDatastore {
@@ -145,10 +134,7 @@ fn create_fhir_datastore(
     })))
 }
 
-fn delete_fhir_datastore(
-    state: &HealthLakeState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_fhir_datastore(state: &HealthLakeState, payload: &Value) -> Result<Response, LawsError> {
     let id = payload["DatastoreId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DatastoreId".into()))?;
@@ -192,9 +178,7 @@ fn describe_fhir_datastore(
     })))
 }
 
-fn list_fhir_datastores(
-    state: &HealthLakeState,
-) -> Result<Response, LawsError> {
+fn list_fhir_datastores(state: &HealthLakeState) -> Result<Response, LawsError> {
     let datastores: Vec<Value> = state
         .datastores
         .iter()
@@ -217,10 +201,7 @@ fn list_fhir_datastores(
     })))
 }
 
-fn start_fhir_import_job(
-    state: &HealthLakeState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn start_fhir_import_job(state: &HealthLakeState, payload: &Value) -> Result<Response, LawsError> {
     let datastore_id = payload["DatastoreId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DatastoreId".into()))?
@@ -231,8 +212,7 @@ fn start_fhir_import_job(
         .unwrap_or("import-job")
         .to_string();
 
-    let input_data_config = payload["InputDataConfig"]
-        .clone();
+    let input_data_config = payload["InputDataConfig"].clone();
 
     let job_id = uuid::Uuid::new_v4().to_string();
     let now = chrono::Utc::now().to_rfc3339();
@@ -255,13 +235,8 @@ fn start_fhir_import_job(
     })))
 }
 
-fn list_fhir_import_jobs(
-    state: &HealthLakeState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let datastore_id = payload["DatastoreId"]
-        .as_str()
-        .unwrap_or("");
+fn list_fhir_import_jobs(state: &HealthLakeState, payload: &Value) -> Result<Response, LawsError> {
+    let datastore_id = payload["DatastoreId"].as_str().unwrap_or("");
 
     let jobs: Vec<Value> = state
         .import_jobs

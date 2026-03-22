@@ -202,9 +202,7 @@ fn describe_accelerator(
     })))
 }
 
-fn list_accelerators(
-    state: &GlobalAcceleratorState,
-) -> Result<Response, LawsError> {
+fn list_accelerators(state: &GlobalAcceleratorState) -> Result<Response, LawsError> {
     let accs: Vec<Value> = state
         .accelerators
         .iter()
@@ -227,19 +225,13 @@ fn list_accelerators(
     })))
 }
 
-fn create_listener(
-    state: &GlobalAcceleratorState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_listener(state: &GlobalAcceleratorState, payload: &Value) -> Result<Response, LawsError> {
     let accelerator_arn = payload["AcceleratorArn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing AcceleratorArn".into()))?
         .to_string();
 
-    let protocol = payload["Protocol"]
-        .as_str()
-        .unwrap_or("TCP")
-        .to_string();
+    let protocol = payload["Protocol"].as_str().unwrap_or("TCP").to_string();
 
     let from_port = payload["PortRanges"]
         .as_array()
@@ -275,13 +267,8 @@ fn create_listener(
     })))
 }
 
-fn list_listeners(
-    state: &GlobalAcceleratorState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let accelerator_arn = payload["AcceleratorArn"]
-        .as_str()
-        .unwrap_or("");
+fn list_listeners(state: &GlobalAcceleratorState, payload: &Value) -> Result<Response, LawsError> {
+    let accelerator_arn = payload["AcceleratorArn"].as_str().unwrap_or("");
 
     let listeners: Vec<Value> = state
         .listeners

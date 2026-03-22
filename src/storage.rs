@@ -44,7 +44,10 @@ pub mod mem {
         }
 
         pub fn list_values(&self) -> Vec<V> {
-            self.data.iter().map(|entry| entry.value().clone()).collect()
+            self.data
+                .iter()
+                .map(|entry| entry.value().clone())
+                .collect()
         }
 
         pub fn len(&self) -> usize {

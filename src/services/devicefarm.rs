@@ -54,11 +54,7 @@ impl Default for DeviceFarmState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &DeviceFarmState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &DeviceFarmState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("DeviceFarm_20150623.")
         .unwrap_or(target);
@@ -135,7 +131,9 @@ fn create_project(state: &DeviceFarmState, payload: &Value) -> Result<Response, 
     };
 
     state.projects.insert(arn.clone(), project.clone());
-    Ok(json_response(json!({ "project": project_to_json(&project) })))
+    Ok(json_response(
+        json!({ "project": project_to_json(&project) }),
+    ))
 }
 
 fn list_projects(state: &DeviceFarmState) -> Result<Response, LawsError> {
@@ -158,7 +156,9 @@ fn get_project(state: &DeviceFarmState, payload: &Value) -> Result<Response, Law
         .get(arn)
         .ok_or_else(|| LawsError::NotFound(format!("Project not found: {arn}")))?;
 
-    Ok(json_response(json!({ "project": project_to_json(project.value()) })))
+    Ok(json_response(
+        json!({ "project": project_to_json(project.value()) }),
+    ))
 }
 
 fn delete_project(state: &DeviceFarmState, payload: &Value) -> Result<Response, LawsError> {
@@ -182,7 +182,9 @@ fn create_upload(state: &DeviceFarmState, payload: &Value) -> Result<Response, L
         .to_string();
 
     if !state.projects.contains_key(&project_arn) {
-        return Err(LawsError::NotFound(format!("Project not found: {project_arn}")));
+        return Err(LawsError::NotFound(format!(
+            "Project not found: {project_arn}"
+        )));
     }
 
     let name = payload["name"]
@@ -231,7 +233,9 @@ fn schedule_run(state: &DeviceFarmState, payload: &Value) -> Result<Response, La
         .ok_or_else(|| LawsError::InvalidRequest("Missing projectArn".into()))?;
 
     if !state.projects.contains_key(project_arn) {
-        return Err(LawsError::NotFound(format!("Project not found: {project_arn}")));
+        return Err(LawsError::NotFound(format!(
+            "Project not found: {project_arn}"
+        )));
     }
 
     let run_id = uuid::Uuid::new_v4().to_string();

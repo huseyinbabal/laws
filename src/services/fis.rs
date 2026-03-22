@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post, delete};
+use axum::routing::{delete, get, post};
 use axum::Json;
 use chrono::Utc;
 use dashmap::DashMap;
@@ -73,7 +73,10 @@ impl Default for FisState {
 
 pub fn router(state: Arc<FisState>) -> axum::Router {
     axum::Router::new()
-        .route("/experimentTemplates", post(create_experiment_template).get(list_experiment_templates))
+        .route(
+            "/experimentTemplates",
+            post(create_experiment_template).get(list_experiment_templates),
+        )
         .route(
             "/experimentTemplates/{template_id}",
             get(get_experiment_template).delete(delete_experiment_template),
@@ -124,9 +127,7 @@ async fn create_experiment_template(
     rest_json::created(resp)
 }
 
-async fn list_experiment_templates(
-    State(state): State<Arc<FisState>>,
-) -> Response {
+async fn list_experiment_templates(State(state): State<Arc<FisState>>) -> Response {
     let items: Vec<Value> = state
         .templates
         .iter()
@@ -184,13 +185,14 @@ async fn delete_experiment_template(
     }
 }
 
-async fn start_experiment(
-    State(state): State<Arc<FisState>>,
-    Json(body): Json<Value>,
-) -> Response {
+async fn start_experiment(State(state): State<Arc<FisState>>, Json(body): Json<Value>) -> Response {
     let template_id = match body["experimentTemplateId"].as_str() {
         Some(id) => id.to_string(),
-        None => return rest_json::error_response(&LawsError::InvalidRequest("Missing experimentTemplateId".into())),
+        None => {
+            return rest_json::error_response(&LawsError::InvalidRequest(
+                "Missing experimentTemplateId".into(),
+            ))
+        }
     };
 
     if !state.templates.contains_key(&template_id) {
@@ -228,9 +230,7 @@ async fn start_experiment(
     rest_json::created(resp)
 }
 
-async fn list_experiments(
-    State(state): State<Arc<FisState>>,
-) -> Response {
+async fn list_experiments(State(state): State<Arc<FisState>>) -> Response {
     let items: Vec<Value> = state
         .experiments
         .iter()

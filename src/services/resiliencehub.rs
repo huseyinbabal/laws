@@ -57,14 +57,8 @@ impl Default for ResilienceHubState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &ResilienceHubState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AwsResilienceHub.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &ResilienceHubState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AwsResilienceHub.").unwrap_or(target);
 
     let result = match action {
         "CreateApp" => create_app(state, payload),
@@ -103,24 +97,15 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_app(
-    state: &ResilienceHubState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_app(state: &ResilienceHubState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["name"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing name".into()))?
         .to_string();
 
-    let description = payload["description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["description"].as_str().unwrap_or("").to_string();
 
-    let policy_arn = payload["policyArn"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let policy_arn = payload["policyArn"].as_str().unwrap_or("").to_string();
 
     let app_arn = format!(
         "arn:aws:resiliencehub:{REGION}:{ACCOUNT_ID}:app/{}",
@@ -151,10 +136,7 @@ fn create_app(
     })))
 }
 
-fn delete_app(
-    state: &ResilienceHubState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_app(state: &ResilienceHubState, payload: &Value) -> Result<Response, LawsError> {
     let app_arn = payload["appArn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing appArn".into()))?;
@@ -169,10 +151,7 @@ fn delete_app(
     })))
 }
 
-fn describe_app(
-    state: &ResilienceHubState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_app(state: &ResilienceHubState, payload: &Value) -> Result<Response, LawsError> {
     let app_arn = payload["appArn"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing appArn".into()))?;
@@ -261,9 +240,7 @@ fn create_resiliency_policy(
     })))
 }
 
-fn list_resiliency_policies(
-    state: &ResilienceHubState,
-) -> Result<Response, LawsError> {
+fn list_resiliency_policies(state: &ResilienceHubState) -> Result<Response, LawsError> {
     let policies: Vec<Value> = state
         .policies
         .iter()
@@ -298,10 +275,7 @@ fn start_app_assessment(
         .to_string();
 
     if !state.apps.contains_key(app_arn) {
-        return Err(LawsError::NotFound(format!(
-            "App '{}' not found",
-            app_arn
-        )));
+        return Err(LawsError::NotFound(format!("App '{}' not found", app_arn)));
     }
 
     let assessment_arn = format!(

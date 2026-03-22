@@ -75,14 +75,8 @@ impl Default for HealthState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &HealthState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AWSHealth_20160804.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &HealthState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AWSHealth_20160804.").unwrap_or(target);
 
     let result = match action {
         "DescribeEvents" => describe_events(state, payload),
@@ -119,10 +113,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn describe_events(
-    state: &HealthState,
-    _payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_events(state: &HealthState, _payload: &Value) -> Result<Response, LawsError> {
     let events: Vec<Value> = state
         .events
         .iter()
@@ -145,10 +136,7 @@ fn describe_events(
     })))
 }
 
-fn describe_event_details(
-    state: &HealthState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_event_details(state: &HealthState, payload: &Value) -> Result<Response, LawsError> {
     let event_arns: Vec<&str> = payload["eventArns"]
         .as_array()
         .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect())
@@ -191,10 +179,7 @@ fn describe_event_details(
     })))
 }
 
-fn describe_affected_entities(
-    state: &HealthState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_affected_entities(state: &HealthState, payload: &Value) -> Result<Response, LawsError> {
     let event_arn = payload["filter"]["eventArns"]
         .as_array()
         .and_then(|a| a.first())
@@ -217,9 +202,7 @@ fn describe_affected_entities(
     })))
 }
 
-fn describe_event_types(
-    _state: &HealthState,
-) -> Result<Response, LawsError> {
+fn describe_event_types(_state: &HealthState) -> Result<Response, LawsError> {
     Ok(json_response(json!({
         "eventTypes": [
             {
@@ -241,9 +224,7 @@ fn describe_event_types(
     })))
 }
 
-fn describe_event_aggregates(
-    state: &HealthState,
-) -> Result<Response, LawsError> {
+fn describe_event_aggregates(state: &HealthState) -> Result<Response, LawsError> {
     let count = state.events.len();
 
     Ok(json_response(json!({

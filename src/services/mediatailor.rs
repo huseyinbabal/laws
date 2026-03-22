@@ -69,8 +69,7 @@ pub fn router(state: Arc<MediaTailorState>) -> axum::Router {
         )
         .route(
             "/playbackConfiguration/{name}",
-            axum::routing::get(get_playback_configuration)
-                .delete(delete_playback_configuration),
+            axum::routing::get(get_playback_configuration).delete(delete_playback_configuration),
         )
         .route(
             "/channels",
@@ -105,9 +104,7 @@ async fn put_playback_configuration(
         .unwrap_or("")
         .to_owned();
 
-    let arn = format!(
-        "arn:aws:mediatailor:{REGION}:{ACCOUNT_ID}:playbackConfiguration/{name}"
-    );
+    let arn = format!("arn:aws:mediatailor:{REGION}:{ACCOUNT_ID}:playbackConfiguration/{name}");
     let session_prefix = format!(
         "https://{}.mediatailor.{REGION}.amazonaws.com/v1/session/{ACCOUNT_ID}/{name}",
         uuid::Uuid::new_v4().to_string().replace('-', "")[..8].to_string()
@@ -158,9 +155,7 @@ async fn get_playback_configuration(
     }
 }
 
-async fn list_playback_configurations(
-    State(state): State<Arc<MediaTailorState>>,
-) -> Response {
+async fn list_playback_configurations(State(state): State<Arc<MediaTailorState>>) -> Response {
     let configs: Vec<Value> = state
         .configurations
         .iter()
@@ -208,9 +203,7 @@ async fn create_channel(
         .unwrap_or("LOOP")
         .to_owned();
 
-    let arn = format!(
-        "arn:aws:mediatailor:{REGION}:{ACCOUNT_ID}:channel/{channel_name}"
-    );
+    let arn = format!("arn:aws:mediatailor:{REGION}:{ACCOUNT_ID}:channel/{channel_name}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let channel = Channel {
@@ -232,9 +225,7 @@ async fn create_channel(
     }))
 }
 
-async fn list_channels(
-    State(state): State<Arc<MediaTailorState>>,
-) -> Response {
+async fn list_channels(State(state): State<Arc<MediaTailorState>>) -> Response {
     let channels: Vec<Value> = state
         .channels
         .iter()

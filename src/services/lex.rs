@@ -64,10 +64,7 @@ impl Default for LexState {
 
 pub fn router(state: Arc<LexState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/bots/{name}/versions/$LATEST",
-            put(put_bot).get(get_bot),
-        )
+        .route("/bots/{name}/versions/$LATEST", put(put_bot).get(get_bot))
         .route("/bots", get(get_bots))
         .route("/bots/{name}", delete(delete_bot))
         .route("/bots/{name}/text", post(post_text))
@@ -83,23 +80,13 @@ async fn put_bot(
     Path(name): Path<String>,
     Json(payload): Json<Value>,
 ) -> Response {
-    let description = payload["description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["description"].as_str().unwrap_or("").to_string();
 
-    let locale = payload["locale"]
-        .as_str()
-        .unwrap_or("en-US")
-        .to_string();
+    let locale = payload["locale"].as_str().unwrap_or("en-US").to_string();
 
-    let child_directed = payload["childDirected"]
-        .as_bool()
-        .unwrap_or(false);
+    let child_directed = payload["childDirected"].as_bool().unwrap_or(false);
 
-    let arn = format!(
-        "arn:aws:lex:{REGION}:{ACCOUNT_ID}:bot:{name}"
-    );
+    let arn = format!("arn:aws:lex:{REGION}:{ACCOUNT_ID}:bot:{name}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let bot = LexBot {
@@ -138,29 +125,21 @@ async fn get_bots(State(state): State<Arc<LexState>>) -> Response {
     rest_json::ok(json!({ "bots": bots }))
 }
 
-async fn get_bot(
-    State(state): State<Arc<LexState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn get_bot(State(state): State<Arc<LexState>>, Path(name): Path<String>) -> Response {
     match state.bots.get(&name) {
         Some(bot) => rest_json::ok(bot_to_json(bot.value())),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Bot '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Bot '{}' not found", name)))
+        }
     }
 }
 
-async fn delete_bot(
-    State(state): State<Arc<LexState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn delete_bot(State(state): State<Arc<LexState>>, Path(name): Path<String>) -> Response {
     match state.bots.remove(&name) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Bot '{}' not found",
-            name
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Bot '{}' not found", name)))
+        }
     }
 }
 
@@ -176,9 +155,7 @@ async fn post_text(
         )));
     }
 
-    let input_text = payload["inputText"]
-        .as_str()
-        .unwrap_or("");
+    let input_text = payload["inputText"].as_str().unwrap_or("");
 
     rest_json::ok(json!({
         "intentName": "FallbackIntent",

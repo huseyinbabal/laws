@@ -57,11 +57,7 @@ impl Default for ControlTowerState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &ControlTowerState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &ControlTowerState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("ControltowerService.")
         .unwrap_or(target);
@@ -123,21 +119,13 @@ fn enabled_control_to_json(ec: &EnabledControl) -> Value {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_landing_zone(
-    state: &ControlTowerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let version = payload["version"]
-        .as_str()
-        .unwrap_or("3.3")
-        .to_string();
+fn create_landing_zone(state: &ControlTowerState, payload: &Value) -> Result<Response, LawsError> {
+    let version = payload["version"].as_str().unwrap_or("3.3").to_string();
 
     let manifest = payload["manifest"].clone();
 
     let identifier = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:controltower:{REGION}:{ACCOUNT_ID}:landingzone/{identifier}"
-    );
+    let arn = format!("arn:aws:controltower:{REGION}:{ACCOUNT_ID}:landingzone/{identifier}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let lz = LandingZone {
@@ -159,22 +147,15 @@ fn create_landing_zone(
     })))
 }
 
-fn get_landing_zone(
-    state: &ControlTowerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let identifier = payload["landingZoneIdentifier"]
-        .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("landingZoneIdentifier is required".to_string())
-        })?;
+fn get_landing_zone(state: &ControlTowerState, payload: &Value) -> Result<Response, LawsError> {
+    let identifier = payload["landingZoneIdentifier"].as_str().ok_or_else(|| {
+        LawsError::InvalidRequest("landingZoneIdentifier is required".to_string())
+    })?;
 
     let lz = state
         .landing_zones
         .get(identifier)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Landing zone '{}' not found", identifier))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Landing zone '{}' not found", identifier)))?;
 
     Ok(json_response(json!({
         "landingZone": landing_zone_to_json(lz.value()),
@@ -197,22 +178,15 @@ fn list_landing_zones(state: &ControlTowerState) -> Result<Response, LawsError> 
     Ok(json_response(json!({ "landingZones": zones })))
 }
 
-fn enable_control(
-    state: &ControlTowerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn enable_control(state: &ControlTowerState, payload: &Value) -> Result<Response, LawsError> {
     let control_identifier = payload["controlIdentifier"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("controlIdentifier is required".to_string())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("controlIdentifier is required".to_string()))?
         .to_string();
 
     let target_identifier = payload["targetIdentifier"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("targetIdentifier is required".to_string())
-        })?
+        .ok_or_else(|| LawsError::InvalidRequest("targetIdentifier is required".to_string()))?
         .to_string();
 
     let key = format!("{}:{}", control_identifier, target_identifier);
@@ -225,9 +199,7 @@ fn enable_control(
     }
 
     let ec_id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:controltower:{REGION}:{ACCOUNT_ID}:enabledcontrol/{ec_id}"
-    );
+    let arn = format!("arn:aws:controltower:{REGION}:{ACCOUNT_ID}:enabledcontrol/{ec_id}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let ec = EnabledControl {
@@ -248,33 +220,23 @@ fn enable_control(
     })))
 }
 
-fn disable_control(
-    state: &ControlTowerState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn disable_control(state: &ControlTowerState, payload: &Value) -> Result<Response, LawsError> {
     let control_identifier = payload["controlIdentifier"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("controlIdentifier is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("controlIdentifier is required".to_string()))?;
 
     let target_identifier = payload["targetIdentifier"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("targetIdentifier is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("targetIdentifier is required".to_string()))?;
 
     let key = format!("{}:{}", control_identifier, target_identifier);
 
-    state
-        .enabled_controls
-        .remove(&key)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!(
-                "Enabled control not found for '{}' on '{}'",
-                control_identifier, target_identifier
-            ))
-        })?;
+    state.enabled_controls.remove(&key).ok_or_else(|| {
+        LawsError::NotFound(format!(
+            "Enabled control not found for '{}' on '{}'",
+            control_identifier, target_identifier
+        ))
+    })?;
 
     let operation_id = uuid::Uuid::new_v4().to_string();
 
@@ -287,8 +249,7 @@ fn list_enabled_controls(
     state: &ControlTowerState,
     payload: &Value,
 ) -> Result<Response, LawsError> {
-    let target_identifier = payload["targetIdentifier"]
-        .as_str();
+    let target_identifier = payload["targetIdentifier"].as_str();
 
     let controls: Vec<Value> = state
         .enabled_controls

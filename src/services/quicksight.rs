@@ -140,16 +140,20 @@ async fn list_data_sets(
     State(state): State<Arc<QuickSightState>>,
     Path(_account_id): Path<String>,
 ) -> Response {
-    let datasets: Vec<Value> = state.datasets.iter().map(|entry| {
-        let ds = entry.value();
-        json!({
-            "DataSetId": ds.data_set_id,
-            "Arn": ds.arn,
-            "Name": ds.name,
-            "ImportMode": ds.import_mode,
-            "CreatedTime": ds.created_time
+    let datasets: Vec<Value> = state
+        .datasets
+        .iter()
+        .map(|entry| {
+            let ds = entry.value();
+            json!({
+                "DataSetId": ds.data_set_id,
+                "Arn": ds.arn,
+                "Name": ds.name,
+                "ImportMode": ds.import_mode,
+                "CreatedTime": ds.created_time
+            })
         })
-    }).collect();
+        .collect();
 
     rest_json::ok(json!({
         "DataSetSummaries": datasets,
@@ -174,9 +178,9 @@ async fn describe_data_set(
             "RequestId": random_id(),
             "Status": 200
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "data set not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("data set not found: {id}")))
+        }
     }
 }
 
@@ -191,9 +195,9 @@ async fn delete_data_set(
             "RequestId": random_id(),
             "Status": 200
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "data set not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("data set not found: {id}")))
+        }
     }
 }
 
@@ -234,15 +238,19 @@ async fn list_dashboards(
     State(state): State<Arc<QuickSightState>>,
     Path(_account_id): Path<String>,
 ) -> Response {
-    let dashboards: Vec<Value> = state.dashboards.iter().map(|entry| {
-        let d = entry.value();
-        json!({
-            "DashboardId": d.dashboard_id,
-            "Arn": d.arn,
-            "Name": d.name,
-            "CreatedTime": d.created_time
+    let dashboards: Vec<Value> = state
+        .dashboards
+        .iter()
+        .map(|entry| {
+            let d = entry.value();
+            json!({
+                "DashboardId": d.dashboard_id,
+                "Arn": d.arn,
+                "Name": d.name,
+                "CreatedTime": d.created_time
+            })
         })
-    }).collect();
+        .collect();
 
     rest_json::ok(json!({
         "DashboardSummaryList": dashboards,

@@ -130,9 +130,7 @@ async fn create_workspace(
     }))
 }
 
-async fn list_workspaces(
-    State(state): State<Arc<ManagedGrafanaState>>,
-) -> Response {
+async fn list_workspaces(State(state): State<Arc<ManagedGrafanaState>>) -> Response {
     let workspaces: Vec<Value> = state
         .workspaces
         .iter()
@@ -174,9 +172,9 @@ async fn describe_workspace(
                 "modified": w.modified_at
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Workspace not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Workspace not found: {id}")))
+        }
     }
 }
 
@@ -193,9 +191,9 @@ async fn delete_workspace(
                 "status": "DELETING"
             }
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Workspace not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Workspace not found: {id}")))
+        }
     }
 }
 
@@ -225,8 +223,8 @@ async fn update_workspace(
                 }
             }))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Workspace not found: {id}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Workspace not found: {id}")))
+        }
     }
 }

@@ -64,27 +64,20 @@ impl Default for OmicsState {
 
 pub fn router(state: Arc<OmicsState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/sequenceStore",
-            axum::routing::post(create_sequence_store),
-        )
+        .route("/sequenceStore", axum::routing::post(create_sequence_store))
         .route(
             "/sequenceStore/list",
             axum::routing::post(list_sequence_stores),
         )
         .route(
             "/sequenceStore/{id}",
-            axum::routing::get(get_sequence_store)
-                .delete(delete_sequence_store),
+            axum::routing::get(get_sequence_store).delete(delete_sequence_store),
         )
         .route(
             "/workflow",
             axum::routing::post(create_workflow).get(list_workflows),
         )
-        .route(
-            "/workflow/{id}",
-            axum::routing::get(get_workflow),
-        )
+        .route("/workflow/{id}", axum::routing::get(get_workflow))
         .with_state(state)
 }
 
@@ -132,15 +125,10 @@ async fn create_sequence_store(
             .ok_or_else(|| LawsError::InvalidRequest("Missing name".into()))?
             .to_string();
 
-        let description = payload["description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["description"].as_str().unwrap_or("").to_string();
 
         let id = random_id();
-        let arn = format!(
-            "arn:aws:omics:{REGION}:{ACCOUNT_ID}:sequenceStore/{id}"
-        );
+        let arn = format!("arn:aws:omics:{REGION}:{ACCOUNT_ID}:sequenceStore/{id}");
         let created_at = chrono::Utc::now().to_rfc3339();
 
         let store = SequenceStore {
@@ -163,9 +151,7 @@ async fn create_sequence_store(
     }
 }
 
-async fn list_sequence_stores(
-    State(state): State<Arc<OmicsState>>,
-) -> Response {
+async fn list_sequence_stores(State(state): State<Arc<OmicsState>>) -> Response {
     let stores: Vec<Value> = state
         .sequence_stores
         .iter()
@@ -211,20 +197,12 @@ async fn create_workflow(
             .ok_or_else(|| LawsError::InvalidRequest("Missing name".into()))?
             .to_string();
 
-        let workflow_type = payload["type"]
-            .as_str()
-            .unwrap_or("PRIVATE")
-            .to_string();
+        let workflow_type = payload["type"].as_str().unwrap_or("PRIVATE").to_string();
 
-        let description = payload["description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["description"].as_str().unwrap_or("").to_string();
 
         let id = random_id();
-        let arn = format!(
-            "arn:aws:omics:{REGION}:{ACCOUNT_ID}:workflow/{id}"
-        );
+        let arn = format!("arn:aws:omics:{REGION}:{ACCOUNT_ID}:workflow/{id}");
         let created_at = chrono::Utc::now().to_rfc3339();
 
         let workflow = Workflow {
@@ -249,9 +227,7 @@ async fn create_workflow(
     }
 }
 
-async fn list_workflows(
-    State(state): State<Arc<OmicsState>>,
-) -> Response {
+async fn list_workflows(State(state): State<Arc<OmicsState>>) -> Response {
     let workflows: Vec<Value> = state
         .workflows
         .iter()
@@ -261,15 +237,11 @@ async fn list_workflows(
     rest_json::ok(json!({ "items": workflows }))
 }
 
-async fn get_workflow(
-    State(state): State<Arc<OmicsState>>,
-    Path(id): Path<String>,
-) -> Response {
+async fn get_workflow(State(state): State<Arc<OmicsState>>, Path(id): Path<String>) -> Response {
     match state.workflows.get(&id) {
         Some(wf) => rest_json::ok(workflow_to_json(wf.value())),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Workflow '{}' not found",
-            id
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Workflow '{}' not found", id)))
+        }
     }
 }

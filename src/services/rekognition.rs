@@ -40,10 +40,12 @@ impl Default for RekognitionState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(state: &RekognitionState, target: &str, payload: &serde_json::Value) -> Response {
-    let action = target
-        .strip_prefix("RekognitionService.")
-        .unwrap_or(target);
+pub async fn handle_request(
+    state: &RekognitionState,
+    target: &str,
+    payload: &serde_json::Value,
+) -> Response {
+    let action = target.strip_prefix("RekognitionService.").unwrap_or(target);
 
     let result = match action {
         "DetectLabels" => detect_labels(),
@@ -55,7 +57,9 @@ pub async fn handle_request(state: &RekognitionState, target: &str, payload: &se
         "ListCollections" => list_collections(state),
         "IndexFaces" => index_faces(state, payload),
         "SearchFacesByImage" => search_faces_by_image(state, payload),
-        other => Err(LawsError::InvalidRequest(format!("unknown action: {other}"))),
+        other => Err(LawsError::InvalidRequest(format!(
+            "unknown action: {other}"
+        ))),
     };
 
     match result {
@@ -69,7 +73,12 @@ pub async fn handle_request(state: &RekognitionState, target: &str, payload: &se
 // ---------------------------------------------------------------------------
 
 fn json_response(body: Value) -> Response {
-    (StatusCode::OK, [("Content-Type", "application/x-amz-json-1.1")], serde_json::to_string(&body).unwrap_or_default()).into_response()
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/x-amz-json-1.1")],
+        serde_json::to_string(&body).unwrap_or_default(),
+    )
+        .into_response()
 }
 
 fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
@@ -131,9 +140,7 @@ fn create_collection(state: &RekognitionState, body: &Value) -> Result<Response,
         )));
     }
 
-    let arn = format!(
-        "arn:aws:rekognition:{REGION}:{ACCOUNT_ID}:collection/{collection_id}"
-    );
+    let arn = format!("arn:aws:rekognition:{REGION}:{ACCOUNT_ID}:collection/{collection_id}");
     let created_at = chrono::Utc::now().to_rfc3339();
 
     let collection = RekCollection {

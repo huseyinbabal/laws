@@ -79,15 +79,9 @@ impl Default for BraketState {
 pub fn router(state: Arc<BraketState>) -> axum::Router {
     axum::Router::new()
         .route("/quantum-task", post(create_quantum_task))
-        .route(
-            "/quantum-task/{task_id}",
-            get(get_quantum_task),
-        )
+        .route("/quantum-task/{task_id}", get(get_quantum_task))
         .route("/quantum-tasks", post(search_quantum_tasks))
-        .route(
-            "/quantum-task/{task_id}/cancel",
-            put(cancel_quantum_task),
-        )
+        .route("/quantum-task/{task_id}/cancel", put(cancel_quantum_task))
         .route("/device/{device_arn}", get(get_device))
         .route("/devices", post(search_devices))
         .with_state(state)
@@ -114,9 +108,7 @@ async fn create_quantum_task(
     Json(req): Json<CreateQuantumTaskRequest>,
 ) -> Response {
     let task_id = uuid::Uuid::new_v4().to_string();
-    let quantum_task_arn = format!(
-        "arn:aws:braket:{REGION}:{ACCOUNT_ID}:quantum-task/{task_id}"
-    );
+    let quantum_task_arn = format!("arn:aws:braket:{REGION}:{ACCOUNT_ID}:quantum-task/{task_id}");
     let now = Utc::now().to_rfc3339();
 
     let task = QuantumTask {
@@ -127,9 +119,7 @@ async fn create_quantum_task(
         output_s3_bucket: req
             .output_s3_bucket
             .unwrap_or_else(|| "braket-output".into()),
-        output_s3_directory: req
-            .output_s3_directory
-            .unwrap_or_else(|| "results".into()),
+        output_s3_directory: req.output_s3_directory.unwrap_or_else(|| "results".into()),
         created_at: now,
     };
 

@@ -55,14 +55,8 @@ impl Default for IdentityStoreState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &IdentityStoreState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("AWSIdentityStore.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &IdentityStoreState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("AWSIdentityStore.").unwrap_or(target);
 
     let result = match action {
         "CreateUser" => create_user(state, payload),
@@ -101,19 +95,13 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_user(
-    state: &IdentityStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_user(state: &IdentityStoreState, payload: &Value) -> Result<Response, LawsError> {
     let identity_store_id = payload["IdentityStoreId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing IdentityStoreId".into()))?
         .to_string();
 
-    let user_name = payload["UserName"]
-        .as_str()
-        .unwrap_or("user")
-        .to_string();
+    let user_name = payload["UserName"].as_str().unwrap_or("user").to_string();
 
     let display_name = payload["DisplayName"]
         .as_str()
@@ -145,13 +133,8 @@ fn create_user(
     })))
 }
 
-fn get_user_id(
-    state: &IdentityStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let identity_store_id = payload["IdentityStoreId"]
-        .as_str()
-        .unwrap_or("");
+fn get_user_id(state: &IdentityStoreState, payload: &Value) -> Result<Response, LawsError> {
+    let identity_store_id = payload["IdentityStoreId"].as_str().unwrap_or("");
 
     let filter_value = payload["AlternateIdentifier"]["UniqueAttribute"]["AttributeValue"]
         .as_str()
@@ -175,10 +158,7 @@ fn get_user_id(
     }
 }
 
-fn describe_user(
-    state: &IdentityStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_user(state: &IdentityStoreState, payload: &Value) -> Result<Response, LawsError> {
     let user_id = payload["UserId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing UserId".into()))?;
@@ -197,18 +177,15 @@ fn describe_user(
     })))
 }
 
-fn list_users(
-    state: &IdentityStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let identity_store_id = payload["IdentityStoreId"]
-        .as_str()
-        .unwrap_or("");
+fn list_users(state: &IdentityStoreState, payload: &Value) -> Result<Response, LawsError> {
+    let identity_store_id = payload["IdentityStoreId"].as_str().unwrap_or("");
 
     let users: Vec<Value> = state
         .users
         .iter()
-        .filter(|e| identity_store_id.is_empty() || e.value().identity_store_id == identity_store_id)
+        .filter(|e| {
+            identity_store_id.is_empty() || e.value().identity_store_id == identity_store_id
+        })
         .map(|e| {
             let u = e.value();
             json!({
@@ -225,10 +202,7 @@ fn list_users(
     })))
 }
 
-fn create_group(
-    state: &IdentityStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_group(state: &IdentityStoreState, payload: &Value) -> Result<Response, LawsError> {
     let identity_store_id = payload["IdentityStoreId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing IdentityStoreId".into()))?
@@ -239,10 +213,7 @@ fn create_group(
         .ok_or_else(|| LawsError::InvalidRequest("Missing DisplayName".into()))?
         .to_string();
 
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
 
     let group_id = uuid::Uuid::new_v4().to_string();
 
@@ -261,18 +232,15 @@ fn create_group(
     })))
 }
 
-fn list_groups(
-    state: &IdentityStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let identity_store_id = payload["IdentityStoreId"]
-        .as_str()
-        .unwrap_or("");
+fn list_groups(state: &IdentityStoreState, payload: &Value) -> Result<Response, LawsError> {
+    let identity_store_id = payload["IdentityStoreId"].as_str().unwrap_or("");
 
     let groups: Vec<Value> = state
         .groups
         .iter()
-        .filter(|e| identity_store_id.is_empty() || e.value().identity_store_id == identity_store_id)
+        .filter(|e| {
+            identity_store_id.is_empty() || e.value().identity_store_id == identity_store_id
+        })
         .map(|e| {
             let g = e.value();
             json!({
@@ -289,10 +257,7 @@ fn list_groups(
     })))
 }
 
-fn describe_group(
-    state: &IdentityStoreState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_group(state: &IdentityStoreState, payload: &Value) -> Result<Response, LawsError> {
     let group_id = payload["GroupId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing GroupId".into()))?;

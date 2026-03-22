@@ -269,10 +269,7 @@ async fn delete_table(
     Ok(json_response(json!({})))
 }
 
-async fn get_table(
-    state: &GlueState,
-    payload: &serde_json::Value,
-) -> Result<Response, LawsError> {
+async fn get_table(state: &GlueState, payload: &serde_json::Value) -> Result<Response, LawsError> {
     let database_name = payload["DatabaseName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("DatabaseName is required".to_string()))?;
@@ -296,10 +293,7 @@ async fn get_table(
     })))
 }
 
-async fn get_tables(
-    state: &GlueState,
-    payload: &serde_json::Value,
-) -> Result<Response, LawsError> {
+async fn get_tables(state: &GlueState, payload: &serde_json::Value) -> Result<Response, LawsError> {
     let database_name = payload["DatabaseName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("DatabaseName is required".to_string()))?;
@@ -340,19 +334,10 @@ async fn create_crawler(
         )));
     }
 
-    let role = payload["Role"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
-    let database_name = payload["DatabaseName"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let role = payload["Role"].as_str().unwrap_or("").to_string();
+    let database_name = payload["DatabaseName"].as_str().unwrap_or("").to_string();
     let targets = payload["Targets"].clone();
-    let arn = format!(
-        "arn:aws:glue:{}:{}:crawler/{}",
-        REGION, ACCOUNT_ID, name
-    );
+    let arn = format!("arn:aws:glue:{}:{}:crawler/{}", REGION, ACCOUNT_ID, name);
 
     let crawler = GlueCrawler {
         name: name.clone(),

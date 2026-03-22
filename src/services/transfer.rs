@@ -57,14 +57,8 @@ impl Default for TransferState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &TransferState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("TransferService.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &TransferState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("TransferService.").unwrap_or(target);
 
     let result = match action {
         "CreateServer" => create_server(state, payload),
@@ -103,11 +97,11 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_server(
-    state: &TransferState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
-    let server_id = format!("s-{}", uuid::Uuid::new_v4().to_string().replace("-", "")[..17].to_string());
+fn create_server(state: &TransferState, payload: &Value) -> Result<Response, LawsError> {
+    let server_id = format!(
+        "s-{}",
+        uuid::Uuid::new_v4().to_string().replace("-", "")[..17].to_string()
+    );
 
     let endpoint_type = payload["EndpointType"]
         .as_str()
@@ -128,9 +122,7 @@ fn create_server(
         })
         .unwrap_or_else(|| vec!["SFTP".to_string()]);
 
-    let arn = format!(
-        "arn:aws:transfer:{REGION}:{ACCOUNT_ID}:server/{server_id}"
-    );
+    let arn = format!("arn:aws:transfer:{REGION}:{ACCOUNT_ID}:server/{server_id}");
 
     let server = TransferServer {
         server_id: server_id.clone(),
@@ -148,22 +140,15 @@ fn create_server(
     })))
 }
 
-fn delete_server(
-    state: &TransferState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_server(state: &TransferState, payload: &Value) -> Result<Response, LawsError> {
     let server_id = payload["ServerId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ServerId is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ServerId is required".to_string()))?;
 
     state
         .servers
         .remove(server_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Server '{}' not found", server_id))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Server '{}' not found", server_id)))?;
 
     // Remove associated users
     state.users.retain(|_, u| u.server_id != server_id);
@@ -171,22 +156,15 @@ fn delete_server(
     Ok(json_response(json!({})))
 }
 
-fn describe_server(
-    state: &TransferState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_server(state: &TransferState, payload: &Value) -> Result<Response, LawsError> {
     let server_id = payload["ServerId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ServerId is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ServerId is required".to_string()))?;
 
     let server = state
         .servers
         .get(server_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Server '{}' not found", server_id))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("Server '{}' not found", server_id)))?;
 
     Ok(json_response(json!({
         "Server": {
@@ -220,10 +198,7 @@ fn list_servers(state: &TransferState) -> Result<Response, LawsError> {
     Ok(json_response(json!({ "Servers": servers })))
 }
 
-fn create_user(
-    state: &TransferState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_user(state: &TransferState, payload: &Value) -> Result<Response, LawsError> {
     let server_id = payload["ServerId"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("ServerId is required".to_string()))?
@@ -234,15 +209,9 @@ fn create_user(
         .ok_or_else(|| LawsError::InvalidRequest("UserName is required".to_string()))?
         .to_string();
 
-    let role = payload["Role"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let role = payload["Role"].as_str().unwrap_or("").to_string();
 
-    let home_directory = payload["HomeDirectory"]
-        .as_str()
-        .unwrap_or("/")
-        .to_string();
+    let home_directory = payload["HomeDirectory"].as_str().unwrap_or("/").to_string();
 
     if !state.servers.contains_key(&server_id) {
         return Err(LawsError::NotFound(format!(
@@ -259,9 +228,7 @@ fn create_user(
         )));
     }
 
-    let arn = format!(
-        "arn:aws:transfer:{REGION}:{ACCOUNT_ID}:user/{server_id}/{user_name}"
-    );
+    let arn = format!("arn:aws:transfer:{REGION}:{ACCOUNT_ID}:user/{server_id}/{user_name}");
 
     let user = TransferUser {
         server_id: server_id.clone(),
@@ -279,42 +246,28 @@ fn create_user(
     })))
 }
 
-fn delete_user(
-    state: &TransferState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_user(state: &TransferState, payload: &Value) -> Result<Response, LawsError> {
     let server_id = payload["ServerId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ServerId is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ServerId is required".to_string()))?;
 
     let user_name = payload["UserName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("UserName is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("UserName is required".to_string()))?;
 
     let user_key = format!("{}:{}", server_id, user_name);
     state
         .users
         .remove(&user_key)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("User '{}' not found", user_name))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("User '{}' not found", user_name)))?;
 
     Ok(json_response(json!({})))
 }
 
-fn list_users(
-    state: &TransferState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn list_users(state: &TransferState, payload: &Value) -> Result<Response, LawsError> {
     let server_id = payload["ServerId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("ServerId is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("ServerId is required".to_string()))?;
 
     if !state.servers.contains_key(server_id) {
         return Err(LawsError::NotFound(format!(

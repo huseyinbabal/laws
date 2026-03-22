@@ -76,15 +76,25 @@ pub fn router(state: Arc<BedrockState>) -> axum::Router {
 // Handlers
 // ---------------------------------------------------------------------------
 
-async fn list_foundation_models(
-    State(_state): State<Arc<BedrockState>>,
-) -> Response {
+async fn list_foundation_models(State(_state): State<Arc<BedrockState>>) -> Response {
     let models = vec![
         foundation_model("anthropic.claude-v2", "Anthropic", "Claude v2"),
         foundation_model("anthropic.claude-v2:1", "Anthropic", "Claude v2.1"),
-        foundation_model("anthropic.claude-3-sonnet-20240229-v1:0", "Anthropic", "Claude 3 Sonnet"),
-        foundation_model("anthropic.claude-3-haiku-20240307-v1:0", "Anthropic", "Claude 3 Haiku"),
-        foundation_model("amazon.titan-text-express-v1", "Amazon", "Titan Text Express"),
+        foundation_model(
+            "anthropic.claude-3-sonnet-20240229-v1:0",
+            "Anthropic",
+            "Claude 3 Sonnet",
+        ),
+        foundation_model(
+            "anthropic.claude-3-haiku-20240307-v1:0",
+            "Anthropic",
+            "Claude 3 Haiku",
+        ),
+        foundation_model(
+            "amazon.titan-text-express-v1",
+            "Amazon",
+            "Titan Text Express",
+        ),
         foundation_model("amazon.titan-text-lite-v1", "Amazon", "Titan Text Lite"),
         foundation_model("amazon.titan-embed-text-v1", "Amazon", "Titan Embeddings"),
         foundation_model("meta.llama2-13b-chat-v1", "Meta", "Llama 2 Chat 13B"),
@@ -115,9 +125,8 @@ async fn create_model_customization_job(
             .unwrap_or(&job_name)
             .to_string();
 
-        let job_arn = format!(
-            "arn:aws:bedrock:{REGION}:{ACCOUNT_ID}:model-customization-job/{job_name}"
-        );
+        let job_arn =
+            format!("arn:aws:bedrock:{REGION}:{ACCOUNT_ID}:model-customization-job/{job_name}");
         let now = chrono::Utc::now().to_rfc3339();
 
         let job = ModelCustomizationJob {
@@ -129,19 +138,18 @@ async fn create_model_customization_job(
             created_at: now.clone(),
         };
 
-        state
-            .model_customization_jobs
-            .insert(job_name.clone(), job);
+        state.model_customization_jobs.insert(job_name.clone(), job);
 
         // Also create the custom model
-        let model_arn = format!(
-            "arn:aws:bedrock:{REGION}:{ACCOUNT_ID}:custom-model/{custom_model_name}"
-        );
+        let model_arn =
+            format!("arn:aws:bedrock:{REGION}:{ACCOUNT_ID}:custom-model/{custom_model_name}");
 
         let model = CustomModel {
             model_arn: model_arn.clone(),
             model_name: custom_model_name.clone(),
-            base_model_arn: format!("arn:aws:bedrock:{REGION}::foundation-model/anthropic.claude-v2"),
+            base_model_arn: format!(
+                "arn:aws:bedrock:{REGION}::foundation-model/anthropic.claude-v2"
+            ),
             created_at: now,
         };
 
@@ -158,9 +166,7 @@ async fn create_model_customization_job(
     }
 }
 
-async fn list_model_customization_jobs(
-    State(state): State<Arc<BedrockState>>,
-) -> Response {
+async fn list_model_customization_jobs(State(state): State<Arc<BedrockState>>) -> Response {
     let summaries: Vec<Value> = state
         .model_customization_jobs
         .iter()
@@ -182,9 +188,7 @@ async fn list_model_customization_jobs(
     }))
 }
 
-async fn list_custom_models(
-    State(state): State<Arc<BedrockState>>,
-) -> Response {
+async fn list_custom_models(State(state): State<Arc<BedrockState>>) -> Response {
     let summaries: Vec<Value> = state
         .custom_models
         .iter()

@@ -9,7 +9,6 @@ use axum::routing::post;
 use axum::Router;
 use chrono::Utc;
 use dashmap::DashMap;
-use rand::Rng;
 
 use crate::error::LawsError;
 use crate::protocol::query::{parse_query_request, xml_error_response, xml_response};
@@ -49,9 +48,7 @@ impl Default for Ec2State {
 // ---------------------------------------------------------------------------
 
 pub fn router(state: Arc<Ec2State>) -> Router {
-    Router::new()
-        .route("/", post(handle_ec2))
-        .with_state(state)
+    Router::new().route("/", post(handle_ec2)).with_state(state)
 }
 
 // ---------------------------------------------------------------------------
@@ -59,8 +56,9 @@ pub fn router(state: Arc<Ec2State>) -> Router {
 // ---------------------------------------------------------------------------
 
 fn generate_instance_id() -> String {
-    let mut rng = rand::thread_rng();
-    let val: u64 = rng.gen();
+    use rand::RngExt;
+    let mut rng = rand::rng();
+    let val: u64 = rng.random();
     format!("i-{:016x}", val)
 }
 
@@ -74,9 +72,7 @@ fn instance_state_xml(name: &str) -> String {
         "shutting-down" => 32,
         _ => 0,
     };
-    format!(
-        "<instanceState><code>{code}</code><name>{name}</name></instanceState>"
-    )
+    format!("<instanceState><code>{code}</code><name>{name}</name></instanceState>")
 }
 
 fn collect_indexed_params(params: &HashMap<String, String>, prefix: &str) -> Vec<String> {
@@ -99,12 +95,7 @@ fn collect_indexed_params(params: &HashMap<String, String>, prefix: &str) -> Vec
 // Dispatch handler
 // ---------------------------------------------------------------------------
 
-pub fn handle_request(
-    state: &Ec2State,
-    headers: &HeaderMap,
-    body: &Bytes,
-    uri: &Uri,
-) -> Response {
+pub fn handle_request(state: &Ec2State, headers: &HeaderMap, body: &Bytes, uri: &Uri) -> Response {
     let req = match parse_query_request(uri, headers, body) {
         Ok(r) => r,
         Err(e) => return xml_error_response(&e),
@@ -235,9 +226,7 @@ fn terminate_instances(
 ) -> Result<Response, LawsError> {
     let instance_ids = collect_indexed_params(params, "InstanceId");
     if instance_ids.is_empty() {
-        return Err(LawsError::InvalidRequest(
-            "Missing InstanceId.1".into(),
-        ));
+        return Err(LawsError::InvalidRequest("Missing InstanceId.1".into()));
     }
 
     let mut items_xml = String::new();
@@ -274,9 +263,7 @@ fn change_instance_state(
 ) -> Result<Response, LawsError> {
     let instance_ids = collect_indexed_params(params, "InstanceId");
     if instance_ids.is_empty() {
-        return Err(LawsError::InvalidRequest(
-            "Missing InstanceId.1".into(),
-        ));
+        return Err(LawsError::InvalidRequest("Missing InstanceId.1".into()));
     }
 
     let mut items_xml = String::new();
@@ -347,9 +334,7 @@ fn reboot_instances(
 ) -> Result<Response, LawsError> {
     let instance_ids = collect_indexed_params(params, "InstanceId");
     if instance_ids.is_empty() {
-        return Err(LawsError::InvalidRequest(
-            "Missing InstanceId.1".into(),
-        ));
+        return Err(LawsError::InvalidRequest("Missing InstanceId.1".into()));
     }
     // Verify all instances exist
     for id in &instance_ids {

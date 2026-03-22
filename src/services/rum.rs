@@ -57,7 +57,10 @@ impl Default for RumState {
 
 pub fn router(state: Arc<RumState>) -> axum::Router {
     axum::Router::new()
-        .route("/appmonitors", post(create_app_monitor).get(list_app_monitors))
+        .route(
+            "/appmonitors",
+            post(create_app_monitor).get(list_app_monitors),
+        )
         .route(
             "/appmonitors/{name}",
             get(get_app_monitor)
@@ -135,10 +138,7 @@ async fn list_app_monitors(State(state): State<Arc<RumState>>) -> Response {
     rest_json::ok(json!({ "AppMonitorSummaries": monitors }))
 }
 
-async fn get_app_monitor(
-    State(state): State<Arc<RumState>>,
-    Path(name): Path<String>,
-) -> Response {
+async fn get_app_monitor(State(state): State<Arc<RumState>>, Path(name): Path<String>) -> Response {
     match state.app_monitors.get(&name) {
         Some(m) => rest_json::ok(json!({
             "AppMonitor": {

@@ -64,11 +64,7 @@ impl Default for ConfigServiceState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &ConfigServiceState,
-    target: &str,
-    payload: &Value,
-) -> Response {
+pub async fn handle_request(state: &ConfigServiceState, target: &str, payload: &Value) -> Response {
     let action = target
         .strip_prefix("StarlingDoveService.")
         .unwrap_or(target);
@@ -116,10 +112,7 @@ fn config_rule_arn(name: &str) -> String {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn put_config_rule(
-    state: &ConfigServiceState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn put_config_rule(state: &ConfigServiceState, payload: &Value) -> Result<Response, LawsError> {
     let rule = payload
         .get("ConfigRule")
         .ok_or_else(|| LawsError::InvalidRequest("Missing ConfigRule".into()))?;
@@ -130,10 +123,7 @@ fn put_config_rule(
         .to_string();
 
     let source = rule.get("Source").cloned().unwrap_or(json!({}));
-    let input_parameters = rule["InputParameters"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let input_parameters = rule["InputParameters"].as_str().unwrap_or("").to_string();
 
     let config_rule_id = uuid::Uuid::new_v4().to_string();
     let arn = config_rule_arn(&name);
@@ -152,10 +142,7 @@ fn put_config_rule(
     Ok(json_response(json!({})))
 }
 
-fn delete_config_rule(
-    state: &ConfigServiceState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_config_rule(state: &ConfigServiceState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["ConfigRuleName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing ConfigRuleName".into()))?;
@@ -196,15 +183,9 @@ fn put_configuration_recorder(
         .get("ConfigurationRecorder")
         .ok_or_else(|| LawsError::InvalidRequest("Missing ConfigurationRecorder".into()))?;
 
-    let name = recorder["name"]
-        .as_str()
-        .unwrap_or("default")
-        .to_string();
+    let name = recorder["name"].as_str().unwrap_or("default").to_string();
 
-    let role_arn = recorder["roleARN"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let role_arn = recorder["roleARN"].as_str().unwrap_or("").to_string();
 
     let cr = ConfigurationRecorder {
         name: name.clone(),
@@ -217,9 +198,7 @@ fn put_configuration_recorder(
     Ok(json_response(json!({})))
 }
 
-fn describe_configuration_recorders(
-    state: &ConfigServiceState,
-) -> Result<Response, LawsError> {
+fn describe_configuration_recorders(state: &ConfigServiceState) -> Result<Response, LawsError> {
     let recorders: Vec<Value> = state
         .configuration_recorders
         .iter()
@@ -244,16 +223,11 @@ fn start_configuration_recorder(
 ) -> Result<Response, LawsError> {
     let name = payload["ConfigurationRecorderName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("Missing ConfigurationRecorderName".into())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("Missing ConfigurationRecorderName".into()))?;
 
-    let mut recorder = state
-        .configuration_recorders
-        .get_mut(name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Configuration recorder '{}' not found", name))
-        })?;
+    let mut recorder = state.configuration_recorders.get_mut(name).ok_or_else(|| {
+        LawsError::NotFound(format!("Configuration recorder '{}' not found", name))
+    })?;
 
     recorder.recording = true;
 
@@ -266,16 +240,11 @@ fn stop_configuration_recorder(
 ) -> Result<Response, LawsError> {
     let name = payload["ConfigurationRecorderName"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("Missing ConfigurationRecorderName".into())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("Missing ConfigurationRecorderName".into()))?;
 
-    let mut recorder = state
-        .configuration_recorders
-        .get_mut(name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("Configuration recorder '{}' not found", name))
-        })?;
+    let mut recorder = state.configuration_recorders.get_mut(name).ok_or_else(|| {
+        LawsError::NotFound(format!("Configuration recorder '{}' not found", name))
+    })?;
 
     recorder.recording = false;
 
@@ -290,10 +259,7 @@ fn put_delivery_channel(
         .get("DeliveryChannel")
         .ok_or_else(|| LawsError::InvalidRequest("Missing DeliveryChannel".into()))?;
 
-    let name = channel["name"]
-        .as_str()
-        .unwrap_or("default")
-        .to_string();
+    let name = channel["name"].as_str().unwrap_or("default").to_string();
 
     let s3_bucket_name = channel["s3BucketName"]
         .as_str()
@@ -313,9 +279,7 @@ fn put_delivery_channel(
     Ok(json_response(json!({})))
 }
 
-fn describe_delivery_channels(
-    state: &ConfigServiceState,
-) -> Result<Response, LawsError> {
+fn describe_delivery_channels(state: &ConfigServiceState) -> Result<Response, LawsError> {
     let channels: Vec<Value> = state
         .delivery_channels
         .iter()

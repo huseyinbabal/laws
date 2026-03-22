@@ -68,7 +68,10 @@ impl Default for AuditManagerState {
 
 pub fn router(state: Arc<AuditManagerState>) -> axum::Router {
     axum::Router::new()
-        .route("/assessments", post(create_assessment).get(list_assessments))
+        .route(
+            "/assessments",
+            post(create_assessment).get(list_assessments),
+        )
         .route(
             "/assessments/{assessment_id}",
             get(get_assessment).delete(delete_assessment),
@@ -122,9 +125,7 @@ async fn create_assessment(
     Json(req): Json<CreateAssessmentRequest>,
 ) -> Response {
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:auditmanager:{REGION}:{ACCOUNT_ID}:assessment/{id}"
-    );
+    let arn = format!("arn:aws:auditmanager:{REGION}:{ACCOUNT_ID}:assessment/{id}");
     let now = Utc::now().to_rfc3339();
 
     let assessment = Assessment {
@@ -191,9 +192,7 @@ async fn create_control(
     Json(req): Json<CreateControlRequest>,
 ) -> Response {
     let id = uuid::Uuid::new_v4().to_string();
-    let arn = format!(
-        "arn:aws:auditmanager:{REGION}:{ACCOUNT_ID}:control/{id}"
-    );
+    let arn = format!("arn:aws:auditmanager:{REGION}:{ACCOUNT_ID}:control/{id}");
     let now = Utc::now().to_rfc3339();
 
     let control = Control {

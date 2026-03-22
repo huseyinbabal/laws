@@ -130,14 +130,8 @@ async fn create_pipeline(
         )));
     }
 
-    let arn = format!(
-        "arn:aws:codepipeline:{}:{}:{}",
-        REGION, ACCOUNT_ID, name
-    );
-    let role_arn = pipeline_input["roleArn"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let arn = format!("arn:aws:codepipeline:{}:{}:{}", REGION, ACCOUNT_ID, name);
+    let role_arn = pipeline_input["roleArn"].as_str().unwrap_or("").to_string();
     let stages = pipeline_input["stages"].clone();
     let now = chrono::Utc::now().to_rfc3339();
 
@@ -173,9 +167,7 @@ async fn delete_pipeline(
         .ok_or_else(|| LawsError::NotFound(format!("Pipeline not found: {}", name)))?;
 
     // Remove associated executions
-    state
-        .executions
-        .retain(|_, e| e.pipeline_name != name);
+    state.executions.retain(|_, e| e.pipeline_name != name);
 
     Ok(json_response(json!({})))
 }
@@ -263,10 +255,7 @@ async fn start_pipeline_execution(
         .to_string();
 
     if !state.pipelines.contains_key(&name) {
-        return Err(LawsError::NotFound(format!(
-            "Pipeline not found: {}",
-            name
-        )));
+        return Err(LawsError::NotFound(format!("Pipeline not found: {}", name)));
     }
 
     let execution_id = uuid::Uuid::new_v4().to_string();
@@ -295,16 +284,11 @@ async fn get_pipeline_execution(
         .ok_or_else(|| LawsError::InvalidRequest("pipelineName is required".to_string()))?;
     let execution_id = payload["pipelineExecutionId"]
         .as_str()
-        .ok_or_else(|| {
-            LawsError::InvalidRequest("pipelineExecutionId is required".to_string())
-        })?;
+        .ok_or_else(|| LawsError::InvalidRequest("pipelineExecutionId is required".to_string()))?;
 
-    let exec = state
-        .executions
-        .get(execution_id)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("PipelineExecution not found: {}", execution_id))
-        })?;
+    let exec = state.executions.get(execution_id).ok_or_else(|| {
+        LawsError::NotFound(format!("PipelineExecution not found: {}", execution_id))
+    })?;
 
     if exec.pipeline_name != pipeline_name {
         return Err(LawsError::NotFound(format!(

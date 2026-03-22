@@ -73,14 +73,8 @@ pub fn router(state: Arc<OutpostsState>) -> axum::Router {
             "/outposts/{id}",
             axum::routing::get(get_outpost).delete(delete_outpost),
         )
-        .route(
-            "/sites",
-            axum::routing::post(create_site).get(list_sites),
-        )
-        .route(
-            "/sites/{id}",
-            axum::routing::get(get_site),
-        )
+        .route("/sites", axum::routing::post(create_site).get(list_sites))
+        .route("/sites/{id}", axum::routing::get(get_site))
         .with_state(state)
 }
 
@@ -129,15 +123,9 @@ async fn create_outpost(
             .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
             .to_string();
 
-        let description = payload["Description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["Description"].as_str().unwrap_or("").to_string();
 
-        let site_id = payload["SiteId"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let site_id = payload["SiteId"].as_str().unwrap_or("").to_string();
 
         let availability_zone = payload["AvailabilityZone"]
             .as_str()
@@ -145,9 +133,7 @@ async fn create_outpost(
             .to_string();
 
         let outpost_id = random_id("op");
-        let outpost_arn = format!(
-            "arn:aws:outposts:{REGION}:{ACCOUNT_ID}:outpost/{outpost_id}"
-        );
+        let outpost_arn = format!("arn:aws:outposts:{REGION}:{ACCOUNT_ID}:outpost/{outpost_id}");
 
         let outpost = Outpost {
             outpost_id: outpost_id.clone(),
@@ -172,9 +158,7 @@ async fn create_outpost(
     }
 }
 
-async fn list_outposts(
-    State(state): State<Arc<OutpostsState>>,
-) -> Response {
+async fn list_outposts(State(state): State<Arc<OutpostsState>>) -> Response {
     let outposts: Vec<Value> = state
         .outposts
         .iter()
@@ -184,16 +168,12 @@ async fn list_outposts(
     rest_json::ok(json!({ "Outposts": outposts }))
 }
 
-async fn get_outpost(
-    State(state): State<Arc<OutpostsState>>,
-    Path(id): Path<String>,
-) -> Response {
+async fn get_outpost(State(state): State<Arc<OutpostsState>>, Path(id): Path<String>) -> Response {
     match state.outposts.get(&id) {
         Some(o) => rest_json::ok(json!({ "Outpost": outpost_to_json(o.value()) })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Outpost '{}' not found",
-            id
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Outpost '{}' not found", id)))
+        }
     }
 }
 
@@ -203,10 +183,9 @@ async fn delete_outpost(
 ) -> Response {
     match state.outposts.remove(&id) {
         Some(_) => rest_json::ok(json!({})),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Outpost '{}' not found",
-            id
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Outpost '{}' not found", id)))
+        }
     }
 }
 
@@ -220,15 +199,10 @@ async fn create_site(
             .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
             .to_string();
 
-        let description = payload["Description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["Description"].as_str().unwrap_or("").to_string();
 
         let site_id = random_id("os");
-        let site_arn = format!(
-            "arn:aws:outposts:{REGION}:{ACCOUNT_ID}:site/{site_id}"
-        );
+        let site_arn = format!("arn:aws:outposts:{REGION}:{ACCOUNT_ID}:site/{site_id}");
 
         let site = OutpostSite {
             site_id: site_id.clone(),
@@ -250,9 +224,7 @@ async fn create_site(
     }
 }
 
-async fn list_sites(
-    State(state): State<Arc<OutpostsState>>,
-) -> Response {
+async fn list_sites(State(state): State<Arc<OutpostsState>>) -> Response {
     let sites: Vec<Value> = state
         .sites
         .iter()
@@ -262,15 +234,9 @@ async fn list_sites(
     rest_json::ok(json!({ "Sites": sites }))
 }
 
-async fn get_site(
-    State(state): State<Arc<OutpostsState>>,
-    Path(id): Path<String>,
-) -> Response {
+async fn get_site(State(state): State<Arc<OutpostsState>>, Path(id): Path<String>) -> Response {
     match state.sites.get(&id) {
         Some(s) => rest_json::ok(json!({ "Site": site_to_json(s.value()) })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Site '{}' not found",
-            id
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("Site '{}' not found", id))),
     }
 }

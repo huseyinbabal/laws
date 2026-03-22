@@ -104,29 +104,18 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_portfolio(
-    state: &ServiceCatalogState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_portfolio(state: &ServiceCatalogState, payload: &Value) -> Result<Response, LawsError> {
     let display_name = payload["DisplayName"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing DisplayName".into()))?
         .to_string();
 
-    let description = payload["Description"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let description = payload["Description"].as_str().unwrap_or("").to_string();
 
-    let provider_name = payload["ProviderName"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let provider_name = payload["ProviderName"].as_str().unwrap_or("").to_string();
 
     let id = format!("port-{}", &uuid::Uuid::new_v4().to_string()[..12]);
-    let arn = format!(
-        "arn:aws:catalog:{REGION}:{ACCOUNT_ID}:portfolio/{id}"
-    );
+    let arn = format!("arn:aws:catalog:{REGION}:{ACCOUNT_ID}:portfolio/{id}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let portfolio = Portfolio {
@@ -152,10 +141,7 @@ fn create_portfolio(
     })))
 }
 
-fn delete_portfolio(
-    state: &ServiceCatalogState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_portfolio(state: &ServiceCatalogState, payload: &Value) -> Result<Response, LawsError> {
     let id = payload["Id"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing Id".into()))?;
@@ -168,9 +154,7 @@ fn delete_portfolio(
     Ok(json_response(json!({})))
 }
 
-fn list_portfolios(
-    state: &ServiceCatalogState,
-) -> Result<Response, LawsError> {
+fn list_portfolios(state: &ServiceCatalogState) -> Result<Response, LawsError> {
     let portfolios: Vec<Value> = state
         .portfolios
         .iter()
@@ -192,19 +176,13 @@ fn list_portfolios(
     })))
 }
 
-fn create_product(
-    state: &ServiceCatalogState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_product(state: &ServiceCatalogState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload["Name"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing Name".into()))?
         .to_string();
 
-    let owner = payload["Owner"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let owner = payload["Owner"].as_str().unwrap_or("").to_string();
 
     let product_type = payload["ProductType"]
         .as_str()
@@ -212,9 +190,7 @@ fn create_product(
         .to_string();
 
     let id = format!("prod-{}", &uuid::Uuid::new_v4().to_string()[..12]);
-    let arn = format!(
-        "arn:aws:catalog:{REGION}:{ACCOUNT_ID}:product/{id}"
-    );
+    let arn = format!("arn:aws:catalog:{REGION}:{ACCOUNT_ID}:product/{id}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let product = Product {
@@ -242,10 +218,7 @@ fn create_product(
     })))
 }
 
-fn delete_product(
-    state: &ServiceCatalogState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_product(state: &ServiceCatalogState, payload: &Value) -> Result<Response, LawsError> {
     let id = payload["Id"]
         .as_str()
         .ok_or_else(|| LawsError::InvalidRequest("Missing Id".into()))?;
@@ -258,9 +231,7 @@ fn delete_product(
     Ok(json_response(json!({})))
 }
 
-fn search_products(
-    state: &ServiceCatalogState,
-) -> Result<Response, LawsError> {
+fn search_products(state: &ServiceCatalogState) -> Result<Response, LawsError> {
     let products: Vec<Value> = state
         .products
         .iter()

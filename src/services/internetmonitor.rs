@@ -88,12 +88,14 @@ async fn create_monitor(
     let resources: Vec<String> = payload
         .get("Resources")
         .and_then(|v| v.as_array())
-        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_owned())).collect())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_owned()))
+                .collect()
+        })
         .unwrap_or_default();
 
-    let arn = format!(
-        "arn:aws:internetmonitor:{REGION}:{ACCOUNT_ID}:monitor/{name}"
-    );
+    let arn = format!("arn:aws:internetmonitor:{REGION}:{ACCOUNT_ID}:monitor/{name}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let monitor = Monitor {
@@ -128,15 +130,13 @@ async fn get_monitor(
             "CreatedAt": m.created_at,
             "ModifiedAt": m.modified_at
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Monitor not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Monitor not found: {name}")))
+        }
     }
 }
 
-async fn list_monitors(
-    State(state): State<Arc<InternetMonitorState>>,
-) -> Response {
+async fn list_monitors(State(state): State<Arc<InternetMonitorState>>) -> Response {
     let monitors: Vec<Value> = state
         .monitors
         .iter()
@@ -161,9 +161,9 @@ async fn delete_monitor(
 ) -> Response {
     match state.monitors.remove(&name) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Monitor not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Monitor not found: {name}")))
+        }
     }
 }
 
@@ -177,11 +177,17 @@ async fn update_monitor(
             if let Some(status) = payload.get("Status").and_then(|v| v.as_str()) {
                 m.status = status.to_owned();
             }
-            if let Some(max_city) = payload.get("MaxCityNetworksToMonitor").and_then(|v| v.as_u64()) {
+            if let Some(max_city) = payload
+                .get("MaxCityNetworksToMonitor")
+                .and_then(|v| v.as_u64())
+            {
                 m.max_city_networks_to_monitor = max_city as u32;
             }
             if let Some(resources) = payload.get("Resources").and_then(|v| v.as_array()) {
-                m.resources = resources.iter().filter_map(|v| v.as_str().map(|s| s.to_owned())).collect();
+                m.resources = resources
+                    .iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_owned()))
+                    .collect();
             }
             m.modified_at = chrono::Utc::now().to_rfc3339();
 
@@ -190,8 +196,8 @@ async fn update_monitor(
                 "Status": m.status
             }))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Monitor not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Monitor not found: {name}")))
+        }
     }
 }

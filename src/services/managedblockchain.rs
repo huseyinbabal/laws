@@ -69,10 +69,7 @@ pub fn router(state: Arc<ManagedBlockchainState>) -> axum::Router {
             "/networks",
             axum::routing::post(create_network).get(list_networks),
         )
-        .route(
-            "/networks/{network_id}",
-            axum::routing::get(get_network),
-        )
+        .route("/networks/{network_id}", axum::routing::get(get_network))
         .route(
             "/networks/{network_id}/nodes",
             axum::routing::post(create_node).get(list_nodes),
@@ -110,7 +107,10 @@ async fn create_network(
         .unwrap_or("1.4")
         .to_owned();
 
-    let id = format!("n-{}", uuid::Uuid::new_v4().to_string().replace('-', "")[..24].to_string());
+    let id = format!(
+        "n-{}",
+        uuid::Uuid::new_v4().to_string().replace('-', "")[..24].to_string()
+    );
     let now = chrono::Utc::now().to_rfc3339();
 
     let network = Network {
@@ -129,9 +129,7 @@ async fn create_network(
     }))
 }
 
-async fn list_networks(
-    State(state): State<Arc<ManagedBlockchainState>>,
-) -> Response {
+async fn list_networks(State(state): State<Arc<ManagedBlockchainState>>) -> Response {
     let networks: Vec<Value> = state
         .networks
         .iter()
@@ -205,7 +203,10 @@ async fn create_node(
         .unwrap_or("us-east-1a")
         .to_owned();
 
-    let id = format!("nd-{}", uuid::Uuid::new_v4().to_string().replace('-', "")[..24].to_string());
+    let id = format!(
+        "nd-{}",
+        uuid::Uuid::new_v4().to_string().replace('-', "")[..24].to_string()
+    );
     let now = chrono::Utc::now().to_rfc3339();
 
     let node = Node {
@@ -267,9 +268,7 @@ async fn get_node(
                 "CreationDate": n.created_at
             }
         })),
-        _ => rest_json::error_response(&LawsError::NotFound(format!(
-            "Node not found: {node_id}"
-        ))),
+        _ => rest_json::error_response(&LawsError::NotFound(format!("Node not found: {node_id}"))),
     }
 }
 
@@ -283,8 +282,6 @@ async fn delete_node(
             state.nodes.remove(&node_id);
             rest_json::no_content()
         }
-        _ => rest_json::error_response(&LawsError::NotFound(format!(
-            "Node not found: {node_id}"
-        ))),
+        _ => rest_json::error_response(&LawsError::NotFound(format!("Node not found: {node_id}"))),
     }
 }

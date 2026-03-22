@@ -51,7 +51,10 @@ impl Default for KinesisState {
 impl KinesisState {
     fn next_sequence_number(&self) -> String {
         let n = self.sequence_counter.fetch_add(1, Ordering::SeqCst);
-        format!("4960000000000000000000000000000000000000000000000000{:04}", n)
+        format!(
+            "4960000000000000000000000000000000000000000000000000{:04}",
+            n
+        )
     }
 }
 
@@ -130,10 +133,7 @@ fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
 
 fn create_stream(state: &KinesisState, body: &Value) -> Result<Value, LawsError> {
     let stream_name = require_str(body, "StreamName")?.to_owned();
-    let shard_count = body
-        .get("ShardCount")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(1);
+    let shard_count = body.get("ShardCount").and_then(|v| v.as_u64()).unwrap_or(1);
 
     if state.streams.contains_key(&stream_name) {
         return Err(LawsError::AlreadyExists(format!(
@@ -141,9 +141,7 @@ fn create_stream(state: &KinesisState, body: &Value) -> Result<Value, LawsError>
         )));
     }
 
-    let arn = format!(
-        "arn:aws:kinesis:us-east-1:000000000000:stream/{stream_name}"
-    );
+    let arn = format!("arn:aws:kinesis:us-east-1:000000000000:stream/{stream_name}");
 
     let stream = KinesisStream {
         stream_name: stream_name.clone(),
@@ -315,16 +313,18 @@ fn get_records(state: &KinesisState, body: &Value) -> Result<Value, LawsError> {
     // "AAAAAAAAAAEaaaa-iterator-{stream_name}-{uuid}"
     let stream_name = iterator
         .strip_prefix("AAAAAAAAAAEaaaa-iterator-")
-        .and_then(|rest| rest.rsplit_once('-').map(|(_name, _uuid_last)| {
-            // The UUID contains hyphens, so we need to find the stream name portion.
-            // Our format: {stream_name}-{uuid} where uuid is 36 chars (8-4-4-4-12).
-            // Take everything before the last 36 chars.
-            if rest.len() > 36 {
-                &rest[..rest.len() - 37] // -37 to also remove the hyphen before UUID
-            } else {
-                rest
-            }
-        }))
+        .and_then(|rest| {
+            rest.rsplit_once('-').map(|(_name, _uuid_last)| {
+                // The UUID contains hyphens, so we need to find the stream name portion.
+                // Our format: {stream_name}-{uuid} where uuid is 36 chars (8-4-4-4-12).
+                // Take everything before the last 36 chars.
+                if rest.len() > 36 {
+                    &rest[..rest.len() - 37] // -37 to also remove the hyphen before UUID
+                } else {
+                    rest
+                }
+            })
+        })
         .ok_or_else(|| LawsError::InvalidRequest("invalid shard iterator".into()))?;
 
     let stream = state

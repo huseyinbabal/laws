@@ -58,10 +58,7 @@ impl Default for SyntheticsState {
 pub fn router(state: Arc<SyntheticsState>) -> axum::Router {
     axum::Router::new()
         .route("/canary", post(create_canary))
-        .route(
-            "/canary/{name}",
-            get(get_canary).delete(delete_canary),
-        )
+        .route("/canary/{name}", get(get_canary).delete(delete_canary))
         .route("/canaries", get(describe_canaries))
         .route("/canary/{name}/start", post(start_canary))
         .route("/canary/{name}/stop", post(stop_canary))
@@ -115,7 +112,9 @@ async fn create_canary(
         artifact_s3_location: req
             .artifact_s3_location
             .unwrap_or_else(|| format!("s3://cw-syn-results-{ACCOUNT_ID}-{REGION}")),
-        runtime_version: req.runtime_version.unwrap_or_else(|| "syn-nodejs-puppeteer-6.0".into()),
+        runtime_version: req
+            .runtime_version
+            .unwrap_or_else(|| "syn-nodejs-puppeteer-6.0".into()),
         status: "READY".to_string(),
         created_at: now,
         handler: req.handler.unwrap_or_else(|| "index.handler".into()),
@@ -137,9 +136,9 @@ async fn get_canary(
 ) -> Response {
     match state.canaries.get(&name) {
         Some(c) => rest_json::ok(json!({ "Canary": canary_to_json(c.value()) })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Canary not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Canary not found: {name}")))
+        }
     }
 }
 
@@ -159,9 +158,9 @@ async fn delete_canary(
 ) -> Response {
     match state.canaries.remove(&name) {
         Some(_) => rest_json::ok(json!({})),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Canary not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Canary not found: {name}")))
+        }
     }
 }
 
@@ -174,9 +173,9 @@ async fn start_canary(
             c.status = "RUNNING".to_string();
             rest_json::ok(json!({}))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Canary not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Canary not found: {name}")))
+        }
     }
 }
 
@@ -189,9 +188,9 @@ async fn stop_canary(
             c.status = "STOPPED".to_string();
             rest_json::ok(json!({}))
         }
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Canary not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Canary not found: {name}")))
+        }
     }
 }
 

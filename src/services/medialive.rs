@@ -84,9 +84,9 @@ pub fn router(state: Arc<MediaLiveState>) -> axum::Router {
 // ---------------------------------------------------------------------------
 
 fn random_id() -> String {
-    use rand::Rng;
-    rand::thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
+    use rand::RngExt;
+    rand::rng()
+        .sample_iter(&rand::distr::Alphanumeric)
         .take(7)
         .map(char::from)
         .collect::<String>()
@@ -115,7 +115,11 @@ async fn create_channel(
         .and_then(|v| v.as_array())
         .map(|arr| {
             arr.iter()
-                .filter_map(|v| v.get("InputId").and_then(|id| id.as_str()).map(|s| s.to_owned()))
+                .filter_map(|v| {
+                    v.get("InputId")
+                        .and_then(|id| id.as_str())
+                        .map(|s| s.to_owned())
+                })
                 .collect()
         })
         .unwrap_or_default();
@@ -144,18 +148,20 @@ async fn create_channel(
     }))
 }
 
-async fn list_channels(
-    State(state): State<Arc<MediaLiveState>>,
-) -> Response {
-    let channels: Vec<Value> = state.channels.iter().map(|entry| {
-        let c = entry.value();
-        json!({
-            "Id": c.id,
-            "Arn": c.arn,
-            "Name": c.name,
-            "State": c.state
+async fn list_channels(State(state): State<Arc<MediaLiveState>>) -> Response {
+    let channels: Vec<Value> = state
+        .channels
+        .iter()
+        .map(|entry| {
+            let c = entry.value();
+            json!({
+                "Id": c.id,
+                "Arn": c.arn,
+                "Name": c.name,
+                "State": c.state
+            })
         })
-    }).collect();
+        .collect();
 
     rest_json::ok(json!({
         "Channels": channels
@@ -175,9 +181,7 @@ async fn describe_channel(
             "InputAttachments": c.input_attachments,
             "RoleArn": c.role_arn
         })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "channel not found: {id}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("channel not found: {id}"))),
     }
 }
 
@@ -187,9 +191,7 @@ async fn delete_channel(
 ) -> Response {
     match state.channels.remove(&id) {
         Some(_) => rest_json::no_content(),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "channel not found: {id}"
-        ))),
+        None => rest_json::error_response(&LawsError::NotFound(format!("channel not found: {id}"))),
     }
 }
 
@@ -232,19 +234,21 @@ async fn create_input(
     }))
 }
 
-async fn list_inputs(
-    State(state): State<Arc<MediaLiveState>>,
-) -> Response {
-    let inputs: Vec<Value> = state.inputs.iter().map(|entry| {
-        let i = entry.value();
-        json!({
-            "Id": i.id,
-            "Arn": i.arn,
-            "Name": i.name,
-            "Type": i.input_type,
-            "State": i.state
+async fn list_inputs(State(state): State<Arc<MediaLiveState>>) -> Response {
+    let inputs: Vec<Value> = state
+        .inputs
+        .iter()
+        .map(|entry| {
+            let i = entry.value();
+            json!({
+                "Id": i.id,
+                "Arn": i.arn,
+                "Name": i.name,
+                "Type": i.input_type,
+                "State": i.state
+            })
         })
-    }).collect();
+        .collect();
 
     rest_json::ok(json!({
         "Inputs": inputs

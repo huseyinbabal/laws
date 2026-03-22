@@ -41,7 +41,11 @@ impl Default for ComprehendState {
 // Handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(state: &ComprehendState, target: &str, payload: &serde_json::Value) -> Response {
+pub async fn handle_request(
+    state: &ComprehendState,
+    target: &str,
+    payload: &serde_json::Value,
+) -> Response {
     let action = target
         .strip_prefix("Comprehend_20171127.")
         .unwrap_or(target);
@@ -54,7 +58,9 @@ pub async fn handle_request(state: &ComprehendState, target: &str, payload: &ser
         "BatchDetectSentiment" => batch_detect_sentiment(payload),
         "StartEntitiesDetectionJob" => start_entities_detection_job(state, payload),
         "ListEntitiesDetectionJobs" => list_entities_detection_jobs(state),
-        other => Err(LawsError::InvalidRequest(format!("unknown action: {other}"))),
+        other => Err(LawsError::InvalidRequest(format!(
+            "unknown action: {other}"
+        ))),
     };
 
     match result {
@@ -68,7 +74,12 @@ pub async fn handle_request(state: &ComprehendState, target: &str, payload: &ser
 // ---------------------------------------------------------------------------
 
 fn json_response(body: Value) -> Response {
-    (StatusCode::OK, [("Content-Type", "application/x-amz-json-1.1")], serde_json::to_string(&body).unwrap_or_default()).into_response()
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/x-amz-json-1.1")],
+        serde_json::to_string(&body).unwrap_or_default(),
+    )
+        .into_response()
 }
 
 fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
@@ -142,21 +153,18 @@ fn batch_detect_sentiment(body: &Value) -> Result<Response, LawsError> {
     })))
 }
 
-fn start_entities_detection_job(state: &ComprehendState, body: &Value) -> Result<Response, LawsError> {
+fn start_entities_detection_job(
+    state: &ComprehendState,
+    body: &Value,
+) -> Result<Response, LawsError> {
     let job_id = uuid::Uuid::new_v4().to_string();
     let job_name = body
         .get("JobName")
         .and_then(|v| v.as_str())
         .unwrap_or("unnamed")
         .to_owned();
-    let input_data_config = body
-        .get("InputDataConfig")
-        .cloned()
-        .unwrap_or(json!({}));
-    let output_data_config = body
-        .get("OutputDataConfig")
-        .cloned()
-        .unwrap_or(json!({}));
+    let input_data_config = body.get("InputDataConfig").cloned().unwrap_or(json!({}));
+    let output_data_config = body.get("OutputDataConfig").cloned().unwrap_or(json!({}));
 
     let job = ComprehendJob {
         job_id: job_id.clone(),

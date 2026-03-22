@@ -61,9 +61,7 @@ impl Default for PersonalizeState {
 // ---------------------------------------------------------------------------
 
 pub async fn handle_request(state: &PersonalizeState, target: &str, payload: &Value) -> Response {
-    let action = target
-        .strip_prefix("AmazonPersonalize.")
-        .unwrap_or(target);
+    let action = target.strip_prefix("AmazonPersonalize.").unwrap_or(target);
 
     let result = match action {
         "CreateDataset" => create_dataset(state, payload),
@@ -75,7 +73,9 @@ pub async fn handle_request(state: &PersonalizeState, target: &str, payload: &Va
         "CreateCampaign" => create_campaign(state, payload),
         "DeleteCampaign" => delete_campaign(state, payload),
         "ListCampaigns" => list_campaigns(state),
-        other => Err(LawsError::InvalidRequest(format!("unknown action: {other}"))),
+        other => Err(LawsError::InvalidRequest(format!(
+            "unknown action: {other}"
+        ))),
     };
 
     match result {
@@ -89,7 +89,12 @@ pub async fn handle_request(state: &PersonalizeState, target: &str, payload: &Va
 // ---------------------------------------------------------------------------
 
 fn json_response(body: Value) -> Response {
-    (StatusCode::OK, [("Content-Type", "application/x-amz-json-1.1")], serde_json::to_string(&body).unwrap_or_default()).into_response()
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/x-amz-json-1.1")],
+        serde_json::to_string(&body).unwrap_or_default(),
+    )
+        .into_response()
 }
 
 fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
@@ -104,7 +109,11 @@ fn require_str<'a>(body: &'a Value, field: &str) -> Result<&'a str, LawsError> {
 
 fn create_dataset(state: &PersonalizeState, body: &Value) -> Result<Response, LawsError> {
     let name = require_str(body, "Name")?.to_owned();
-    let dataset_type = body.get("DatasetType").and_then(|v| v.as_str()).unwrap_or("Interactions").to_owned();
+    let dataset_type = body
+        .get("DatasetType")
+        .and_then(|v| v.as_str())
+        .unwrap_or("Interactions")
+        .to_owned();
     let dataset_arn = format!("arn:aws:personalize:{REGION}:{ACCOUNT_ID}:dataset/{name}");
 
     let dataset = PersonalizeDataset {
@@ -124,22 +133,28 @@ fn create_dataset(state: &PersonalizeState, body: &Value) -> Result<Response, La
 fn delete_dataset(state: &PersonalizeState, body: &Value) -> Result<Response, LawsError> {
     let dataset_arn = require_str(body, "DatasetArn")?;
     let name = dataset_arn.rsplit('/').next().unwrap_or(dataset_arn);
-    state.datasets.remove(name)
+    state
+        .datasets
+        .remove(name)
         .ok_or_else(|| LawsError::NotFound(format!("dataset not found: {dataset_arn}")))?;
 
     Ok(json_response(json!({})))
 }
 
 fn list_datasets(state: &PersonalizeState) -> Result<Response, LawsError> {
-    let datasets: Vec<Value> = state.datasets.iter().map(|entry| {
-        let ds = entry.value();
-        json!({
-            "DatasetArn": ds.dataset_arn,
-            "Name": ds.name,
-            "DatasetType": ds.dataset_type,
-            "Status": ds.status
+    let datasets: Vec<Value> = state
+        .datasets
+        .iter()
+        .map(|entry| {
+            let ds = entry.value();
+            json!({
+                "DatasetArn": ds.dataset_arn,
+                "Name": ds.name,
+                "DatasetType": ds.dataset_type,
+                "Status": ds.status
+            })
         })
-    }).collect();
+        .collect();
 
     Ok(json_response(json!({
         "Datasets": datasets
@@ -148,7 +163,11 @@ fn list_datasets(state: &PersonalizeState) -> Result<Response, LawsError> {
 
 fn create_solution(state: &PersonalizeState, body: &Value) -> Result<Response, LawsError> {
     let name = require_str(body, "Name")?.to_owned();
-    let recipe_arn = body.get("RecipeArn").and_then(|v| v.as_str()).unwrap_or("arn:aws:personalize:::recipe/aws-hrnn").to_owned();
+    let recipe_arn = body
+        .get("RecipeArn")
+        .and_then(|v| v.as_str())
+        .unwrap_or("arn:aws:personalize:::recipe/aws-hrnn")
+        .to_owned();
     let solution_arn = format!("arn:aws:personalize:{REGION}:{ACCOUNT_ID}:solution/{name}");
 
     let solution = Solution {
@@ -168,21 +187,27 @@ fn create_solution(state: &PersonalizeState, body: &Value) -> Result<Response, L
 fn delete_solution(state: &PersonalizeState, body: &Value) -> Result<Response, LawsError> {
     let solution_arn = require_str(body, "SolutionArn")?;
     let name = solution_arn.rsplit('/').next().unwrap_or(solution_arn);
-    state.solutions.remove(name)
+    state
+        .solutions
+        .remove(name)
         .ok_or_else(|| LawsError::NotFound(format!("solution not found: {solution_arn}")))?;
 
     Ok(json_response(json!({})))
 }
 
 fn list_solutions(state: &PersonalizeState) -> Result<Response, LawsError> {
-    let solutions: Vec<Value> = state.solutions.iter().map(|entry| {
-        let s = entry.value();
-        json!({
-            "SolutionArn": s.solution_arn,
-            "Name": s.name,
-            "Status": s.status
+    let solutions: Vec<Value> = state
+        .solutions
+        .iter()
+        .map(|entry| {
+            let s = entry.value();
+            json!({
+                "SolutionArn": s.solution_arn,
+                "Name": s.name,
+                "Status": s.status
+            })
         })
-    }).collect();
+        .collect();
 
     Ok(json_response(json!({
         "Solutions": solutions
@@ -211,21 +236,27 @@ fn create_campaign(state: &PersonalizeState, body: &Value) -> Result<Response, L
 fn delete_campaign(state: &PersonalizeState, body: &Value) -> Result<Response, LawsError> {
     let campaign_arn = require_str(body, "CampaignArn")?;
     let name = campaign_arn.rsplit('/').next().unwrap_or(campaign_arn);
-    state.campaigns.remove(name)
+    state
+        .campaigns
+        .remove(name)
         .ok_or_else(|| LawsError::NotFound(format!("campaign not found: {campaign_arn}")))?;
 
     Ok(json_response(json!({})))
 }
 
 fn list_campaigns(state: &PersonalizeState) -> Result<Response, LawsError> {
-    let campaigns: Vec<Value> = state.campaigns.iter().map(|entry| {
-        let c = entry.value();
-        json!({
-            "CampaignArn": c.campaign_arn,
-            "Name": c.name,
-            "Status": c.status
+    let campaigns: Vec<Value> = state
+        .campaigns
+        .iter()
+        .map(|entry| {
+            let c = entry.value();
+            json!({
+                "CampaignArn": c.campaign_arn,
+                "Name": c.name,
+                "Status": c.status
+            })
         })
-    }).collect();
+        .collect();
 
     Ok(json_response(json!({
         "Campaigns": campaigns

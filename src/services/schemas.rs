@@ -64,10 +64,7 @@ impl Default for SchemasState {
 
 pub fn router(state: Arc<SchemasState>) -> axum::Router {
     axum::Router::new()
-        .route(
-            "/v1/registries",
-            axum::routing::get(list_registries),
-        )
+        .route("/v1/registries", axum::routing::get(list_registries))
         .route(
             "/v1/registries/{registry_name}",
             axum::routing::post(create_registry)
@@ -80,8 +77,7 @@ pub fn router(state: Arc<SchemasState>) -> axum::Router {
         )
         .route(
             "/v1/registries/{registry_name}/schemas/{schema_name}",
-            axum::routing::post(create_schema)
-                .get(describe_schema),
+            axum::routing::post(create_schema).get(describe_schema),
         )
         .with_state(state)
 }
@@ -129,14 +125,10 @@ async fn create_registry(
             )));
         }
 
-        let description = payload["Description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["Description"].as_str().unwrap_or("").to_string();
 
-        let registry_arn = format!(
-            "arn:aws:schemas:{REGION}:{ACCOUNT_ID}:registry/{registry_name}"
-        );
+        let registry_arn =
+            format!("arn:aws:schemas:{REGION}:{ACCOUNT_ID}:registry/{registry_name}");
         let created_at = chrono::Utc::now().to_rfc3339();
 
         let registry = Registry {
@@ -158,9 +150,7 @@ async fn create_registry(
     }
 }
 
-async fn list_registries(
-    State(state): State<Arc<SchemasState>>,
-) -> Response {
+async fn list_registries(State(state): State<Arc<SchemasState>>) -> Response {
     let registries: Vec<Value> = state
         .registries
         .iter()
@@ -189,7 +179,9 @@ async fn delete_registry(
 ) -> Response {
     match state.registries.remove(&registry_name) {
         Some(_) => {
-            state.schemas.retain(|_, s| s.registry_name != registry_name);
+            state
+                .schemas
+                .retain(|_, s| s.registry_name != registry_name);
             rest_json::no_content()
         }
         None => rest_json::error_response(&LawsError::NotFound(format!(
@@ -214,24 +206,14 @@ async fn create_schema(
 
         let key = format!("{}:{}", registry_name, schema_name);
 
-        let description = payload["Description"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let description = payload["Description"].as_str().unwrap_or("").to_string();
 
-        let schema_type = payload["Type"]
-            .as_str()
-            .unwrap_or("OpenApi3")
-            .to_string();
+        let schema_type = payload["Type"].as_str().unwrap_or("OpenApi3").to_string();
 
-        let content = payload["Content"]
-            .as_str()
-            .unwrap_or("{}")
-            .to_string();
+        let content = payload["Content"].as_str().unwrap_or("{}").to_string();
 
-        let schema_arn = format!(
-            "arn:aws:schemas:{REGION}:{ACCOUNT_ID}:schema/{registry_name}/{schema_name}"
-        );
+        let schema_arn =
+            format!("arn:aws:schemas:{REGION}:{ACCOUNT_ID}:schema/{registry_name}/{schema_name}");
         let created_at = chrono::Utc::now().to_rfc3339();
 
         let schema = Schema {

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post, delete};
+use axum::routing::{delete, get, post};
 use axum::Json;
 use chrono::Utc;
 use dashmap::DashMap;
@@ -90,7 +90,9 @@ async fn create_project(
 ) -> Response {
     let name = match body["Name"].as_str() {
         Some(n) => n.to_string(),
-        None => return rest_json::error_response(&LawsError::InvalidRequest("Missing Name".into())),
+        None => {
+            return rest_json::error_response(&LawsError::InvalidRequest("Missing Name".into()))
+        }
     };
 
     if state.projects.contains_key(&name) {
@@ -135,9 +137,9 @@ async fn delete_project(
 ) -> Response {
     match state.projects.remove(&name) {
         Some(_) => rest_json::ok(json!({ "Name": name })),
-        None => rest_json::error_response(&LawsError::NotFound(format!(
-            "Project not found: {name}"
-        ))),
+        None => {
+            rest_json::error_response(&LawsError::NotFound(format!("Project not found: {name}")))
+        }
     }
 }
 
@@ -147,7 +149,9 @@ async fn create_recipe(
 ) -> Response {
     let name = match body["Name"].as_str() {
         Some(n) => n.to_string(),
-        None => return rest_json::error_response(&LawsError::InvalidRequest("Missing Name".into())),
+        None => {
+            return rest_json::error_response(&LawsError::InvalidRequest("Missing Name".into()))
+        }
     };
 
     if state.recipes.contains_key(&name) {
@@ -191,7 +195,9 @@ async fn create_dataset(
 ) -> Response {
     let name = match body["Name"].as_str() {
         Some(n) => n.to_string(),
-        None => return rest_json::error_response(&LawsError::InvalidRequest("Missing Name".into())),
+        None => {
+            return rest_json::error_response(&LawsError::InvalidRequest("Missing Name".into()))
+        }
     };
 
     if state.datasets.contains_key(&name) {

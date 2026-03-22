@@ -62,9 +62,7 @@ pub async fn handle_request(
     target: &str,
     payload: &Value,
 ) -> Response {
-    let action = target
-        .strip_prefix("AccessAnalyzer.")
-        .unwrap_or(target);
+    let action = target.strip_prefix("AccessAnalyzer.").unwrap_or(target);
 
     let result = match action {
         "CreateAnalyzer" => create_analyzer(state, payload),
@@ -136,14 +134,9 @@ fn create_analyzer(state: &AccessAnalyzerState, payload: &Value) -> Result<Respo
         )));
     }
 
-    let analyzer_type = payload["type"]
-        .as_str()
-        .unwrap_or("ACCOUNT")
-        .to_string();
+    let analyzer_type = payload["type"].as_str().unwrap_or("ACCOUNT").to_string();
 
-    let arn = format!(
-        "arn:aws:access-analyzer:{REGION}:{ACCOUNT_ID}:analyzer/{name}"
-    );
+    let arn = format!("arn:aws:access-analyzer:{REGION}:{ACCOUNT_ID}:analyzer/{name}");
     let now = chrono::Utc::now().to_rfc3339();
 
     let analyzer = Analyzer {
@@ -197,7 +190,9 @@ fn get_analyzer(state: &AccessAnalyzerState, payload: &Value) -> Result<Response
         .get(name)
         .ok_or_else(|| LawsError::NotFound(format!("Analyzer '{}' not found", name)))?;
 
-    Ok(json_response(json!({ "analyzer": analyzer_to_json(analyzer.value()) })))
+    Ok(json_response(
+        json!({ "analyzer": analyzer_to_json(analyzer.value()) }),
+    ))
 }
 
 fn list_findings(state: &AccessAnalyzerState, payload: &Value) -> Result<Response, LawsError> {
@@ -225,5 +220,7 @@ fn get_finding(state: &AccessAnalyzerState, payload: &Value) -> Result<Response,
         .get(id)
         .ok_or_else(|| LawsError::NotFound(format!("Finding '{}' not found", id)))?;
 
-    Ok(json_response(json!({ "finding": finding_to_json(finding.value()) })))
+    Ok(json_response(
+        json!({ "finding": finding_to_json(finding.value()) }),
+    ))
 }

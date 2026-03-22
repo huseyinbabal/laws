@@ -46,14 +46,8 @@ impl Default for FirehoseState {
 // Request handler
 // ---------------------------------------------------------------------------
 
-pub async fn handle_request(
-    state: &FirehoseState,
-    target: &str,
-    payload: &Value,
-) -> Response {
-    let action = target
-        .strip_prefix("Firehose_20150804.")
-        .unwrap_or(target);
+pub async fn handle_request(state: &FirehoseState, target: &str, payload: &Value) -> Response {
+    let action = target.strip_prefix("Firehose_20150804.").unwrap_or(target);
 
     let result = match action {
         "CreateDeliveryStream" => create_delivery_stream(state, payload),
@@ -91,10 +85,7 @@ fn json_response(body: Value) -> Response {
 // Operations
 // ---------------------------------------------------------------------------
 
-fn create_delivery_stream(
-    state: &FirehoseState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn create_delivery_stream(state: &FirehoseState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload
         .get("DeliveryStreamName")
         .and_then(|v| v.as_str())
@@ -109,9 +100,7 @@ fn create_delivery_stream(
         )));
     }
 
-    let arn = format!(
-        "arn:aws:firehose:{REGION}:{ACCOUNT_ID}:deliverystream/{name}"
-    );
+    let arn = format!("arn:aws:firehose:{REGION}:{ACCOUNT_ID}:deliverystream/{name}");
 
     let stream = DeliveryStream {
         name: name.clone(),
@@ -128,10 +117,7 @@ fn create_delivery_stream(
     })))
 }
 
-fn delete_delivery_stream(
-    state: &FirehoseState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn delete_delivery_stream(state: &FirehoseState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload
         .get("DeliveryStreamName")
         .and_then(|v| v.as_str())
@@ -142,17 +128,12 @@ fn delete_delivery_stream(
     state
         .streams
         .remove(name)
-        .ok_or_else(|| {
-            LawsError::NotFound(format!("delivery stream not found: {name}"))
-        })?;
+        .ok_or_else(|| LawsError::NotFound(format!("delivery stream not found: {name}")))?;
 
     Ok(json_response(json!({})))
 }
 
-fn describe_delivery_stream(
-    state: &FirehoseState,
-    payload: &Value,
-) -> Result<Response, LawsError> {
+fn describe_delivery_stream(state: &FirehoseState, payload: &Value) -> Result<Response, LawsError> {
     let name = payload
         .get("DeliveryStreamName")
         .and_then(|v| v.as_str())
