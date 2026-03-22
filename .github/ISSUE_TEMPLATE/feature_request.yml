@@ -1,0 +1,71 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the feature you'd like.
+      placeholder: Describe the feature...
+    validations:
+      required: true
+
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Use Case
+      description: Why do you need this feature? What problem does it solve?
+      placeholder: Explain the use case...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed Solution
+      description: If you have ideas on how this could be implemented, describe them here.
+      placeholder: Describe your proposed solution...
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you've considered.
+
+  - type: dropdown
+    id: aws_service
+    attributes:
+      label: Related AWS Service
+      description: If this feature is related to a specific AWS service.
+      options:
+        - EC2
+        - ECS
+        - EKS
+        - Lambda
+        - S3
+        - DynamoDB
+        - RDS
+        - IAM
+        - CloudWatch
+        - VPC
+        - Route53
+        - API Gateway
+        - SQS
+        - SNS
+        - Secrets Manager
+        - SSM Parameter Store
+        - CloudFormation
+        - Other
+        - Not applicable
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or references.

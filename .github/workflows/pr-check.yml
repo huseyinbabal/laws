@@ -1,0 +1,40 @@
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+jobs:
+  ui-build:
+    name: UI Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ui
+        run: npm ci
+
+      - name: Type check & build
+        working-directory: ui
+        run: npm run build
+
+  check:
+    uses: huseyinbabal/rust-actions/.github/workflows/pr-check.yml@main
+    with:
+      check_issue_link: true
+      run_tests: true
+      run_fmt: true
+      run_clippy: true
+      run_security_scan: true
