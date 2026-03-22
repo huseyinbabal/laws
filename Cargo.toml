@@ -27,6 +27,6 @@ tokio-stream = { version = "0.1", features = ["sync"] }
 bytes = "1"
 http = "1"
 thiserror = "2"
-rand = "0.8"
+rand = "0.10"
 form_urlencoded = "1"
 http-body-util = "0.1"
