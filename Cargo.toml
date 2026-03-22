@@ -1,0 +1,32 @@
+[package]
+name = "laws"
+version = "0.1.0"
+edition = "2021"
+description = "Local AWS - a lightweight, blazing-fast AWS service emulator written in Rust"
+license = "MIT"
+repository = "https://github.com/huseyinbabal/laws"
+
+[dependencies]
+axum = { version = "0.8", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+quick-xml = { version = "0.37", features = ["serialize"] }
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+base64 = "0.22"
+sha2 = "0.10"
+md-5 = "0.10"
+hex = "0.4"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4", features = ["derive"] }
+dashmap = "6"
+tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
+tokio-stream = { version = "0.1", features = ["sync"] }
+bytes = "1"
+http = "1"
+thiserror = "2"
+rand = "0.8"
+form_urlencoded = "1"
+http-body-util = "0.1"
