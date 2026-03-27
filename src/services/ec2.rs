@@ -554,7 +554,7 @@ fn describe_security_groups(
     let (start, max) = parse_pagination(params, 1000);
 
     // Return at least a default security group for the default VPC
-    let items = vec![format!(
+    let items = [format!(
         r#"<item>
   <ownerId>{owner_id}</ownerId>
   <groupId>sg-00000000</groupId>
@@ -608,7 +608,7 @@ fn describe_vpcs(
 ) -> Result<Response, LawsError> {
     let (start, max) = parse_pagination(params, 1000);
 
-    let items = vec![format!(
+    let items = [format!(
         r#"<item>
   <vpcId>vpc-00000000</vpcId>
   <ownerId>{owner_id}</ownerId>
