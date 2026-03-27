@@ -137,6 +137,9 @@ struct DispatchState {
     swf: Arc<services::swf::SwfState>,
     verifiedpermissions: Arc<services::verifiedpermissions::VerifiedPermissionsState>,
     workmail: Arc<services::workmail::WorkMailState>,
+    // REST-based services shared for the dashboard resources API
+    s3: Arc<services::s3::S3State>,
+    lambda: Arc<services::lambda::LambdaState>,
 }
 
 #[tokio::main]
@@ -178,9 +181,10 @@ async fn main() {
 
 fn build_router(_config: &Config, dashboard_state: DashboardState) -> Router {
     // ── REST-based services (original) ──
-    let s3_router = services::s3::router(Arc::new(services::s3::S3State::new()));
-    let lambda_router =
-        services::lambda::router(Arc::new(services::lambda::LambdaState::default()));
+    let s3_state = Arc::new(services::s3::S3State::new());
+    let lambda_state = Arc::new(services::lambda::LambdaState::default());
+    let s3_router = services::s3::router(s3_state.clone());
+    let lambda_router = services::lambda::router(lambda_state.clone());
     let apigateway_router =
         services::apigateway::router(Arc::new(services::apigateway::ApiGatewayState::default()));
     let route53_router =
@@ -451,10 +455,16 @@ fn build_router(_config: &Config, dashboard_state: DashboardState) -> Router {
             services::verifiedpermissions::VerifiedPermissionsState::default(),
         ),
         workmail: Arc::new(services::workmail::WorkMailState::default()),
+        s3: s3_state,
+        lambda: lambda_state,
     };
 
     let dispatch_router: Router<()> = Router::<DispatchState>::new()
         .route("/", axum::routing::post(dispatch_handler))
+        .route(
+            "/api/dashboard/resources/{service}",
+            axum::routing::get(resources_handler),
+        )
         .fallback(dispatch_handler)
         .with_state(dispatch_state);
 
@@ -1068,4 +1078,114 @@ fn extract_action(body: &[u8], uri: &axum::http::Uri) -> Option<String> {
         }
     }
     None
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard resources API
+// ---------------------------------------------------------------------------
+
+async fn resources_handler(
+    State(ds): State<DispatchState>,
+    axum::extract::Path(service): axum::extract::Path<String>,
+) -> axum::response::Response {
+    use axum::response::IntoResponse;
+    use serde_json::json;
+
+    let resources: serde_json::Value = match service.to_lowercase().as_str() {
+        "ec2" => {
+            let instances: Vec<serde_json::Value> = ds
+                .ec2
+                .instances
+                .iter()
+                .map(|entry| {
+                    let i = entry.value();
+                    json!({
+                        "instanceId": i.instance_id,
+                        "state": i.state,
+                        "instanceType": i.instance_type,
+                        "imageId": i.image_id,
+                        "launchTime": i.launch_time,
+                        "vpcId": i.vpc_id,
+                        "subnetId": i.subnet_id,
+                        "privateIpAddress": i.private_ip_address,
+                    })
+                })
+                .collect();
+            json!({ "service": "EC2", "resourceType": "Instances", "resources": instances })
+        }
+        "s3" => {
+            let buckets: Vec<serde_json::Value> = ds
+                .s3
+                .buckets
+                .list()
+                .iter()
+                .map(|(_key, b)| {
+                    json!({
+                        "name": b.name,
+                        "creationDate": b.creation_date,
+                    })
+                })
+                .collect();
+            json!({ "service": "S3", "resourceType": "Buckets", "resources": buckets })
+        }
+        "sqs" => {
+            let queues: Vec<serde_json::Value> = ds
+                .sqs
+                .queues
+                .iter()
+                .map(|entry| {
+                    let q = entry.value();
+                    json!({
+                        "queueName": q.name,
+                        "queueUrl": q.url,
+                        "messageCount": q.messages.len(),
+                    })
+                })
+                .collect();
+            json!({ "service": "SQS", "resourceType": "Queues", "resources": queues })
+        }
+        "dynamodb" => {
+            let tables: Vec<serde_json::Value> = ds
+                .dynamodb
+                .tables
+                .iter()
+                .map(|entry| {
+                    let t = entry.value();
+                    json!({
+                        "tableName": t.table_name,
+                        "status": t.status,
+                        "itemCount": t.items.len(),
+                    })
+                })
+                .collect();
+            json!({ "service": "DynamoDB", "resourceType": "Tables", "resources": tables })
+        }
+        "lambda" => {
+            let functions: Vec<serde_json::Value> = ds
+                .lambda
+                .functions
+                .list()
+                .iter()
+                .map(|(_key, f)| {
+                    json!({
+                        "functionName": f.function_name,
+                        "runtime": f.runtime,
+                        "handler": f.handler,
+                        "lastModified": f.last_modified,
+                    })
+                })
+                .collect();
+            json!({ "service": "Lambda", "resourceType": "Functions", "resources": functions })
+        }
+        _ => {
+            json!({ "service": service, "resourceType": "Unknown", "resources": [] })
+        }
+    };
+
+    (
+        axum::http::StatusCode::OK,
+        [("content-type", "application/json")],
+        serde_json::to_string(&resources).unwrap_or_default(),
+    )
+        .into_response()
 }
