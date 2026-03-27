@@ -3,6 +3,7 @@
 mod config;
 mod dashboard;
 mod error;
+mod persistence;
 mod protocol;
 mod services;
 mod storage;
@@ -149,6 +150,19 @@ async fn main() {
 
     let config = Config::parse();
     let addr = format!("{}:{}", config.host, config.port);
+
+    // Handle --persist / --reset
+    if config.persist {
+        let db_path = config.resolve_db_path();
+        if config.reset {
+            if let Err(e) = persistence::SqliteStore::reset(&db_path) {
+                tracing::error!("Failed to reset database: {e}");
+            } else {
+                info!("Database reset: {db_path}");
+            }
+        }
+        info!("Persistence enabled: {db_path}");
+    }
 
     let dashboard_state = DashboardState::new();
     let app = build_router(&config, dashboard_state.clone());

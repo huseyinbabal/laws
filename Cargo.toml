@@ -30,3 +30,6 @@ thiserror = "2"
 rand = "0.10"
 form_urlencoded = "1"
 http-body-util = "0.1"
+rusqlite = { version = "0.35", features = ["bundled"] }
+dirs = "6"
+tempfile = "3"
