@@ -8,6 +8,7 @@ import { usePinnedServices } from '../composables/usePinnedServices'
 import AppBadge from './ui/AppBadge.vue'
 import AppCard from './ui/AppCard.vue'
 import RequestTable from './RequestTable.vue'
+import ResourcePanel from './ResourcePanel.vue'
 
 const route = useRoute()
 const { events } = useSSE()
@@ -103,6 +104,9 @@ const stats = computed(() => {
         <p class="text-2xl font-bold tabular-nums text-destructive">{{ stats.errors }}</p>
       </AppCard>
     </div>
+
+    <!-- Resources -->
+    <ResourcePanel :serviceId="serviceId" />
 
     <!-- Actions seen -->
     <div v-if="stats.actions.length > 0">
