@@ -143,7 +143,9 @@ async fn list_snapshot_blocks(
     match state.snapshots.get(&snapshot_id) {
         Some(s) => {
             let blocks: Vec<Value> = s
-                .blocks.keys().map(|idx| {
+                .blocks
+                .keys()
+                .map(|idx| {
                     json!({
                         "BlockIndex": idx,
                         "BlockToken": format!("token-{}", idx),
@@ -170,7 +172,9 @@ async fn list_changed_blocks(
     match state.snapshots.get(&snapshot_id) {
         Some(s) => {
             let blocks: Vec<Value> = s
-                .blocks.keys().map(|idx| {
+                .blocks
+                .keys()
+                .map(|idx| {
                     json!({
                         "BlockIndex": idx,
                         "FirstBlockToken": format!("token-{}", idx),

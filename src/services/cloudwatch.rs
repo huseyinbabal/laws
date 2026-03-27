@@ -189,11 +189,7 @@ fn put_metric_data(
         };
 
         let key = metric_key(&namespace, &metric_name);
-        state
-            .metrics
-            .entry(key)
-            .or_default()
-            .push(data_point);
+        state.metrics.entry(key).or_default().push(data_point);
 
         n += 1;
     }

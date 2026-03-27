@@ -138,7 +138,8 @@ async fn create_bucket(State(state): State<Arc<S3State>>, Path(bucket): Path<Str
         r#"<?xml version="1.0" encoding="UTF-8"?>
 <CreateBucketConfiguration>
   <LocationConstraint>us-east-1</LocationConstraint>
-</CreateBucketConfiguration>"#.to_string(),
+</CreateBucketConfiguration>"#
+            .to_string(),
     )
 }
 
