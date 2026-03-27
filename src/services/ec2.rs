@@ -140,9 +140,7 @@ fn state_code(name: &str) -> u16 {
 /// Renders `<instanceState>` for DescribeInstances / RunInstances instance items.
 fn instance_state_xml(name: &str) -> String {
     let code = state_code(name);
-    format!(
-        "<instanceState><code>{code}</code><name>{name}</name></instanceState>"
-    )
+    format!("<instanceState><code>{code}</code><name>{name}</name></instanceState>")
 }
 
 /// Renders `<code>` + `<name>` without an outer wrapper, for use inside
@@ -428,8 +426,7 @@ fn describe_instances(
     }
 
     // Collect all reservations into a Vec for pagination
-    let mut all_reservations: Vec<(String, Vec<String>)> =
-        reservation_map.into_iter().collect();
+    let mut all_reservations: Vec<(String, Vec<String>)> = reservation_map.into_iter().collect();
     all_reservations.sort_by(|a, b| a.0.cmp(&b.0));
 
     let total = all_reservations.len();
@@ -462,9 +459,7 @@ fn describe_instances(
     }
 
     let token = next_token_xml(start, page.len(), total);
-    let inner = format!(
-        "<reservationSet>{reservations_xml}</reservationSet>{token}"
-    );
+    let inner = format!("<reservationSet>{reservations_xml}</reservationSet>{token}");
     Ok(xml_response_ec2("DescribeInstances", &inner))
 }
 
@@ -603,8 +598,7 @@ fn describe_security_groups(
     let sg_xml: String = page.iter().cloned().collect();
     let token = next_token_xml(start, page.len(), total);
 
-    let inner =
-        format!("<securityGroupInfo>{sg_xml}</securityGroupInfo>{token}");
+    let inner = format!("<securityGroupInfo>{sg_xml}</securityGroupInfo>{token}");
     Ok(xml_response_ec2("DescribeSecurityGroups", &inner))
 }
 

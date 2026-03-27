@@ -132,4 +132,3 @@ function formatHeader(key: string): string {
     </div>
   </AppCard>
 </template>
-</script>
