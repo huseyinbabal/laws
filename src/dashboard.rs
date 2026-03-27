@@ -106,7 +106,6 @@ pub async fn request_logger(
     }
 
     let method = req.method().to_string();
-    let (service, action) = extract_service_and_action(&req);
 
     // Capture request headers
     let request_headers: HashMap<String, String> = req
@@ -121,6 +120,10 @@ pub async fn request_logger(
         Ok(collected) => collected.to_bytes(),
         Err(_) => axum::body::Bytes::new(),
     };
+
+    // Extract service/action AFTER buffering the body so we can parse
+    // form-encoded Action params from POST bodies (used by EC2, IAM, SQS, etc.)
+    let (service, action) = extract_service_and_action_from_parts(&parts, &body_bytes);
 
     let request_body = if body_bytes.is_empty() {
         None
@@ -191,18 +194,21 @@ pub async fn request_logger(
 // Service/action extraction
 // ---------------------------------------------------------------------------
 
-fn extract_service_and_action(req: &Request) -> (String, String) {
+fn extract_service_and_action_from_parts(
+    parts: &axum::http::request::Parts,
+    body_bytes: &axum::body::Bytes,
+) -> (String, String) {
     // Try X-Amz-Target header (JSON protocol)
-    if let Some(target) = req
-        .headers()
+    if let Some(target) = parts
+        .headers
         .get("x-amz-target")
         .and_then(|v| v.to_str().ok())
     {
         return parse_amz_target(target);
     }
 
-    // Try Action query/form param from URI
-    if let Some(query) = req.uri().query() {
+    // Try Action from URI query string
+    if let Some(query) = parts.uri.query() {
         for pair in form_urlencoded::parse(query.as_bytes()) {
             if pair.0 == "Action" {
                 let action = pair.1.to_string();
@@ -212,8 +218,27 @@ fn extract_service_and_action(req: &Request) -> (String, String) {
         }
     }
 
+    // Try Action from form-encoded POST body (EC2, IAM, STS, SQS, SNS, etc.)
+    if !body_bytes.is_empty() {
+        let is_form = parts
+            .headers
+            .get("content-type")
+            .and_then(|v| v.to_str().ok())
+            .map(|v| v.starts_with("application/x-www-form-urlencoded"))
+            .unwrap_or(true); // default to form parsing for query-protocol services
+        if is_form {
+            for pair in form_urlencoded::parse(body_bytes) {
+                if pair.0 == "Action" {
+                    let action = pair.1.to_string();
+                    let service = guess_service_from_action(&action);
+                    return (service, action);
+                }
+            }
+        }
+    }
+
     // Fall back to path-based heuristics for REST services
-    let path = req.uri().path();
+    let path = parts.uri.path();
     guess_service_from_path(path)
 }
 
