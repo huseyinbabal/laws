@@ -1,6 +1,6 @@
 [package]
 name = "laws"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 description = "Local AWS - a lightweight AWS service emulator"
 license = "MIT"
