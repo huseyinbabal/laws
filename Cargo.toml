@@ -15,7 +15,7 @@ quick-xml = { version = "0.39", features = ["serialize"] }
 uuid = { version = "1", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 base64 = "0.22"
-sha2 = "0.10"
+sha2 = "0.11"
 md-5 = "0.10"
 hex = "0.4"
 tracing = "0.1"
