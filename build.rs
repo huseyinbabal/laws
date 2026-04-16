@@ -1,9 +1,9 @@
 fn main() {
     // Don't want just ui, as then the build output would invalidate
     // it every run. This isn't complete, but it's probably fine for dev.
-    println!("cargo-rebuild-if-changed=ui/index.html");
-    println!("cargo-rebuild-if-changed=ui/src");
-    println!("cargo-rebuild-if-changed=ui/package-lock.json");
+    println!("cargo:rerun-if-changed=ui/index.html");
+    println!("cargo:rerun-if-changed=ui/src");
+    println!("cargo:rerun-if-changed=ui/package-lock.json");
 
     let status = std::process::Command::new("npm")
         .arg("ci")
