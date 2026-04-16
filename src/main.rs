@@ -14,7 +14,6 @@ use axum::extract::State;
 use axum::Router;
 use clap::Parser;
 use tower_http::cors::CorsLayer;
-use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
@@ -567,9 +566,16 @@ fn build_router(
         .merge(workdocs_router)
         // Dashboard
         .merge(dashboard::router(dashboard_state.clone()))
-        .route_service("/dashboard", ServeFile::new("ui/dist/index.html"))
-        .route_service("/dashboard/", ServeFile::new("ui/dist/index.html"))
-        .nest_service("/dashboard/assets", ServeDir::new("ui/dist/assets"))
+        .nest("/dashboard", {
+            static_serve::embed_assets!(
+                "ui/dist",
+                strip_html_ext = true, // don't require explicit "index.html"
+                cache_busted_paths = ["assets"]
+            );
+            static_router()
+                // Don't use below fallbacks
+                .fallback(|| async { (http::StatusCode::NOT_FOUND, "Dashboard asset not found") })
+        })
         // Dispatch fallback + S3 catch-all
         .merge(dispatch_router)
         .merge(s3_router)

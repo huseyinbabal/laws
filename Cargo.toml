@@ -33,3 +33,4 @@ http-body-util = "0.1"
 rusqlite = { version = "0.39", features = ["bundled"] }
 dirs = "6"
 tempfile = "3"
+static-serve = "0.6.1"
