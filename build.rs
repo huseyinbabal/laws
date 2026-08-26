@@ -30,8 +30,11 @@ fn main() {
         return;
     }
 
-    run("npm", &["ci", "--ignore-scripts"]);
-    run("npm", &["run", "build"]);
+    // On Windows, npm is a batch script (npm.cmd); `Command::new("npm")`
+    // only resolves executables, so it would fail with "program not found".
+    let npm = if cfg!(windows) { "npm.cmd" } else { "npm" };
+    run(npm, &["ci", "--ignore-scripts"]);
+    run(npm, &["run", "build"]);
 }
 
 fn run(program: &str, args: &[&str]) {
