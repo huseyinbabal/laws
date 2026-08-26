@@ -70,6 +70,7 @@ pub async fn handle_request(
         "DeleteRepository" => delete_repository(state, payload),
         "DescribeRepositories" => describe_repositories(state, payload),
         "ListImages" => list_images(state, payload),
+        "DescribeImages" => describe_images(state, payload),
         "PutImage" => put_image(state, payload),
         "BatchGetImage" => batch_get_image(state, payload),
         "GetAuthorizationToken" => get_authorization_token(state, payload),
@@ -234,6 +235,56 @@ fn list_images(state: &EcrState, payload: &Value) -> Result<Response, LawsError>
         .unwrap_or_default();
 
     Ok(json_response(json!({ "imageIds": image_ids })))
+}
+
+fn describe_images(state: &EcrState, payload: &Value) -> Result<Response, LawsError> {
+    let name = payload["repositoryName"]
+        .as_str()
+        .ok_or_else(|| LawsError::InvalidRequest("repositoryName is required".to_string()))?;
+
+    if !state.repositories.contains_key(name) {
+        return Err(LawsError::NotFound(format!(
+            "Repository '{}' not found",
+            name
+        )));
+    }
+
+    let requested_ids = payload["imageIds"].as_array().cloned().unwrap_or_default();
+
+    let image_details: Vec<Value> = state
+        .images
+        .get(name)
+        .map(|imgs| {
+            imgs.iter()
+                .filter(|img| {
+                    requested_ids.is_empty()
+                        || requested_ids.iter().any(|id| {
+                            id["imageDigest"].as_str() == Some(img.image_digest.as_str())
+                                || (id["imageTag"].as_str().is_some()
+                                    && id["imageTag"].as_str() == img.image_tag.as_deref())
+                        })
+                })
+                .map(|img| {
+                    let pushed_at = chrono::DateTime::parse_from_rfc3339(&img.pushed_at)
+                        .map(|dt| dt.timestamp() as f64)
+                        .unwrap_or(0.0);
+                    let tags: Vec<&str> = img.image_tag.iter().map(|t| t.as_str()).collect();
+                    json!({
+                        "registryId": ACCOUNT_ID,
+                        "repositoryName": name,
+                        "imageDigest": img.image_digest,
+                        "imageTags": tags,
+                        "imageSizeInBytes": 0,
+                        "imagePushedAt": pushed_at,
+                        "imageManifestMediaType": "application/vnd.docker.distribution.manifest.v2+json",
+                        "artifactMediaType": "application/vnd.docker.container.image.v1+json"
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    Ok(json_response(json!({ "imageDetails": image_details })))
 }
 
 fn put_image(state: &EcrState, payload: &Value) -> Result<Response, LawsError> {
