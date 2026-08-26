@@ -19,6 +19,24 @@ pub struct SqliteStore {
     conn: Mutex<Connection>,
 }
 
+/// Validate a table name and return it quoted as a SQL identifier.
+///
+/// Table names come from code, not user input, but this API is `pub` and the
+/// name is interpolated into SQL text, so we refuse anything that isn't a plain
+/// identifier (`[A-Za-z_][A-Za-z0-9_]*`) and additionally quote it with
+/// standard double quotes. This makes injection via `]`, `"`, `;` etc. impossible.
+fn quoted_table(table: &str) -> Result<String, String> {
+    let mut chars = table.chars();
+    let valid_first = matches!(chars.next(), Some(c) if c.is_ascii_alphabetic() || c == '_');
+    let valid_rest = chars.all(|c| c.is_ascii_alphanumeric() || c == '_');
+    if !valid_first || !valid_rest || table.len() > 128 {
+        return Err(format!(
+            "invalid table name {table:?}: must match [A-Za-z_][A-Za-z0-9_]* (max 128 chars)"
+        ));
+    }
+    Ok(format!("\"{table}\""))
+}
+
 impl SqliteStore {
     /// Open (or create) a SQLite database at `path`.
     /// Creates the parent directory if it doesn't exist.
@@ -60,8 +78,9 @@ impl SqliteStore {
 
     /// Ensure a table for the given service exists.
     pub fn ensure_table(&self, table: &str) -> Result<(), String> {
+        let q = quoted_table(table)?;
         let sql = format!(
-            "CREATE TABLE IF NOT EXISTS [{table}] (
+            "CREATE TABLE IF NOT EXISTS {q} (
                 key   TEXT PRIMARY KEY,
                 data  TEXT NOT NULL
             )"
@@ -79,7 +98,10 @@ impl SqliteStore {
     /// Insert or replace a key-value pair.
     pub fn put(&self, table: &str, key: &str, data: &str) -> Result<(), String> {
         self.ensure_table(table)?;
-        let sql = format!("INSERT OR REPLACE INTO [{table}] (key, data) VALUES (?1, ?2)");
+        let sql = format!(
+            "INSERT OR REPLACE INTO {} (key, data) VALUES (?1, ?2)",
+            quoted_table(table)?
+        );
         let conn = self.conn.lock().map_err(|e| e.to_string())?;
         conn.execute(&sql, params![key, data])
             .map_err(|e| format!("put({table}, {key}): {e}"))?;
@@ -89,7 +111,7 @@ impl SqliteStore {
     /// Get a single value by key.
     pub fn get(&self, table: &str, key: &str) -> Result<Option<String>, String> {
         self.ensure_table(table)?;
-        let sql = format!("SELECT data FROM [{table}] WHERE key = ?1");
+        let sql = format!("SELECT data FROM {} WHERE key = ?1", quoted_table(table)?);
         let conn = self.conn.lock().map_err(|e| e.to_string())?;
         let mut stmt = conn
             .prepare(&sql)
@@ -109,7 +131,7 @@ impl SqliteStore {
     /// Remove a key.
     pub fn delete(&self, table: &str, key: &str) -> Result<(), String> {
         self.ensure_table(table)?;
-        let sql = format!("DELETE FROM [{table}] WHERE key = ?1");
+        let sql = format!("DELETE FROM {} WHERE key = ?1", quoted_table(table)?);
         let conn = self.conn.lock().map_err(|e| e.to_string())?;
         conn.execute(&sql, params![key])
             .map_err(|e| format!("delete({table}, {key}): {e}"))?;
@@ -119,7 +141,7 @@ impl SqliteStore {
     /// Delete all rows from a table.
     pub fn delete_all(&self, table: &str) -> Result<(), String> {
         self.ensure_table(table)?;
-        let sql = format!("DELETE FROM [{table}]");
+        let sql = format!("DELETE FROM {}", quoted_table(table)?);
         let conn = self.conn.lock().map_err(|e| e.to_string())?;
         conn.execute(&sql, [])
             .map_err(|e| format!("delete_all({table}): {e}"))?;
@@ -129,7 +151,7 @@ impl SqliteStore {
     /// List all (key, data) pairs in a table.
     pub fn list(&self, table: &str) -> Result<Vec<(String, String)>, String> {
         self.ensure_table(table)?;
-        let sql = format!("SELECT key, data FROM [{table}]");
+        let sql = format!("SELECT key, data FROM {}", quoted_table(table)?);
         let conn = self.conn.lock().map_err(|e| e.to_string())?;
         let mut stmt = conn
             .prepare(&sql)
@@ -309,6 +331,55 @@ mod tests {
         let path = dir.path().join("test.db");
         let store = SqliteStore::open(path.to_str().unwrap()).unwrap();
         (store, dir)
+    }
+
+    #[test]
+    fn rejects_malicious_table_names() {
+        let (store, _dir) = temp_db();
+        for bad in [
+            "x]; DROP TABLE users; --",
+            "a\"b",
+            "with space",
+            "semi;colon",
+            "",
+            "1starts_with_digit",
+            "dash-name",
+        ] {
+            assert!(
+                store.ensure_table(bad).is_err(),
+                "{bad:?} should be rejected"
+            );
+            assert!(
+                store.put(bad, "k", "v").is_err(),
+                "{bad:?} should be rejected"
+            );
+            assert!(store.get(bad, "k").is_err(), "{bad:?} should be rejected");
+            assert!(
+                store.delete(bad, "k").is_err(),
+                "{bad:?} should be rejected"
+            );
+            assert!(store.delete_all(bad).is_err(), "{bad:?} should be rejected");
+            assert!(store.list(bad).is_err(), "{bad:?} should be rejected");
+        }
+        // Nothing was created as a side effect.
+        let conn = store.conn.lock().unwrap();
+        let n: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(n, 0);
+    }
+
+    #[test]
+    fn accepts_identifier_table_names() {
+        let (store, _dir) = temp_db();
+        for ok in ["_x", "ecr_repositories", "T1", "a_b_c_123"] {
+            store.put(ok, "k", "v").unwrap();
+            assert_eq!(store.get(ok, "k").unwrap().as_deref(), Some("v"));
+        }
     }
 
     #[test]
