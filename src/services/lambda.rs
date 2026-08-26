@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::response::Response;
 use axum::routing::{get, post};
 use axum::Json;
@@ -10,6 +10,7 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
 use crate::error::LawsError;
+use crate::pagination::paginate_params;
 use crate::protocol::rest_json;
 use crate::storage::mem::MemoryStore;
 
@@ -162,15 +163,20 @@ fn do_create_function(state: &LambdaState, req: CreateFunctionRequest) -> Result
     Ok(resp)
 }
 
-async fn list_functions(State(state): State<Arc<LambdaState>>) -> Response {
-    let funcs: Vec<Value> = state
-        .functions
-        .list_values()
-        .iter()
-        .map(function_to_json)
-        .collect();
+async fn list_functions(
+    State(state): State<Arc<LambdaState>>,
+    Query(params): Query<std::collections::HashMap<String, String>>,
+) -> Response {
+    let mut funcs = state.functions.list_values();
+    funcs.sort_by(|a, b| a.function_name.cmp(&b.function_name));
+    let page = paginate_params(&params, funcs, &["MaxItems"], &["Marker"], 50);
+    let funcs: Vec<Value> = page.items.iter().map(function_to_json).collect();
 
-    rest_json::ok(json!({ "Functions": funcs }))
+    let mut resp = json!({ "Functions": funcs });
+    if let Some(t) = page.next_token {
+        resp["NextMarker"] = json!(t);
+    }
+    rest_json::ok(resp)
 }
 
 async fn get_function(State(state): State<Arc<LambdaState>>, Path(name): Path<String>) -> Response {

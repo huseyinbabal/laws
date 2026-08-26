@@ -5,6 +5,7 @@ use http::StatusCode;
 use serde_json::{json, Value};
 
 use crate::error::LawsError;
+use crate::pagination::paginate_json;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -191,7 +192,7 @@ fn describe_repositories(state: &EcrState, payload: &Value) -> Result<Response, 
         .as_array()
         .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect());
 
-    let repos: Vec<Value> = state
+    let mut repos: Vec<EcrRepository> = state
         .repositories
         .iter()
         .filter(|entry| {
@@ -200,10 +201,17 @@ fn describe_repositories(state: &EcrState, payload: &Value) -> Result<Response, 
                 .map(|names| names.contains(&entry.key().as_str()))
                 .unwrap_or(true)
         })
-        .map(|entry| repository_to_json(entry.value()))
+        .map(|entry| entry.value().clone())
         .collect();
+    repos.sort_by(|a, b| a.repository_name.cmp(&b.repository_name));
 
-    Ok(json_response(json!({ "repositories": repos })))
+    let page = paginate_json(payload, repos, &["maxResults"], &["nextToken"], 100);
+    let repos: Vec<Value> = page.items.iter().map(repository_to_json).collect();
+    let mut resp = json!({ "repositories": repos });
+    if let Some(t) = page.next_token {
+        resp["nextToken"] = json!(t);
+    }
+    Ok(json_response(resp))
 }
 
 fn list_images(state: &EcrState, payload: &Value) -> Result<Response, LawsError> {
@@ -218,23 +226,29 @@ fn list_images(state: &EcrState, payload: &Value) -> Result<Response, LawsError>
         )));
     }
 
-    let image_ids: Vec<Value> = state
+    let images: Vec<EcrImage> = state
         .images
         .get(name)
-        .map(|imgs| {
-            imgs.iter()
-                .map(|img| {
-                    let mut id = json!({ "imageDigest": img.image_digest });
-                    if let Some(tag) = &img.image_tag {
-                        id["imageTag"] = json!(tag);
-                    }
-                    id
-                })
-                .collect()
-        })
+        .map(|imgs| imgs.clone())
         .unwrap_or_default();
+    let page = paginate_json(payload, images, &["maxResults"], &["nextToken"], 100);
+    let image_ids: Vec<Value> = page
+        .items
+        .iter()
+        .map(|img| {
+            let mut id = json!({ "imageDigest": img.image_digest });
+            if let Some(tag) = &img.image_tag {
+                id["imageTag"] = json!(tag);
+            }
+            id
+        })
+        .collect();
 
-    Ok(json_response(json!({ "imageIds": image_ids })))
+    let mut resp = json!({ "imageIds": image_ids });
+    if let Some(t) = page.next_token {
+        resp["nextToken"] = json!(t);
+    }
+    Ok(json_response(resp))
 }
 
 fn describe_images(state: &EcrState, payload: &Value) -> Result<Response, LawsError> {
@@ -251,7 +265,7 @@ fn describe_images(state: &EcrState, payload: &Value) -> Result<Response, LawsEr
 
     let requested_ids = payload["imageIds"].as_array().cloned().unwrap_or_default();
 
-    let image_details: Vec<Value> = state
+    let images: Vec<EcrImage> = state
         .images
         .get(name)
         .map(|imgs| {
@@ -264,27 +278,37 @@ fn describe_images(state: &EcrState, payload: &Value) -> Result<Response, LawsEr
                                     && id["imageTag"].as_str() == img.image_tag.as_deref())
                         })
                 })
-                .map(|img| {
-                    let pushed_at = chrono::DateTime::parse_from_rfc3339(&img.pushed_at)
-                        .map(|dt| dt.timestamp() as f64)
-                        .unwrap_or(0.0);
-                    let tags: Vec<&str> = img.image_tag.iter().map(|t| t.as_str()).collect();
-                    json!({
-                        "registryId": ACCOUNT_ID,
-                        "repositoryName": name,
-                        "imageDigest": img.image_digest,
-                        "imageTags": tags,
-                        "imageSizeInBytes": 0,
-                        "imagePushedAt": pushed_at,
-                        "imageManifestMediaType": "application/vnd.docker.distribution.manifest.v2+json",
-                        "artifactMediaType": "application/vnd.docker.container.image.v1+json"
-                    })
-                })
+                .cloned()
                 .collect()
         })
         .unwrap_or_default();
+    let page = paginate_json(payload, images, &["maxResults"], &["nextToken"], 100);
+    let image_details: Vec<Value> = page
+        .items
+        .iter()
+        .map(|img| {
+            let pushed_at = chrono::DateTime::parse_from_rfc3339(&img.pushed_at)
+                .map(|dt| dt.timestamp() as f64)
+                .unwrap_or(0.0);
+            let tags: Vec<&str> = img.image_tag.iter().map(|t| t.as_str()).collect();
+            json!({
+                "registryId": ACCOUNT_ID,
+                "repositoryName": name,
+                "imageDigest": img.image_digest,
+                "imageTags": tags,
+                "imageSizeInBytes": 0,
+                "imagePushedAt": pushed_at,
+                "imageManifestMediaType": "application/vnd.docker.distribution.manifest.v2+json",
+                "artifactMediaType": "application/vnd.docker.container.image.v1+json"
+            })
+        })
+        .collect();
 
-    Ok(json_response(json!({ "imageDetails": image_details })))
+    let mut resp = json!({ "imageDetails": image_details });
+    if let Some(t) = page.next_token {
+        resp["nextToken"] = json!(t);
+    }
+    Ok(json_response(resp))
 }
 
 fn put_image(state: &EcrState, payload: &Value) -> Result<Response, LawsError> {

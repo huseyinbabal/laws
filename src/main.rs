@@ -3,6 +3,7 @@
 mod config;
 mod dashboard;
 mod error;
+mod pagination;
 mod persistence;
 mod protocol;
 mod services;
@@ -1198,34 +1199,6 @@ async fn resources_handler(
                 })
                 .collect();
             json!({ "service": "Lambda", "resourceType": "Functions", "resources": functions })
-        }
-        "ecr" => {
-            let mut images: Vec<serde_json::Value> = Vec::new();
-            for entry in ds.ecr.repositories.iter() {
-                let r = entry.value();
-                let imgs = ds.ecr.images.get(&r.repository_name);
-                match imgs.as_deref() {
-                    Some(list) if !list.is_empty() => {
-                        for img in list {
-                            images.push(json!({
-                                "repositoryName": r.repository_name,
-                                "repositoryUri": r.uri,
-                                "imageTag": img.image_tag,
-                                "imageDigest": img.image_digest,
-                                "pushedAt": img.pushed_at,
-                            }));
-                        }
-                    }
-                    _ => images.push(json!({
-                        "repositoryName": r.repository_name,
-                        "repositoryUri": r.uri,
-                        "imageTag": null,
-                        "imageDigest": null,
-                        "pushedAt": null,
-                    })),
-                }
-            }
-            json!({ "service": "ECR", "resourceType": "Images", "resources": images })
         }
         "ecr" => {
             let mut images: Vec<serde_json::Value> = Vec::new();

@@ -82,7 +82,7 @@ pub fn handle_request(state: &DynamoDbState, target: &str, body: &[u8]) -> Respo
         "CreateTable" => create_table(state, &body),
         "DeleteTable" => delete_table(state, &body),
         "DescribeTable" => describe_table(state, &body),
-        "ListTables" => list_tables(state),
+        "ListTables" => list_tables(state, &body),
         "PutItem" => put_item(state, &body),
         "GetItem" => get_item(state, &body),
         "DeleteItem" => delete_item(state, &body),
@@ -277,13 +277,36 @@ fn describe_table(state: &DynamoDbState, body: &Value) -> Result<Value, LawsErro
     Ok(json!({ "Table": table_description(&table) }))
 }
 
-fn list_tables(state: &DynamoDbState) -> Result<Value, LawsError> {
-    let names: Vec<String> = state
+fn list_tables(state: &DynamoDbState, body: &Value) -> Result<Value, LawsError> {
+    let mut names: Vec<String> = state
         .tables
         .iter()
         .map(|entry| entry.key().clone())
         .collect();
-    Ok(json!({ "TableNames": names }))
+    names.sort();
+
+    // DynamoDB uses the last table name as the cursor rather than an offset.
+    let limit = body["Limit"]
+        .as_u64()
+        .map(|n| n as usize)
+        .unwrap_or(100)
+        .max(1);
+    let start = body["ExclusiveStartTableName"]
+        .as_str()
+        .map(|last| {
+            names
+                .iter()
+                .position(|n| n == last)
+                .map(|i| i + 1)
+                .unwrap_or(0)
+        })
+        .unwrap_or(0);
+    let page: Vec<String> = names.iter().skip(start).take(limit).cloned().collect();
+    let mut resp = json!({ "TableNames": page });
+    if start + page.len() < names.len() {
+        resp["LastEvaluatedTableName"] = json!(page.last());
+    }
+    Ok(resp)
 }
 
 fn put_item(state: &DynamoDbState, body: &Value) -> Result<Value, LawsError> {
