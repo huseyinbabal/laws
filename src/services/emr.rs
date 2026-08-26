@@ -146,7 +146,7 @@ fn run_job_flow(state: &EmrState, payload: &Value) -> Result<Response, LawsError
 
     let cluster_id = format!(
         "j-{}",
-        &uuid::Uuid::new_v4().to_string()[..13].to_uppercase()
+        uuid::Uuid::new_v4().to_string()[..13].to_uppercase()
     );
     let arn = format!("arn:aws:elasticmapreduce:{REGION}:{ACCOUNT_ID}:cluster/{cluster_id}");
 
@@ -243,7 +243,7 @@ fn add_job_flow_steps(state: &EmrState, payload: &Value) -> Result<Response, Law
     for step_val in steps_input {
         let step_id = format!(
             "s-{}",
-            &uuid::Uuid::new_v4().to_string()[..13].to_uppercase()
+            uuid::Uuid::new_v4().to_string()[..13].to_uppercase()
         );
         let name = step_val["Name"].as_str().unwrap_or("Step").to_string();
         let action_on_failure = step_val["ActionOnFailure"]
