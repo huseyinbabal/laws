@@ -132,7 +132,7 @@ fn assume_role(
 
     let assumed_role_id = format!(
         "AROA{}:{}",
-        &uuid::Uuid::new_v4().simple().to_string()[..16].to_uppercase(),
+        uuid::Uuid::new_v4().simple().to_string()[..16].to_uppercase(),
         role_session_name
     );
 

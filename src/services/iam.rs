@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::error::LawsError;
+use crate::pagination::{paginate_params, query_xml_tail};
 use crate::protocol::query::{parse_query_request, xml_error_response, xml_response};
 use crate::storage::mem::MemoryStore;
 
@@ -113,7 +114,7 @@ pub fn handle_request(
         "CreateRole" => create_role(state, &req.params),
         "DeleteRole" => delete_role(state, &req.params),
         "GetRole" => get_role(state, &req.params),
-        "ListRoles" => list_roles(state),
+        "ListRoles" => list_roles(state, &req.params),
         "ListAttachedRolePolicies" => list_attached_role_policies(state, &req.params),
         "CreatePolicy" => create_policy(state, &req.params),
         "DeletePolicy" => delete_policy(state, &req.params),
@@ -333,15 +334,21 @@ fn delete_role(
     Ok(("DeleteRole".into(), String::new()))
 }
 
-fn list_roles(state: &IamState) -> ActionResult {
-    let roles = state.roles.list_values();
-    let members: String = roles
+fn list_roles(
+    state: &IamState,
+    params: &std::collections::HashMap<String, String>,
+) -> ActionResult {
+    let mut roles = state.roles.list_values();
+    roles.sort_by(|a, b| a.role_name.cmp(&b.role_name));
+    let page = paginate_params(params, roles, &["MaxItems"], &["Marker"], 100);
+    let members: String = page
+        .items
         .iter()
         .map(|r| format!("<member>{}</member>", role_xml(r)))
         .collect::<Vec<_>>()
         .join("\n");
 
-    let xml = format!("<Roles>{members}</Roles>");
+    let xml = format!("<Roles>{members}</Roles>{}", query_xml_tail(&page));
     Ok(("ListRoles".into(), xml))
 }
 
