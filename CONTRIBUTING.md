@@ -26,10 +26,8 @@ Thank you for your interest in contributing to laws! This document provides guid
 git clone https://github.com/YOUR_USERNAME/laws.git
 cd laws
 
-# Build the UI
-cd ui && npm install && npm run build && cd ..
-
-# Build the project
+# Build the project (build.rs compiles the dashboard UI in ui/ and embeds it
+# into the binary; requires Node.js/npm. Set LAWS_SKIP_UI_BUILD=1 to skip it.)
 cargo build
 
 # Run in development mode
@@ -138,7 +136,7 @@ aws --endpoint-url http://localhost:4566 myservice list-items
 cargo clippy -- -D warnings
 cargo fmt --check
 
-# Build UI
+# Type-check the UI on its own (cargo build already runs the UI build)
 cd ui && npm run build
 ```
 

@@ -22,7 +22,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 clap = { version = "4", features = ["derive"] }
 dashmap = "6"
-tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
+tower-http = { version = "0.6", features = ["cors", "trace"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 bytes = "1"
 http = "1"
@@ -33,3 +33,4 @@ http-body-util = "0.1"
 rusqlite = { version = "0.39", features = ["bundled"] }
 dirs = "6"
 tempfile = "3"
+static-serve = "0.6"

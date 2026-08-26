@@ -12,10 +12,10 @@ mod storage;
 use std::sync::Arc;
 
 use axum::extract::State;
+use axum::response::IntoResponse;
 use axum::Router;
 use clap::Parser;
 use tower_http::cors::CorsLayer;
-use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
@@ -568,9 +568,10 @@ fn build_router(
         .merge(workdocs_router)
         // Dashboard
         .merge(dashboard::router(dashboard_state.clone()))
-        .route_service("/dashboard", ServeFile::new("ui/dist/index.html"))
-        .route_service("/dashboard/", ServeFile::new("ui/dist/index.html"))
-        .nest_service("/dashboard/assets", ServeDir::new("ui/dist/assets"))
+        // UI assets are compiled into the binary (see build.rs). `nest_service`
+        // (not `nest`) so the 404 fallback below is honoured and unknown
+        // /dashboard/* paths don't fall through to the S3 catch-all.
+        .nest_service("/dashboard", dashboard_ui_router())
         // Dispatch fallback + S3 catch-all
         .merge(dispatch_router)
         .merge(s3_router)
@@ -581,6 +582,26 @@ fn build_router(
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
 }
+
+fn dashboard_ui_router() -> Router {
+    static_serve::embed_assets!(
+        "ui/dist",
+        strip_html_ext = true,
+        cache_busted_paths = ["assets"]
+    );
+    // SPA fallback: client-side routes like /dashboard/ecr must serve
+    // index.html; only unknown hashed assets are a real 404.
+    static_router().fallback(|uri: axum::http::Uri| async move {
+        if uri.path().starts_with("/assets/") {
+            (http::StatusCode::NOT_FOUND, "Dashboard asset not found").into_response()
+        } else {
+            axum::response::Html(DASHBOARD_INDEX_HTML).into_response()
+        }
+    })
+}
+
+const DASHBOARD_INDEX_HTML: &str =
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/ui/dist/index.html"));
 
 #[axum::debug_handler(state = DispatchState)]
 async fn dispatch_handler(
