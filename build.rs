@@ -1,8 +1,11 @@
-//! Builds the dashboard UI (ui/ -> ui/dist) so it can be embedded into the
-//! binary by `static_serve::embed_assets!` in main.rs.
+//! Embeds the dashboard UI (ui/dist) into the binary via
+//! `static_serve::embed_assets!` in main.rs.
 //!
-//! Set `LAWS_SKIP_UI_BUILD=1` to skip running npm (e.g. in Docker, where the
-//! UI is built in a separate stage and copied into ui/dist beforehand).
+//! `ui/dist` is committed to the repository so that `cargo build`,
+//! `cargo install`, cross-compilation and Docker all work without Node.js.
+//! When npm is available (and `LAWS_SKIP_UI_BUILD` is not set) the UI is
+//! rebuilt from `ui/src` so local changes are picked up; the result should be
+//! committed alongside UI source changes (CI verifies this).
 
 use std::path::Path;
 use std::process::Command;
@@ -15,26 +18,49 @@ fn main() {
     println!("cargo:rerun-if-changed=ui/vite.config.ts");
 
     let dist = Path::new("ui/dist");
-
-    if std::env::var_os("LAWS_SKIP_UI_BUILD").is_some() {
-        if !dist.join("index.html").exists() {
-            // embed_assets! needs the directory to exist; ship a stub so the
-            // binary still builds without a dashboard.
-            std::fs::create_dir_all(dist.join("assets")).expect("create ui/dist/assets");
-            std::fs::write(
-                dist.join("index.html"),
-                "<!doctype html><title>laws</title><p>Dashboard UI was not built (LAWS_SKIP_UI_BUILD was set).</p>",
-            )
-            .expect("write ui/dist/index.html");
-        }
-        return;
-    }
+    let has_dist = dist.join("index.html").exists();
 
     // On Windows, npm is a batch script (npm.cmd); `Command::new("npm")`
     // only resolves executables, so it would fail with "program not found".
     let npm = if cfg!(windows) { "npm.cmd" } else { "npm" };
-    run(npm, &["ci", "--ignore-scripts"]);
-    run(npm, &["run", "build"]);
+
+    if std::env::var_os("LAWS_SKIP_UI_BUILD").is_some() {
+        if !has_dist {
+            write_stub(dist, "LAWS_SKIP_UI_BUILD was set");
+        }
+        return;
+    }
+
+    let npm_available = Command::new(npm)
+        .arg("--version")
+        .current_dir("ui")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    if npm_available {
+        run(npm, &["ci", "--ignore-scripts"]);
+        run(npm, &["run", "build"]);
+    } else if has_dist {
+        println!("cargo:warning=npm not found; embedding the prebuilt dashboard from ui/dist");
+    } else {
+        write_stub(dist, "npm was not found");
+        println!(
+            "cargo:warning=npm not found and ui/dist is missing; the dashboard UI will be a stub. \
+             Install Node.js to build it."
+        );
+    }
+}
+
+fn write_stub(dist: &Path, reason: &str) {
+    // embed_assets! needs the directory to exist; ship a stub so the binary
+    // still builds without a dashboard.
+    std::fs::create_dir_all(dist.join("assets")).expect("create ui/dist/assets");
+    std::fs::write(
+        dist.join("index.html"),
+        format!("<!doctype html><title>laws</title><p>Dashboard UI was not built ({reason}).</p>"),
+    )
+    .expect("write ui/dist/index.html");
 }
 
 fn run(program: &str, args: &[&str]) {
@@ -42,11 +68,6 @@ fn run(program: &str, args: &[&str]) {
     match status {
         Ok(s) if s.success() => {}
         Ok(s) => panic!("`{program} {}` failed with {s}", args.join(" ")),
-        Err(e) => panic!(
-            "failed to run `{program} {}`: {e}\n\
-             Building laws requires Node.js/npm to compile the dashboard UI.\n\
-             Install Node.js, or set LAWS_SKIP_UI_BUILD=1 to build without the dashboard.",
-            args.join(" ")
-        ),
+        Err(e) => panic!("failed to run `{program} {}`: {e}", args.join(" ")),
     }
 }

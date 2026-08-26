@@ -275,7 +275,7 @@ docker run --rm -p 4566:4566 laws
 
 ### From Source
 
-Requires Rust and Node.js (the dashboard UI is built by `build.rs` and embedded into the binary, so the resulting executable is self-contained).
+The dashboard UI is embedded into the binary, so the resulting executable is self-contained. A prebuilt UI is committed in `ui/dist`; if Node.js is installed, `build.rs` rebuilds it from `ui/src` automatically.
 
 ```bash
 git clone https://github.com/huseyinbabal/laws.git
@@ -284,7 +284,7 @@ cargo build --release
 ./target/release/laws
 ```
 
-To build without Node.js (no dashboard UI), set `LAWS_SKIP_UI_BUILD=1`.
+Set `LAWS_SKIP_UI_BUILD=1` to skip the UI rebuild even when Node.js is installed.
 
 ## Quick Start
 

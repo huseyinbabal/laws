@@ -26,8 +26,9 @@ Thank you for your interest in contributing to laws! This document provides guid
 git clone https://github.com/YOUR_USERNAME/laws.git
 cd laws
 
-# Build the project (build.rs compiles the dashboard UI in ui/ and embeds it
-# into the binary; requires Node.js/npm. Set LAWS_SKIP_UI_BUILD=1 to skip it.)
+# Build the project. If Node.js is installed, build.rs rebuilds the dashboard
+# UI (ui/ -> ui/dist) and embeds it; otherwise the committed ui/dist is used.
+# When you change the UI, commit the regenerated ui/dist with your change.
 cargo build
 
 # Run in development mode
