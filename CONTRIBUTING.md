@@ -28,7 +28,8 @@ cd laws
 
 # Build the project. If Node.js is installed, build.rs rebuilds the dashboard
 # UI (ui/ -> ui/dist) and embeds it; otherwise the committed ui/dist is used.
-# When you change the UI, commit the regenerated ui/dist with your change.
+# When you change the UI, commit the regenerated ui/dist with your change
+# (asset hashes can differ between machines; that's expected).
 cargo build
 
 # Run in development mode

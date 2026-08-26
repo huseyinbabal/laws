@@ -30,14 +30,6 @@ jobs:
         working-directory: ui
         run: npm run build
 
-      - name: Verify committed ui/dist is up to date
-        run: |
-          if ! git diff --quiet -- ui/dist; then
-            echo "::error::ui/dist is out of date. Run 'cargo build' (or 'npm run build' in ui/) and commit ui/dist."
-            git status --short -- ui/dist
-            exit 1
-          fi
-
   check:
     uses: huseyinbabal/rust-actions/.github/workflows/pr-check.yml@main
     with:

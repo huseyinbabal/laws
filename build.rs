@@ -5,7 +5,7 @@
 //! `cargo install`, cross-compilation and Docker all work without Node.js.
 //! When npm is available (and `LAWS_SKIP_UI_BUILD` is not set) the UI is
 //! rebuilt from `ui/src` so local changes are picked up; the result should be
-//! committed alongside UI source changes (CI verifies this).
+//! committed alongside UI source changes.
 
 use std::path::Path;
 use std::process::Command;
@@ -27,6 +27,17 @@ fn main() {
     if std::env::var_os("LAWS_SKIP_UI_BUILD").is_some() {
         if !has_dist {
             write_stub(dist, "LAWS_SKIP_UI_BUILD was set");
+        }
+        return;
+    }
+
+    // Only rebuild the UI when building from a git checkout. Published crate
+    // tarballs (cargo install / cargo publish --verify) contain no .git and
+    // must not be modified by build scripts, so they use the packaged ui/dist.
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default();
+    if !Path::new(&manifest_dir).join(".git").exists() {
+        if !has_dist {
+            write_stub(dist, "not a git checkout and ui/dist is missing");
         }
         return;
     }
