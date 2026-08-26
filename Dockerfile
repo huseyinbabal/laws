@@ -32,11 +32,16 @@ COPY Cargo.toml Cargo.lock ./
 # Create dummy src to build dependencies
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 
+# The UI is built in the ui-builder stage; skip npm inside cargo's build script
+ENV LAWS_SKIP_UI_BUILD=1
+
 # Build dependencies only
 RUN cargo build --release && rm -rf src
 
-# Copy actual source code
+# Copy actual source code and the prebuilt UI (embedded into the binary by build.rs)
 COPY src ./src
+COPY build.rs ./
+COPY --from=ui-builder /app/ui/dist ./ui/dist
 
 # Build the actual binary
 RUN touch src/main.rs && cargo build --release
@@ -52,11 +57,6 @@ RUN apt-get update && apt-get install -y \
 
 # Copy binary from builder
 COPY --from=builder /app/target/release/laws /usr/local/bin/laws
-
-# Copy UI dist from ui-builder
-COPY --from=ui-builder /app/ui/dist /usr/local/share/laws/ui/dist
-
-WORKDIR /usr/local/share/laws
 
 EXPOSE 4566
 
